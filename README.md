@@ -10,4 +10,5 @@ CEN3907C Design Project - SwoleGator
 
 - Testing ESP32
   - hello world complete and functional!
+  - LED blink complete and functional!
   - discovering wifi and bluetooth netowrks successful!
