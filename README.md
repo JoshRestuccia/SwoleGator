@@ -20,5 +20,5 @@ CEN3907C Design Project - SwoleGator
   - discovering wifi and bluetooth networks successful!
  
 - Testing IMU
- - examples/imu can be used to plot accelerometer data from imu to esp32
- - coutputs accelerometer data to phone app "thunkable"
+  - examples/imu can be used to plot accelerometer data from imu to esp32
+  - coutputs accelerometer data to phone app "thunkable"
