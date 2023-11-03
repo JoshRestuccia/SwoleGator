@@ -53,10 +53,12 @@ function BLE(): JSX.Element {
                 .then(results => {
                     if(results != undefined){
                         console.log("Scanning complete.", results);
+                        setIsScanning(false);
                     } else {
                         console.log("Scanning complete. No devices found.")
+                        setIsScanning(true);
                     }
-                    setIsScanning(true);
+
                 })
                 .catch(error => {
                     console.error(error);
