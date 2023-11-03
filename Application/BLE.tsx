@@ -49,15 +49,16 @@ function BLE(): JSX.Element {
     const startScan = () => {
         console.log("Beginning Scan...");
         if(!isScanning){
-            BleManager.scan([], 30, true)
+            BleManager.scan([], 100, true)
                 .then(results => {
                     if(results != undefined){
                         console.log("Scanning complete.", results);
-                        setIsScanning(false);
+
                     } else {
                         console.log("Scanning complete. No devices found.")
-                        setIsScanning(true);
+
                     }
+                setIsScanning(true);
 
                 })
                 .catch(error => {
