@@ -36,7 +36,7 @@ function BLE(): JSX.Element {
                 console.log("Scan stopped!");
             },
         );
-
+    requestBluetoothScanPermission();
     }, []);
 
     useEffect(() => {
@@ -49,14 +49,17 @@ function BLE(): JSX.Element {
     const startScan = () => {
         console.log("Beginning Scan...");
         if(!isScanning){
-            BleManager.scan([], 30, true)
+            BleManager.scan([], 100, true)
                 .then(results => {
                     if(results != undefined){
                         console.log("Scanning complete.", results);
+
                     } else {
                         console.log("Scanning complete. No devices found.")
+
                     }
-                    setIsScanning(true);
+                setIsScanning(true);
+
                 })
                 .catch(error => {
                     console.error(error);
@@ -79,6 +82,27 @@ function BLE(): JSX.Element {
 
     const peripherals = new Map();
     const [connectedDevices, setConnectedDevices] = useState([]);
+     const requestBluetoothScanPermission = async () => {
+        try {
+          const granted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
+            {
+              title: 'Bluetooth Scan Permission',
+              message: 'This app needs Bluetooth Scan permission to discover nearby devices.',
+              buttonPositive: 'OK',
+              buttonNegative: 'Cancel',
+            }
+          );
+          if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+            console.log('Bluetooth Scan permission granted.');
+            // You can start scanning for devices here.
+          } else {
+            console.log('Bluetooth Scan permission denied.');
+          }
+        } catch (err) {
+          console.warn(err);
+        }
+      };
 
      const handleGetConnectedDevices = () => {
         BleManager.getConnectedPeripherals([]).then((peripheralsArray) => {
