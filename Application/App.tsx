@@ -29,6 +29,8 @@ import {
 } from 'react-native/Libraries/NewAppScreen';
 import BleManager from 'react-native-ble-manager';
 import BLE from './BLE'
+import BottomTabs from './screens/BottomTabs';
+import { NavigationContainer } from '@react-navigation/native';
 
 type SectionProps = PropsWithChildren<{
   title: string;
@@ -96,37 +98,18 @@ function App(): JSX.Element {
   }, []);
   
   return (
-    <SafeAreaView style={backgroundStyle}>
+    <View>
       <StatusBar
         barStyle={isDarkMode ? 'light-content' : 'dark-content'}
         backgroundColor={backgroundStyle.backgroundColor}
       />
-      {/* <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView> */}
-      <BLE></BLE>
-    </SafeAreaView>
+    
+      <View style={styles.tabBar}>
+        <NavigationContainer>
+          <BottomTabs></BottomTabs>
+        </NavigationContainer>
+      </View>
+    </View>
   );
 }
 
@@ -163,7 +146,16 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     paddingVertical: 10,
     fontSize: 16,
-  }
+  },
+  tabBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    backgroundColor: '#f2f2f2',
+    height: 50,
+    borderTopWidth: 1,
+    borderTopColor: '#444444',
+  },
 });
 
 export default App;
