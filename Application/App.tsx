@@ -31,6 +31,7 @@ import BleManager from 'react-native-ble-manager';
 import BLE from './BLE'
 import BottomTabs from './screens/BottomTabs';
 import { NavigationContainer } from '@react-navigation/native';
+import PairingScreen from './screens/PairingScreen';
 
 type SectionProps = PropsWithChildren<{
   title: string;
@@ -98,18 +99,7 @@ function App(): JSX.Element {
   }, []);
   
   return (
-    <View>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-    
-      <View style={styles.tabBar}>
-        <NavigationContainer>
-          <BottomTabs></BottomTabs>
-        </NavigationContainer>
-      </View>
-    </View>
+    <PairingScreen></PairingScreen>
   );
 }
 
