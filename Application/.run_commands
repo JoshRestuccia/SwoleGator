@@ -1,2 +1,3 @@
-npx react-native run-android --deviceId BID00236739
-npx react-native run-android --deviceId emulator-5554
+[BASIC_ANDROID_DEVICE] npx react-native run-android --deviceId BID00236739
+[GOOGLE_PIXEL_2XL] npx react-native run-android --deviceId 802KPLC1531496
+[ANDROID_EMULATOR] npx react-native run-android --deviceId emulator-5554
