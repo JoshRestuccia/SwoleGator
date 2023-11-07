@@ -13,14 +13,20 @@ import {
     TouchableHighlight,
     Pressable,
 } from 'react-native';
-import BleManager, { BleDisconnectPeripheralEvent, BleManagerDidUpdateValueForCharacteristicEvent, BleScanCallbackType, BleScanMatchMode, BleScanMode, Peripheral } from 'react-native-ble-manager';
+import BleManager, {
+    BleDisconnectPeripheralEvent, 
+    BleManagerDidUpdateValueForCharacteristicEvent, 
+    BleScanCallbackType, 
+    BleScanMatchMode, 
+    BleScanMode, 
+    Peripheral 
+} from 'react-native-ble-manager';
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 
-const SERVICE_UUIDS= ["4fafc201-1fb5-459e-8fcc-c5c9c331914b"];
-const CHARACTERISTIC_UUID="beb5483e-36e1-4688-b7f5-ea07361b26a8";
+const SERVICE_UUIDS: string[] = [];
 
-const SECONDS_TO_SCAN_FOR=30;
-const ALLOW_DUPLICATES=false;
+const SECONDS_TO_SCAN_FOR=10;
+const ALLOW_DUPLICATES=true;
 
 const bleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(bleManagerModule);
@@ -46,7 +52,6 @@ function PairingScreen(): JSX.Element {
     };
 
     const startScan = () => {
-        console.log("Starting Scan...");
         if(!isScanning){
             // Reset peripherals
             setPeripherals(new Map<Peripheral['id'], Peripheral>());
@@ -54,7 +59,7 @@ function PairingScreen(): JSX.Element {
                 //Do the scanning
                 console.log("[startScan] starting scan...");
                 setIsScanning(true);
-                BleManager.scan(SERVICE_UUIDS, SECONDS_TO_SCAN_FOR, ALLOW_DUPLICATES, {
+                BleManager.scan(SERVICE_UUIDS, SECONDS_TO_SCAN_FOR, undefined, {
                     matchMode: BleScanMatchMode.Sticky,
                     scanMode: BleScanMode.LowLatency,
                     callbackType: BleScanCallbackType.AllMatches,
@@ -73,10 +78,8 @@ function PairingScreen(): JSX.Element {
     };
 
     const handleStopScan = () => {
-        if(isScanning){
-            setIsScanning(false);
-            console.log("[handleStopScan] Stopped Scan.");
-        }
+        setIsScanning(false);
+        console.log("[handleStopScan] Stopped Scan.");
     };
 
     const handleDisconnnectedPeripheral = (
@@ -280,7 +283,7 @@ function PairingScreen(): JSX.Element {
 
     useEffect(() => {
         try{
-            BleManager.start({showAlert: false})
+            BleManager.start({showAlert: false, forceLegacy: true})
                 .then(() => console.debug('BleManager started...'))
                 .catch(error => console.error('Error starting BleManager', error));
         }catch(error) {
@@ -308,13 +311,20 @@ function PairingScreen(): JSX.Element {
         ];
 
         handleAndroidPermissions();
-    })
+
+        return () => {
+          console.debug('[app] main component unmounting. Removing listeners...');
+          for(const listener of listeners){
+            listener.remove();
+          }
+        };
+    }, []);
 
     return(
         <>
             <StatusBar />
             <SafeAreaView style={styles.body}>
-                <Pressable style={styles.scanButton} onPress={startScan}>
+                <Pressable style={styles.scanButton} onPress={isScanning ? handleStopScan : startScan}>
                     <Text style={styles.scanButtonText}>
                         {isScanning ? 'Scanning...' : 'Scan Bluetooth'}
                     </Text>
@@ -329,16 +339,16 @@ function PairingScreen(): JSX.Element {
                 {Array.from(peripherals.values()).length === 0 && (
                 <View style={styles.row}>
                     <Text style={styles.noPeripherals}>
-                    No Peripherals, press "Scan Bluetooth" above.
+                      {'No Peripherals, press "Scan Bluetooth" above.'}
                     </Text>
                 </View>
                 )}
 
                 <FlatList
-                data={Array.from(peripherals.values())}
-                contentContainerStyle={{rowGap: 12}}
-                renderItem={renderItem}
-                keyExtractor={item => item.id}
+                  data={Array.from(peripherals.values())}
+                  contentContainerStyle={{rowGap: 12}}
+                  renderItem={renderItem}
+                  keyExtractor={item => item.id}
                 />
             </SafeAreaView>
         </>
