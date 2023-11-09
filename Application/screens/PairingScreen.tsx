@@ -59,11 +59,7 @@ function PairingScreen(): JSX.Element {
                 //Do the scanning
                 console.log("[startScan] starting scan...");
                 setIsScanning(true);
-                BleManager.scan(SERVICE_UUIDS, SECONDS_TO_SCAN_FOR, undefined, {
-                    matchMode: BleScanMatchMode.Sticky,
-                    scanMode: BleScanMode.LowLatency,
-                    callbackType: BleScanCallbackType.AllMatches,
-                })
+                BleManager.scan(SERVICE_UUIDS, SECONDS_TO_SCAN_FOR, ALLOW_DUPLICATES)
                 .then(() => {
                     console.debug("[startScan] scan promise returned successfully.");
                 })
@@ -248,13 +244,13 @@ function PairingScreen(): JSX.Element {
                     PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
                 ).then(requestResult => {
                     if (requestResult) {
-                    console.debug(
-                        '[handleAndroidPermissions] User accepts runtime permission android <12',
-                    );
+                      console.debug(
+                          '[handleAndroidPermissions] User accepts runtime permission android <12',
+                      );
                     } else {
-                    console.error(
-                        '[handleAndroidPermissions] User refuses runtime permission android <12',
-                    );
+                      console.error(
+                          '[handleAndroidPermissions] User refuses runtime permission android <12',
+                      );
                     }
                 });
                 }

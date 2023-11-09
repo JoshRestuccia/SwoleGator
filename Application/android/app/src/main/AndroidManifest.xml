@@ -2,12 +2,30 @@
   package="com.swolegator">
 
     <!-- IMPORTANT PERMISSIONS FOR ANDROID -->
-    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- BLUETOOTH is necessary to perform any Bluetooth classic or BLE communication, 
+          such as requesting a connection, accepting a connection, and transferring data. -->
     <uses-permission android:name="android.permission.BLUETOOTH" />
-    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <!-- If you want your app to initiate device discovery or manipulate Bluetooth settings, you 
+          must declare the BLUETOOTH_ADMIN permission -->
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- ACCESS_FINE_LOCATION  is necessary because, on Android 11 and lower, a Bluetooth 
+          scan could potentially be used to gather information about the location of the user. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- If your app supports a service and can run on Android 10 (API level 29) or Android 11, 
+          you must also declare the ACCESS_BACKGROUND_LOCATION permission to discover Bluetooth devices -->
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    <!-- If your app relies on Bluetooth Low Energy, you can use the following -->
+    <uses-feature android:name="android.hardware.bluetooth_le" android:required="true"/>
+    <!-- Needed only if your app looks for Bluetooth devices. If your app doesn't use Bluetooth scan 
+          results to derive physical location information, you can strongly assert that your app 
+          doesn't derive physical location. -->
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+    <!-- Needed only if your app communicates with already-paired Bluetooth
+          devices. -->
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
       android:name=".MainApplication"
