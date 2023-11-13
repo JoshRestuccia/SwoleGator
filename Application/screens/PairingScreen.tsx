@@ -100,10 +100,16 @@ function PairingScreen(): JSX.Element {
 
     const handleDiscoverPeripheral = (peripheral: Peripheral) => {
         console.debug(`[handleDiscoverPeripheral] new BLE peripheral discovered=`, peripheral);
+        //console.debug(`\n[handleDiscoverPeripheral] has found the device with ID = ${peripheral.id} and NAME = ${peripheral.name}\n\n`);
         if(!peripheral.name){
             peripheral.name = 'NO NAME';
         }
-        addOrUpdatePeripheral(peripheral.id, peripheral);
+        if(peripheral.id === "D8:BC:38:E5:C3:EE"){
+          peripheral.name = "SwoleGator Adapter";
+          peripheral.advertising.localName = "SwoleGator Adapter";
+          console.log("The SwoleGator Device has been found!");
+          addOrUpdatePeripheral(peripheral.id, peripheral);
+        }
     };
 
     const togglePeripheralConnection = async (peripheral: Peripheral) => {
@@ -267,7 +273,8 @@ function PairingScreen(): JSX.Element {
             <View style={[styles.row, {backgroundColor}]}>
             <Text style={styles.peripheralName}>
                 {/* completeLocalName (item.name) & shortAdvertisingName (advertising.localName) may not always be the same */}
-                {item.name} - {item?.advertising?.localName}
+                {/*item.name} - {item?.advertising?.localName*/}
+                {item?.advertising?.localName}
                 {item.connecting && ' - Connecting...'}
             </Text>
             <Text style={styles.rssi}>RSSI: {item.rssi}</Text>
