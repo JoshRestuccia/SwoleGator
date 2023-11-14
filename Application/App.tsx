@@ -28,8 +28,6 @@ import {
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
 import BleManager from 'react-native-ble-manager';
-import BLE from './BLE'
-import BottomTabs from './screens/BottomTabs';
 import { NavigationContainer } from '@react-navigation/native';
 import PairingScreen from './screens/PairingScreen';
 

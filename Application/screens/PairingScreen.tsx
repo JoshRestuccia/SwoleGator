@@ -25,7 +25,7 @@ import {Colors} from 'react-native/Libraries/NewAppScreen';
 
 const SERVICE_UUIDS: string[] = [];
 
-const SECONDS_TO_SCAN_FOR=10;
+const SECONDS_TO_SCAN_FOR=5;
 const ALLOW_DUPLICATES=true;
 
 const bleManagerModule = NativeModules.BleManager;
@@ -49,6 +49,7 @@ function PairingScreen(): JSX.Element {
 
     const addOrUpdatePeripheral = (id: string, updatedPeripheral: Peripheral) => {
         setPeripherals(map => new Map(map.set(id, updatedPeripheral)));
+        console.debug(`[addOrUpdatePeripheral] Updated Peripheral (${id}) with (${JSON.stringify(updatedPeripheral)})`);
     };
 
     const startScan = () => {
@@ -105,8 +106,6 @@ function PairingScreen(): JSX.Element {
             peripheral.name = 'NO NAME';
         }
         if(peripheral.id === "D8:BC:38:E5:C3:EE"){
-          peripheral.name = "SwoleGator Adapter";
-          peripheral.advertising.localName = "SwoleGator Adapter";
           console.log("The SwoleGator Device has been found!");
           addOrUpdatePeripheral(peripheral.id, peripheral);
         }
@@ -155,7 +154,7 @@ function PairingScreen(): JSX.Element {
             addOrUpdatePeripheral(peripheral.id, {...peripheral, connecting: true});
     
             await BleManager.connect(peripheral.id);
-            console.debug(`[connectPeripheral][${peripheral.id}] connected.`);
+            console.debug(`[connectPeripheral][${peripheral.name}(${peripheral.id})] connected.`);
     
             addOrUpdatePeripheral(peripheral.id, {
               ...peripheral,
@@ -166,11 +165,12 @@ function PairingScreen(): JSX.Element {
             // before retrieving services, it is often a good idea to let bonding & connection finish properly
             await sleep(900);
     
-            /* Test read current RSSI value, retrieve services first */
+            /* Test read current RSSI and Descriptor values, retrieve services first */
             const peripheralData = await BleManager.retrieveServices(peripheral.id);
+
             console.debug(
               `[connectPeripheral][${peripheral.id}] retrieved peripheral services`,
-              peripheralData,
+              JSON.stringify(peripheralData),
             );
     
             const rssi = await BleManager.readRSSI(peripheral.id);
@@ -179,6 +179,7 @@ function PairingScreen(): JSX.Element {
             );
     
             if (peripheralData.characteristics) {
+              console.log(peripheralData.characteristics);
               for (let characteristic of peripheralData.characteristics) {
                 if (characteristic.descriptors) {
                   for (let descriptor of characteristic.descriptors) {
@@ -190,18 +191,20 @@ function PairingScreen(): JSX.Element {
                         descriptor.uuid,
                       );
                       console.debug(
-                        `[connectPeripheral][${peripheral.id}] descriptor read as:`,
+                        `[connectPeripheral][${peripheral.name}] descriptor read as:`,
                         data,
                       );
                     } catch (error) {
                       console.error(
-                        `[connectPeripheral][${peripheral.id}] failed to retrieve descriptor ${descriptor} for characteristic ${characteristic}:`,
+                        `[connectPeripheral][${peripheral.name}] failed to retrieve descriptor ${JSON.stringify(descriptor)} for characteristic ${JSON.stringify(characteristic)}:`,
                         error,
                       );
                     }
                   }
                 }
               }
+            }else{
+              console.debug("[connectPeripheral] Could not find an instance of peripheralData.characteristics");
             }
     
             let p = peripherals.get(peripheral.id);
