@@ -105,7 +105,7 @@ function PairingScreen(): JSX.Element {
         if(!peripheral.name){
             peripheral.name = 'NO NAME';
         }
-        if(peripheral.id === "D8:BC:38:E5:C3:EE"){
+        if(peripheral.name && (peripheral.name === "SwoleGator Adapter")){
           console.log("The SwoleGator Device has been found!");
           addOrUpdatePeripheral(peripheral.id, peripheral);
         }
@@ -115,10 +115,11 @@ function PairingScreen(): JSX.Element {
         if(peripheral && peripheral.connected) {
             try {
                 await BleManager.disconnect(peripheral.id);
+
             }catch(error){
                 console.error(`[togglePeripheralConnection][${peripheral.id}] error when trying to disconnect device.`, error);
             }
-        }else{
+        }else if(!peripheral.connected){
             await connectPeripheral(peripheral);
         }
     };
@@ -179,11 +180,14 @@ function PairingScreen(): JSX.Element {
             );
     
             if (peripheralData.characteristics) {
-              console.log(peripheralData.characteristics);
+              //console.log(`[PERIPHERAL DATA CHARACTERISITCS]: ${JSON.stringify(peripheralData.characteristics)}`);
               for (let characteristic of peripheralData.characteristics) {
+                //console.log(`\t[CHARACTERISTIC]: ${JSON.stringify(characteristic)}`);
                 if (characteristic.descriptors) {
                   for (let descriptor of characteristic.descriptors) {
+                    if(descriptor.value === null){console.log("The value of the descriptor is NULL");}
                     try {
+                      //console.log( `peripheral.id = ${peripheral.id} \n\tcharacteristic.service = ${characteristic.service} \n\tcharacteristic.characteristic = ${characteristic.characteristic} \n\tdescriptor.uuid = ${descriptor.uuid}`);
                       let data = await BleManager.readDescriptor(
                         peripheral.id,
                         characteristic.service,
@@ -199,6 +203,8 @@ function PairingScreen(): JSX.Element {
                         `[connectPeripheral][${peripheral.name}] failed to retrieve descriptor ${JSON.stringify(descriptor)} for characteristic ${JSON.stringify(characteristic)}:`,
                         error,
                       );
+                      console.warn(`[connectPeripheral] Resetting connection state to disconnected.`);
+                      BleManager.disconnect(peripheral.id);
                     }
                   }
                 }
@@ -307,7 +313,7 @@ function PairingScreen(): JSX.Element {
                 handleStopScan,
             ),
             bleManagerEmitter.addListener(
-                'BleManagerDisconnectedPeripheral',
+                'BleManagerDisconnectPeripheral',
                 handleDisconnnectedPeripheral,
             ),
             bleManagerEmitter.addListener(
