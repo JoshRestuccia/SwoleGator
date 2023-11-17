@@ -29,8 +29,7 @@ import {
 } from 'react-native/Libraries/NewAppScreen';
 import BleManager from 'react-native-ble-manager';
 import { NavigationContainer } from '@react-navigation/native';
-import PairingScreen from './screens/PairingScreen';
-
+import RootNavigator from './screens/RootNavigator';
 
 function App(): JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
@@ -40,7 +39,9 @@ function App(): JSX.Element {
   };
   
   return (
-    <PairingScreen></PairingScreen>
+    <NavigationContainer>
+      <RootNavigator/>
+    </NavigationContainer>
   );
 }
 
