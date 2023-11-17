@@ -1,18 +1,23 @@
-import {range, random} from "lodash";
+
+import React, { useState, useEffect } from 'react';
+import Data from './examples/victory-ex1.json';
 
 const getData = () => {
-    range(1, 25).map((i: number) => ({timestamp: i, x: random(1,25), y: random(1,25), z: random(1,25)}));
+
+    const [jsonData, setJsonData] = useState(Data);
+
+    useEffect(() => {
+        try{
+            setJsonData(Data);
+            console.log(JSON.stringify(jsonData));
+        }catch(error){
+            console.error(`[fetchData] Could not fetch data from the datafile`);
+        }
+    }, []);
+
+    return (
+        jsonData
+    );
 }
 
-const getStyles = () => {
-    const colors = ["red", "orange", "magenta", "gold", "blue", "purple"];
-    return {
-      stroke: colors[random(0, 5)],
-      strokeWidth: random(1, 5),
-    };
-};
-
-export {
-    getData,
-    getStyles
-}
+export {getData};

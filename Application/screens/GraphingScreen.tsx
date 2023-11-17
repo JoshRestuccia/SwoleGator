@@ -1,29 +1,54 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     SafeAreaView,
-    StyleSheet,
-    View,
-    Text,
     StatusBar,
-    NativeModules,
-    NativeEventEmitter,
-    Platform,
-    PermissionsAndroid,
-    FlatList,
-    TouchableHighlight,
-    Pressable,
 } from 'react-native';
-import {Colors} from 'react-native/Libraries/NewAppScreen';
 
 import {
-    VictoryLine,
-    VictoryTheme,
+    VictoryChart, VictoryLine, VictoryTooltip, VictoryVoronoi, VictoryVoronoiContainer,
 } from 'victory-native';
 
-import {data} from '../data/examples/example1.json';
+import { getData } from '../data/LoadData';
+
+
 
 const LineChart = () => {
-    return <VictoryLine/>;
+    return (
+        <VictoryChart 
+            height={400} 
+            width={400}
+            domainPadding={{y: 10}}
+            containerComponent={
+                <VictoryVoronoiContainer
+                    voronoiDimension='x'
+                    labels={ ({datum}) => `y: ${datum.y}`}
+                    labelComponent={
+                        <VictoryTooltip
+                            cornerRadius={0}
+                            flyoutStyle={{fill: "white"}}
+                        />
+                    }
+                />
+            }       
+        >
+            <VictoryLine name="xData"
+                data={Array.from(getData())}
+                style={{
+                    data: {
+                        stroke: "tomato",
+                        strokeWidth: 2
+                    },
+                    labels: { fill: "tomato"}
+                }}
+            />
+            <VictoryLine name="yData"
+                data={Array.from(getData())}
+            />
+            <VictoryLine name="zData"
+                data={Array.from(getData())}
+            />
+        </VictoryChart>
+    );
 }
 
 function GraphingScreen(): JSX.Element {
