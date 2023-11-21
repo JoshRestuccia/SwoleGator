@@ -68,3 +68,10 @@ yarn-error.log
 
 # Debugging Artifacts
 /.logs/
+
+# Python Venv
+/api/flask-env/*
+!/api/flask-env/api.py
+!/api/flask-env/.flaskenv
+!/api/requirements.txt
+!/api/flask-env/README_FLASK.md

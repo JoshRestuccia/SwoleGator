@@ -14,11 +14,14 @@ import {
     VictoryVoronoiContainer,
 } from 'victory-native';
 
-import { getData } from '../data/LoadData';
+import {VictoryData, getData } from '../data/LoadData';
 import conatinerStyles from '../styles/container-view-styles';
 
 
 const LineChart = () => {
+    let xdata: VictoryData[] | undefined = getData('x');
+    let ydata: VictoryData[] | undefined = getData('y');
+    let zdata: VictoryData[] | undefined = getData('z');
     return (
         <VictoryChart 
             height={400} 
@@ -39,7 +42,7 @@ const LineChart = () => {
             }       
         >
             <VictoryLine name="xData"
-                data={getData('x')}
+                data={xdata}
                 style={{
                     data: {
                         stroke: "tomato",
@@ -49,7 +52,7 @@ const LineChart = () => {
                 }}
             />
             <VictoryLine name="yData"
-                data={getData('y')}
+                data={ydata}
                 style={{
                     data: {
                         stroke: "green",
@@ -59,7 +62,7 @@ const LineChart = () => {
                 }}
             />
             <VictoryLine name="zData"
-                data={getData('z')}
+                data={zdata}
                 style={{
                     data: {
                         stroke: "blue",
