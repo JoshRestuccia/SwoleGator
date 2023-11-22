@@ -31,6 +31,8 @@ const Login = ({navigation}) => {
     const onPress = () => {
         signIn(email, password);
         navigation.navigate("Home")
+        setEmail("")
+        setPassword("")
     }
   return (
     <View style={styles.container}>

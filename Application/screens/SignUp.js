@@ -8,6 +8,9 @@ const SignUp = ({navigation}) => {
   const onPress = () => {
     signUp(username, email, password)
     navigation.navigate("Home")
+    setEmail("")
+    setPassword("")
+    setName("")
   }
   const signUp = (username, email, password) => {
     if(!username || !email || !password){
