@@ -3,10 +3,10 @@ import { Text, SafeAreaView } from 'react-native';
 
 
 
-function HomeScreen(): JSX.Element {
+const HomeScreen = () =>{
     return(
         <SafeAreaView>
-            <Text>Welcome to SwoleGator!</Text>
+            <Text>Welcome to SwoleGator! This is the Home page.</Text>
         </SafeAreaView>
     );
 };

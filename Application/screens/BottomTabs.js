@@ -6,7 +6,7 @@ import PairingScreen from "./PairingScreen";
 
 const Tab = createBottomTabNavigator();
 
-function BottomTabs(): JSX.Element {
+const BottomTabs = () => {
     return(
         <View style={styles.tabView}>
             <Tab.Navigator initialRouteName="Home" screenOptions={{headerShown: true}}>
