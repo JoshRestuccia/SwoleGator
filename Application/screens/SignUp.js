@@ -1,10 +1,16 @@
 import {StyleSheet, View, Text, TouchableOpacity, TextInput} from 'react-native'
 import React, {useState, useEffect} from 'react';
 import auth from '@react-native-firebase/auth';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-const SignUp = () => {
-  const signUp = (name, email, password) => {
-    if(!name || !email || !password){
+const SignUp = ({navigation}) => {
+  const onPress = () => {
+    signUp(username, email, password)
+    navigation.navigate("Home")
+  }
+  const signUp = (username, email, password) => {
+    if(!username || !email || !password){
       alert('Not enough data to create account!')
     }
     else{
@@ -12,7 +18,7 @@ const SignUp = () => {
     .then( cred => {
         const {uid} = cred.user;
         auth().currentUser.updateProfile({
-            displayName: name
+            displayName: username
         })
         return uid
     })
@@ -23,15 +29,14 @@ const SignUp = () => {
   }
     const [email, setEmail] = useState();
     const [password, setPassword] = useState();
-    const [name, setName] = useState();
+    const [username, setName] = useState();
   return (
-    <View>
-      <Text>Sign Up</Text>
+    <View style={styles.container}>
       <TextInput
       style={styles.textInput}
-        placeholder='Full Name'
+        placeholder='Username'
         onChangeText={setName}
-        value={name}/>
+        value={username}/>
       <TextInput
       style={styles.textInput}
         placeholder='Email'
@@ -41,28 +46,45 @@ const SignUp = () => {
         style={styles.textInput}
         placeholder='Password'
         onChangeText={setPassword}
-        value={password}/>
-        <TouchableOpacity onPress={() => signUp(name, email, password)}>
+        value={password}
+        secureTextEntry={true}/>
+        <TouchableOpacity onPress={onPress}>
             <View style={styles.button}>
-                <Text>Sign Up</Text>
+                <Text style={styles.textStyle}>Sign Up</Text>
             </View>
         </TouchableOpacity>
+        <View style={styles.textStyle}><Text style={styles.textStyle} onPress={() => navigation.navigate("Login")}>Already have an account? Login here.</Text></View>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
+  container:{
+    justifyItems: 'center',
+  },
     textInput:{
-        backgroundColor: 'grey',
-        color:'black',
-        fontSize:18,
-    },
-    button:{
-        alignItems: 'center',
-        backgroundColor: 'green',
-        padding:10,
-        margin:10
-    }
+      borderBottomColor:'grey',
+      borderBottomWidth: 1,
+      fontSize:18,
+      marginLeft: 35,
+      marginRight: 35,
+      marginTop: 20,
+  },
+  button:{
+    alignItems: 'center',
+    backgroundColor: 'lightblue',
+    padding:10,
+    marginLeft:35,
+    marginRight: 35,
+    marginTop: 25,
+    marginBottom: 20,
+    borderRadius: 30,
+  },
+  textStyle:{
+    fontSize: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  }
 })
 
 export default SignUp;

@@ -1,8 +1,10 @@
-import {StyleSheet, View, Text, TouchableOpacity, TextInput} from 'react-native'
+import {StyleSheet, View, Button, Text, TouchableOpacity, TextInput} from 'react-native'
 import React, {useState, useEffect} from 'react';
 import auth from '@react-native-firebase/auth';
-import SignUp from '../screens/SignUp'
-const Login = () => {
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+
+const Login = ({navigation}) => {
   const signIn = (email, password) => {
     return(
       auth()
@@ -25,9 +27,13 @@ const Login = () => {
   }
     const [email, setEmail] = useState();
     const [password, setPassword] = useState();
+    
+    const onPress = () => {
+        signIn(email, password);
+        navigation.navigate("Home")
+    }
   return (
-    <View>
-      <Text>Login</Text>
+    <View style={styles.container}>
       <TextInput
       style={styles.textInput}
         placeholder='Email'
@@ -37,29 +43,48 @@ const Login = () => {
         style={styles.textInput}
         placeholder='Password'
         onChangeText={setPassword}
+        secureTextEntry={true}
         value={password}/>
-        <TouchableOpacity onPress={() => signIn(email, password)}>
+          <TouchableOpacity onPress={onPress}>
             <View style={styles.button}>
-                <Text>Login</Text>
+                <Text style={styles.textStyle}>Login</Text>
             </View>
         </TouchableOpacity>
-        <TouchableOpacity onPress={<SignUp/>}/>
-        <View><Text>Click here to create account</Text></View>
+        <View style={styles.textStyle}>
+          <Text style={styles.textStyle} onPress={()=>navigation.navigate("Sign Up")}>
+            Click here to create an account
+          </Text>
+        </View>
     </View>
   )
 }
 export default Login
 
 const styles = StyleSheet.create({
-    textInput:{
-        backgroundColor: 'grey',
-        color:'black',
-        fontSize:18,
+    container:{
+      justifyItems: 'center',
     },
+    textInput:{
+      borderBottomColor:'grey',
+      borderBottomWidth: 1,
+      fontSize:18,
+      marginLeft: 35,
+      marginRight: 35,
+      marginTop: 20,
+  },
     button:{
-        alignItems: 'center',
-        backgroundColor: 'lightblue',
-        padding:10,
-        margin:10
+      alignItems: 'center',
+      backgroundColor: 'lightblue',
+      padding:10,
+      marginLeft:35,
+      marginRight: 35,
+      marginTop: 25,
+      marginBottom: 20,
+      borderRadius: 30,
+    },
+    textStyle:{
+      fontSize: 18,
+      alignItems: 'center',
+      justifyContent: 'center',
     }
 })

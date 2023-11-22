@@ -7,122 +7,50 @@
 
 import React, {useState, useEffect} from 'react';
 //import type {PropsWithChildren} from 'react';
-import {
-  Button,
-  PermissionsAndroid,
-  Platform,
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TextInput,
-  Touchable,
-  TouchableOpacity,
-  useColorScheme,
-  View,
-} from 'react-native';
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
-import BleManager from 'react-native-ble-manager';
 import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import PairingScreen from './screens/PairingScreen';
 import SignUp from './screens/SignUp';
 import Login from './screens/Login';
-import auth from '@react-native-firebase/auth';
 import HomeScreen from './screens/HomeScreen';
-
-function App() {
-const logout = () =>
-{
- return( 
-  auth()
-  .signOut()
-  .then(() => console.log('User signed out!'))
-  )
-}
- // Set an initializing state whilst Firebase connects
- const [initializing, setInitializing] = useState(true);
- const [user, setUser] = useState();
-
- // Handle user state changes
- function onAuthStateChanged(user) {
-   setUser(user);
-   if (initializing) setInitializing(false);
- }
-
- useEffect(() => {
-   const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
-   return subscriber; // unsubscribe on unmount
- }, []);
-
- if (initializing) return null;
-
- if (!user) {
-   return (
-     <View>
-       <Login/>
-     </View>
-   );
- }
-
- return (
-   <View>
-     <Text>Welcome {user.displayName} !</Text>
-     <HomeScreen/>
-     <Button style={styles.buttonStyle} title="Logout" onPress={(logout)}/>
-   </View>
- );
-}
-
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-  buttonStyle: {
-    backgroundColor: '#307ecc',
-    borderWidth: 0,
-    color: '#FFFFFF',
-    borderColor: '#307ecc',
-    height: 40,
-    alignItems: 'center',
-    borderRadius: 30,
-    marginLeft: 35,
-    marginRight: 35,
-    marginTop: 300,
-  },
-  buttonTextStyle: {
-    color: '#FFFFFF',
-    paddingVertical: 10,
-    fontSize: 16,
-  },
-  tabBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    backgroundColor: '#f2f2f2',
-    height: 50,
-    borderTopWidth: 1,
-    borderTopColor: '#444444',
-  },
-});
-
-export default App;
+const Stack = createNativeStackNavigator();
+export default function App() {
+  //const [user, setUser] = useState(false);
+  return (
+    <NavigationContainer>
+    <Stack.Navigator
+      initialRouteName="Login"
+      screenOptions={{
+        headerTitleAlign: 'center',
+        headerStyle: {
+          backgroundColor: 'lightblue',
+        },
+        headerTintColor: '#fff',
+        headerTitleStyle: {
+          fontWeight: 'bold',
+        },
+      }}>
+        <Stack.Screen
+          name="Sign Up"
+          component={SignUp}
+          options={{title: "Sign Up"}}
+        />
+        <Stack.Screen
+        name="Login"
+        component={Login}
+        options={{title: "Login"}}
+        />
+        <Stack.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{title: "Home"}}
+        />
+        <Stack.Screen
+        name="Pair Device"
+        component={PairingScreen}
+        options={{title: "Pair Device"}}
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+};
