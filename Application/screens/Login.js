@@ -1,8 +1,6 @@
 import {StyleSheet, View, Button, Text, TouchableOpacity, TextInput} from 'react-native'
 import React, {useState, useEffect} from 'react';
 import auth from '@react-native-firebase/auth';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 const Login = ({navigation}) => {
   const signIn = (email, password) => {
