@@ -5,29 +5,14 @@
  * @format
  */
 
-import React, {useState, useEffect} from 'react';
-import type {PropsWithChildren} from 'react';
+import React, {} from 'react';
 import {
-  PermissionsAndroid,
-  Platform,
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
   StyleSheet,
-  Text,
-  Touchable,
-  TouchableOpacity,
   useColorScheme,
-  View,
 } from 'react-native';
 import {
   Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
-import BleManager from 'react-native-ble-manager';
 import { NavigationContainer } from '@react-navigation/native';
 import RootNavigator from './screens/RootNavigator';
 

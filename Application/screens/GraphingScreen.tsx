@@ -1,32 +1,61 @@
 import React, { useState, useEffect } from 'react';
 import {
+    View,
+    Pressable,
+    Text,
     SafeAreaView,
     StatusBar,
+    Dimensions
 } from 'react-native';
 
 import {
     VictoryChart, 
-    VictoryLabel, 
     VictoryLegend, 
     VictoryLine, 
+    VictoryTheme, 
     VictoryTooltip, 
-    VictoryVoronoi, 
     VictoryVoronoiContainer,
 } from 'victory-native';
 
-import {VictoryData, getData } from '../data/LoadData';
-import conatinerStyles from '../styles/container-view-styles';
+import styles from '../styles/container-view-styles'
+import {Datapoint, VictoryData, getData } from '../data/LoadData';
 
+const legendData = [
+    {
+        name: "X_DATA", 
+        symbol:{
+            fill:"tomato", 
+            type:"square",
+        },
+    },
+    {
+        name:"Y_DATA",
+        symbol:{
+            fill:"green",
+            type:"square"
+        }
+    },
+    {
+        name:"Z_DATA",
+        symbol:{
+            fill:"blue",
+            type:"square"
+        }
+    }
+];
 
-const LineChart = () => {
-    let xdata: VictoryData[] | undefined = getData('x');
-    let ydata: VictoryData[] | undefined = getData('y');
-    let zdata: VictoryData[] | undefined = getData('z');
+function LineChart(): JSX.Element {
+    var xdata = getData('x');
+    var ydata = getData('y');
+    var zdata = getData('z');
+    
     return (
-        <VictoryChart 
-            height={400} 
+        <VictoryChart
+            theme={VictoryTheme.material}
+            height={480} 
             width={400}
-            domainPadding={{y: 10}}
+            domainPadding={{x: 10, y: 5}}
+            padding={50}
             containerComponent={
                 <VictoryVoronoiContainer
                     voronoiDimension='x'
@@ -39,7 +68,7 @@ const LineChart = () => {
                         />
                     }
                 />
-            }       
+            }     
         >
             <VictoryLine name="xData"
                 data={xdata}
@@ -51,6 +80,7 @@ const LineChart = () => {
                     labels: { fill: "tomato"},
                 }}
             />
+
             <VictoryLine name="yData"
                 data={ydata}
                 style={{
@@ -61,6 +91,7 @@ const LineChart = () => {
                     labels: { fill: "green"}
                 }}
             />
+
             <VictoryLine name="zData"
                 data={zdata}
                 style={{
@@ -71,47 +102,53 @@ const LineChart = () => {
                     labels: { fill: "blue"}
                 }}
             />
-            <VictoryLegend 
-                x={20} y={350}
-                title="Live Acceleration Data"
-                titleOrientation='top'
+            <VictoryLegend x={35} y={2}
                 orientation='horizontal'
-                data={[
-                    {
-                        name: "X_DATA", 
-                        symbol:{
-                            fill:"tomato", 
-                            type:"square"
-                        }
+                gutter={30}
+                style={{
+                    border: {
+                        stroke: 'navy',
+                        strokeWidth: 3,
+                        fill: 'skyblue'
                     },
-                    {
-                        name:"Y_DATA",
-                        symbol:{
-                            fill:"green",
-                            type:"square"
-                        }
+                    labels: {
+                        fontSize: 15,
+                        fontWeight: 'bold',
+                        fill: 'navy'
                     },
-                    {
-                        name:"Z_DATA",
-                        symbol:{
-                            fill:"blue",
-                            type:"square"
-                        }
-                    }
-                ]}
-
+                }}
+                data={legendData}
             />
+
         </VictoryChart>
     );
-}
+};
 
 function GraphingScreen(): JSX.Element {
+
+    var [dataState, setDataState] = useState(0);
+
+    const handlePress = () => {
+        console.log(`Updating Data... `);
+        setDataState(dataState+1);
+        console.log(dataState);
+    };
+    
     return(
         <>
+        <View style={styles.container}>
             <StatusBar/>
-            <SafeAreaView style={conatinerStyles.container}>
+            <View style={styles.graphContainer}>
                 <LineChart/>
-            </SafeAreaView>
+            </View>
+            <View style={styles.buttonContainer}>
+                <Pressable style={styles.refreshButton} onPress={handlePress}>
+                    <Text style={styles.refreshButtonText}>
+                        {'Start Recording Data'}
+                    </Text>
+                </Pressable>
+            </View>
+        </View>
         </>
     );
 };

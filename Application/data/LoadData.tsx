@@ -25,7 +25,8 @@ export default function getData(dir: string): VictoryData[] | undefined{
     const [zData, setZData] = useState<Array<VictoryData>>([]);
 
     const parseAxesData = () => {
-        //console.log(jsonData);
+        //console.log(JSON.stringify(jsonData));
+        //console.log(`JSON DATA LENGTH=${jsonData.length}`)
         switch(dir){
             case 'x':
                 const xarray = new Array(jsonData.length);
@@ -34,6 +35,7 @@ export default function getData(dir: string): VictoryData[] | undefined{
                     xarray.push(jsonData[i].x_data);
                 }
                 setXData(xarray);
+                break;
             case 'y':
                 const yarray = new Array<VictoryData>(jsonData.length);
                 console.log('[parseAxesData] Pushing Y Data to yarray...')
@@ -41,6 +43,7 @@ export default function getData(dir: string): VictoryData[] | undefined{
                     yarray.push(jsonData[i].y_data);
                 }
                 setYData(yarray);
+                break;
             case 'z':
                 const zarray = new Array<VictoryData>(jsonData.length);
                 console.log('[parseAxesData] Pushing Z Data to zarray...')
@@ -48,23 +51,24 @@ export default function getData(dir: string): VictoryData[] | undefined{
                     zarray.push(jsonData[i].z_data);
                 }
                 setZData(zarray);
+                break;
         }
+    };
+
+    const fetchData = (url: string) => {
+        fetch(url)
+        .then(resp => resp.json())
+        .then(data => setJsonData(data.datapoints))
+        .catch(err => console.error(err)); 
     };
 
     useEffect(() => {
         const url = `${localhost}:${port}${api_route}`;
         console.log(`FETCHING DATA FROM URL(${url})`);
-        fetch(url)
-        .then(resp => resp.json())
-        .then(data => setJsonData(data.datapoints))
-        .catch(err => console.error(err)); 
-        
+        fetchData(url);
         parseAxesData();
-        // Get new data every x seconds
-        /*const x = 5 * 1000;
-        const dataInterval = setInterval(() => fetchData(url), x);
-        return () => clearInterval(dataInterval);*/
     }, []);
+    
     switch(dir){
         case 'x':
             return xData;

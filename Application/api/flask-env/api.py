@@ -9,7 +9,7 @@ logging.getLogger('flask_cors').level = logging.DEBUG
 @app.route('/api/getdata')
 def getData():
     # Create python script to move data from data file to application
-    f = open('../../data/examples/generated/generated.json')
+    f = open('../../data/examples/generated/generated2.json')
     data = f.read()
     logging.log(2, "The JSON data looks like the following:\n", data)
     f.close()
