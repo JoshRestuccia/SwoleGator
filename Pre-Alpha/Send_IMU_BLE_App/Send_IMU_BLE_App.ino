@@ -108,8 +108,8 @@ void loop() {
   //std::string accelsi = String(accel);
   //string xa = String(floatToString(x_a, S, sizeof(S), 1));
   pCharacteristicx->setValue(x);
-  //pCharacteristicy->setValue(floatToString(y_a, S, sizeof(S), 1));
-  //pCharacteristicz->setValue(floatToString(z_a, S, sizeof(S), 1));
+  pCharacteristicy->setValue(floatToString(y_a, S, sizeof(S), 1));
+  pCharacteristicz->setValue(floatToString(z_a, S, sizeof(S), 1));
   //pCharacteristicx->setValue(x_a);
   //pCharacteristicz->setValue(z_a);
   //Serial.print(accel);

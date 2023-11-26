@@ -1,56 +1,44 @@
-import React, {useEffect} from 'react';
-import { Text , View} from 'react-native';
-import { useBluetoothContext } from '../data/bluetooth_context';
+import React, { useState, useEffect } from 'react';
+import { View, Text } from 'react-native';
+import BleManager from 'react-native-ble-manager';
 
 const RawData = () => {
-  const { updateBluetoothData } = useBluetoothContext();
+  const [data, setData] = useState('');
 
   useEffect(() => {
-    // Replace with your actual peripheral ID, service UUID, and characteristic UUID
-    const peripheralId = 'yourPeripheralId';
-    const serviceUUID = 'yourServiceUUID';
-    const characteristicUUID = 'yourCharacteristicUUID';
+    // Set up continuous data reception
+    const deviceID = "48:E7:29:B4:F9:7E"; // Replace with your device ID
+    const serviceUUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b"; // Replace with your service UUID
+    const characteristicUUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8"; // Replace with your characteristic UUID
 
-    // Start notifications
-    BleManager.startNotification(peripheralId, serviceUUID, characteristicUUID)
+    BleManager.startNotification(deviceID, serviceUUID, characteristicUUID)
       .then(() => {
-        console.debug('Notifications started successfully');
+        console.log('Notification started');
       })
-      .catch((error) => {
-        console.error('Error starting notifications:', error);
-      });
+      .catch((error) => console.error('Notification error:', error));
 
-    // Handle received data
-    const handleUpdateValueForCharacteristic = (data) => {
-      console.debug(`Received data from ESP32: ${data.value}`);
-      updateBluetoothData(data.value);
-    };
-
-    // Add listener for value updates
-    const updateValueListener = BleManager.addListener(
-      'BleManagerDidUpdateValueForCharacteristic',
-      handleUpdateValueForCharacteristic
-    );
-
-    // Clean up when the component unmounts
-    return () => {
-      // Stop notifications
-      BleManager.stopNotification(peripheralId, serviceUUID, characteristicUUID)
-        .then(() => {
-          console.debug('Notifications stopped successfully');
+    const intervalId = setInterval(() => {
+      BleManager.read(deviceID, serviceUUID, characteristicUUID)
+        .then((data) => {
+          // Handle the received data here
+          console.log('Received data:', data);
+          setData(data);
         })
-        .catch((error) => {
-          console.error('Error stopping notifications:', error);
-        });
+        .catch((error) => console.error('Read error:', error));
+    }, 500); // Adjust the interval as needed
 
-      // Remove the listener
-      updateValueListener.remove();
+    return () => {
+      // Cleanup when component unmounts
+      clearInterval(intervalId);
+      BleManager.stopNotification(deviceID, serviceUUID, characteristicUUID)
+        .then(() => console.log('Notification stopped'))
+        .catch((error) => console.error('Notification stop error:', error));
     };
   }, []);
 
   return (
     <View>
-      <Text>{`Received Bluetooth Data: ${bluetoothData}`}</Text>
+      <Text>Continuous Data: {data}</Text>
     </View>
   );
 };

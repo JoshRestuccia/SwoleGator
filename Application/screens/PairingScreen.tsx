@@ -194,6 +194,7 @@ function PairingScreen(): JSX.Element {
                           characteristic.characteristic,
                           descriptor.uuid,
                         );
+                        console.debug("dev", peripheral.id, "serv", characteristic.service, "Char", characteristic.service);
                         console.debug(
                           `[connectPeripheral][${peripheral.id}] descriptor read as:`,
                           data,
