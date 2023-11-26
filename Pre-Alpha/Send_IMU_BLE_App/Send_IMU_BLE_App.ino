@@ -72,6 +72,7 @@ void setup() {
   BLEDevice::startAdvertising();
   Serial.println("Characteristic defined!");
 
+
   delay(100);
 }
 

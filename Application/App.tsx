@@ -30,6 +30,7 @@ import {
 import BleManager from 'react-native-ble-manager';
 import { NavigationContainer } from '@react-navigation/native';
 import RootNavigator from './screens/RootNavigator';
+import { BluetoothProvider } from './data/bluetooth_context';
 
 function App(): JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
@@ -39,9 +40,11 @@ function App(): JSX.Element {
   };
   
   return (
+  <BluetoothProvider>
     <NavigationContainer>
       <RootNavigator/>
     </NavigationContainer>
+   </BluetoothProvider>
   );
 }
 
