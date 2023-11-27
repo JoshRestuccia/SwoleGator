@@ -21,8 +21,10 @@ const RawData = () => {
       BleManager.read(deviceID, serviceUUID, characteristicUUID)
         .then((data) => {
           // Handle the received data here
-          console.log('Received data:', data);
-          setData(data);
+        const uint8Array = new Uint8Array(data);
+        const floatValue = new DataView(uint8Array.buffer).getFloat32(0, true); // true for little-endian
+         console.log ('Received data:', data);
+         setData(floatValue.toString());
         })
         .catch((error) => console.error('Read error:', error));
     }, 500); // Adjust the interval as needed
