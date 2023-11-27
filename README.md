@@ -10,9 +10,8 @@ CEN3907C Design Project - SwoleGator
   4. Download the program in the "Pre-Alpha" folder called "Send_IMU_BLE_App.ino" and upload it to the ESP32 using Arduino IDE and a micro USB connection.
   5. (If needed) Reset the microcontroller by hitting the "EN" button to reset the connection.
 - Steps (Software):
-  1. Go to the Thunkable project https://x.thunkable.com/copy/8e7ddcf721e7e61a09daab24af9b0b63
-  2. Download Thunkable Live on iPhone or Android.
-  3. From the project page, click on "Live Test on Device" to display the app on the phone.
+  1. Follow directions included in "Application ReadMe" to download app using react-native
+  2. Once downloaded, the follow instructions in the app to connect to hardware using BLE and view output data
 
 ## Completed Work
 - Implemented ESP32-WROOM-32 and MPU6050 I2C communication to send accelerometer data from IMU to ESP32 continuously
