@@ -10,10 +10,10 @@
 // https://www.uuidgenerator.net/
 Adafruit_MPU6050 mpu;
 #define SERVICE_UUID        "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
-#define CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
+#define CHARACTERISTIC_UUID "00001800-0000-1000-8000-00805f9b34fb"
 static BLECharacteristic *pCharacteristicx;
-static BLECharacteristic *pCharacteristicy;
-static BLECharacteristic *pCharacteristicz;
+//static BLECharacteristic *pCharacteristicy;
+//static BLECharacteristic *pCharacteristicz;
 class MyCallbacks: public BLECharacteristicCallbacks {
     void onWrite(BLECharacteristic *pCharacteristic) {
       std::string value = pCharacteristic->getValue();
@@ -43,7 +43,7 @@ void setup() {
   mpu.setAccelerometerRange(MPU6050_RANGE_8_G);
   mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
 
-  BLEDevice::init("ESP32");
+  BLEDevice::init("SwoleGator");
   BLEServer *pServer = BLEDevice::createServer();
   BLEService *pService = pServer->createService(SERVICE_UUID);
   pCharacteristicx = pService->createCharacteristic(
@@ -51,7 +51,7 @@ void setup() {
                                          BLECharacteristic::PROPERTY_READ |
                                          BLECharacteristic::PROPERTY_WRITE
                                        );
-  pCharacteristicy = pService->createCharacteristic(
+  /**pCharacteristicy = pService->createCharacteristic(
                                          CHARACTERISTIC_UUID,
                                          BLECharacteristic::PROPERTY_READ |
                                          BLECharacteristic::PROPERTY_WRITE
@@ -60,7 +60,7 @@ void setup() {
                                          CHARACTERISTIC_UUID,
                                          BLECharacteristic::PROPERTY_READ |
                                          BLECharacteristic::PROPERTY_WRITE
-                                       );
+                                       );**/
   pCharacteristicx->setValue("Hello SwoleGator");
   pService->start();
   // BLEAdvertising *pAdvertising = pServer->getAdvertising();  // this still is working for backward compatibility
@@ -113,9 +113,10 @@ void loop() {
   //pCharacteristicz->setValue(z_a);
   //Serial.print(accel);
   //Serial.println();
-  /**Serial.print("Acceleration X: ");
-  Serial.print(x_a);
-  Serial.print(", Y: ");
+  Serial.print("Acceleration: ");
+  Serial.print(x);
+  Serial.println();
+  /**Serial.print(", Y: ");
   Serial.print(y_a);
   Serial.print(", Z: ");
   Serial.print(z_a);
