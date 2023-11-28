@@ -13,14 +13,20 @@ import {
     TouchableHighlight,
     Pressable,
 } from 'react-native';
-import BleManager, { BleDisconnectPeripheralEvent, BleManagerDidUpdateValueForCharacteristicEvent, BleScanCallbackType, BleScanMatchMode, BleScanMode, Peripheral } from 'react-native-ble-manager';
+import BleManager, {
+    BleDisconnectPeripheralEvent, 
+    BleManagerDidUpdateValueForCharacteristicEvent, 
+    BleScanCallbackType, 
+    BleScanMatchMode, 
+    BleScanMode, 
+    Peripheral 
+} from 'react-native-ble-manager';
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 
-const SERVICE_UUIDS= ["4fafc201-1fb5-459e-8fcc-c5c9c331914b"];
-const CHARACTERISTIC_UUID="beb5483e-36e1-4688-b7f5-ea07361b26a8";
+const SERVICE_UUIDS: string[] = [];
 
-const SECONDS_TO_SCAN_FOR=30;
-const ALLOW_DUPLICATES=false;
+const SECONDS_TO_SCAN_FOR=5;
+const ALLOW_DUPLICATES=true;
 
 const bleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(bleManagerModule);
@@ -43,10 +49,10 @@ function PairingScreen(): JSX.Element {
 
     const addOrUpdatePeripheral = (id: string, updatedPeripheral: Peripheral) => {
         setPeripherals(map => new Map(map.set(id, updatedPeripheral)));
+        console.debug(`[addOrUpdatePeripheral] Updated Peripheral (${id}) with (${JSON.stringify(updatedPeripheral)})`);
     };
 
     const startScan = () => {
-        console.log("Starting Scan...");
         if(!isScanning){
             // Reset peripherals
             setPeripherals(new Map<Peripheral['id'], Peripheral>());
@@ -54,11 +60,7 @@ function PairingScreen(): JSX.Element {
                 //Do the scanning
                 console.log("[startScan] starting scan...");
                 setIsScanning(true);
-                BleManager.scan(SERVICE_UUIDS, SECONDS_TO_SCAN_FOR, ALLOW_DUPLICATES, {
-                    matchMode: BleScanMatchMode.Sticky,
-                    scanMode: BleScanMode.LowLatency,
-                    callbackType: BleScanCallbackType.AllMatches,
-                })
+                BleManager.scan(SERVICE_UUIDS, SECONDS_TO_SCAN_FOR, ALLOW_DUPLICATES)
                 .then(() => {
                     console.debug("[startScan] scan promise returned successfully.");
                 })
@@ -73,10 +75,8 @@ function PairingScreen(): JSX.Element {
     };
 
     const handleStopScan = () => {
-        if(isScanning){
-            setIsScanning(false);
-            console.log("[handleStopScan] Stopped Scan.");
-        }
+        setIsScanning(false);
+        console.log("[handleStopScan] Stopped Scan.");
     };
 
     const handleDisconnnectedPeripheral = (
@@ -101,20 +101,25 @@ function PairingScreen(): JSX.Element {
 
     const handleDiscoverPeripheral = (peripheral: Peripheral) => {
         console.debug(`[handleDiscoverPeripheral] new BLE peripheral discovered=`, peripheral);
+        //console.debug(`\n[handleDiscoverPeripheral] has found the device with ID = ${peripheral.id} and NAME = ${peripheral.name}\n\n`);
         if(!peripheral.name){
             peripheral.name = 'NO NAME';
         }
-        addOrUpdatePeripheral(peripheral.id, peripheral);
+        if(peripheral.name && (peripheral.name === "SwoleGator Adapter")){
+          console.log("The SwoleGator Device has been found!");
+          addOrUpdatePeripheral(peripheral.id, peripheral);
+        }
     };
 
     const togglePeripheralConnection = async (peripheral: Peripheral) => {
         if(peripheral && peripheral.connected) {
             try {
                 await BleManager.disconnect(peripheral.id);
+
             }catch(error){
                 console.error(`[togglePeripheralConnection][${peripheral.id}] error when trying to disconnect device.`, error);
             }
-        }else{
+        }else if(!peripheral.connected){
             await connectPeripheral(peripheral);
         }
     };
@@ -150,7 +155,7 @@ function PairingScreen(): JSX.Element {
             addOrUpdatePeripheral(peripheral.id, {...peripheral, connecting: true});
     
             await BleManager.connect(peripheral.id);
-            console.debug(`[connectPeripheral][${peripheral.id}] connected.`);
+            console.debug(`[connectPeripheral][${peripheral.name}(${peripheral.id})] connected.`);
     
             addOrUpdatePeripheral(peripheral.id, {
               ...peripheral,
@@ -161,11 +166,12 @@ function PairingScreen(): JSX.Element {
             // before retrieving services, it is often a good idea to let bonding & connection finish properly
             await sleep(900);
     
-            /* Test read current RSSI value, retrieve services first */
+            /* Test read current RSSI and Descriptor values, retrieve services first */
             const peripheralData = await BleManager.retrieveServices(peripheral.id);
+
             console.debug(
               `[connectPeripheral][${peripheral.id}] retrieved peripheral services`,
-              peripheralData,
+              JSON.stringify(peripheralData),
             );
     
             const rssi = await BleManager.readRSSI(peripheral.id);
@@ -174,10 +180,14 @@ function PairingScreen(): JSX.Element {
             );
     
             if (peripheralData.characteristics) {
+              //console.log(`[PERIPHERAL DATA CHARACTERISITCS]: ${JSON.stringify(peripheralData.characteristics)}`);
               for (let characteristic of peripheralData.characteristics) {
+                //console.log(`\t[CHARACTERISTIC]: ${JSON.stringify(characteristic)}`);
                 if (characteristic.descriptors) {
                   for (let descriptor of characteristic.descriptors) {
+                    if(descriptor.value === null){console.log("The value of the descriptor is NULL");}
                     try {
+                      //console.log( `peripheral.id = ${peripheral.id} \n\tcharacteristic.service = ${characteristic.service} \n\tcharacteristic.characteristic = ${characteristic.characteristic} \n\tdescriptor.uuid = ${descriptor.uuid}`);
                       let data = await BleManager.readDescriptor(
                         peripheral.id,
                         characteristic.service,
@@ -185,18 +195,22 @@ function PairingScreen(): JSX.Element {
                         descriptor.uuid,
                       );
                       console.debug(
-                        `[connectPeripheral][${peripheral.id}] descriptor read as:`,
+                        `[connectPeripheral][${peripheral.name}] descriptor read as:`,
                         data,
                       );
                     } catch (error) {
                       console.error(
-                        `[connectPeripheral][${peripheral.id}] failed to retrieve descriptor ${descriptor} for characteristic ${characteristic}:`,
+                        `[connectPeripheral][${peripheral.name}] failed to retrieve descriptor ${JSON.stringify(descriptor)} for characteristic ${JSON.stringify(characteristic)}:`,
                         error,
                       );
+                      console.warn(`[connectPeripheral] Resetting connection state to disconnected.`);
+                      BleManager.disconnect(peripheral.id);
                     }
                   }
                 }
               }
+            }else{
+              console.debug("[connectPeripheral] Could not find an instance of peripheralData.characteristics");
             }
     
             let p = peripherals.get(peripheral.id);
@@ -245,13 +259,13 @@ function PairingScreen(): JSX.Element {
                     PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
                 ).then(requestResult => {
                     if (requestResult) {
-                    console.debug(
-                        '[handleAndroidPermissions] User accepts runtime permission android <12',
-                    );
+                      console.debug(
+                          '[handleAndroidPermissions] User accepts runtime permission android <12',
+                      );
                     } else {
-                    console.error(
-                        '[handleAndroidPermissions] User refuses runtime permission android <12',
-                    );
+                      console.error(
+                          '[handleAndroidPermissions] User refuses runtime permission android <12',
+                      );
                     }
                 });
                 }
@@ -268,7 +282,8 @@ function PairingScreen(): JSX.Element {
             <View style={[styles.row, {backgroundColor}]}>
             <Text style={styles.peripheralName}>
                 {/* completeLocalName (item.name) & shortAdvertisingName (advertising.localName) may not always be the same */}
-                {item.name} - {item?.advertising?.localName}
+                {/*item.name} - {item?.advertising?.localName*/}
+                {item?.advertising?.localName}
                 {item.connecting && ' - Connecting...'}
             </Text>
             <Text style={styles.rssi}>RSSI: {item.rssi}</Text>
@@ -280,7 +295,7 @@ function PairingScreen(): JSX.Element {
 
     useEffect(() => {
         try{
-            BleManager.start({showAlert: false})
+            BleManager.start({showAlert: false, forceLegacy: true})
                 .then(() => console.debug('BleManager started...'))
                 .catch(error => console.error('Error starting BleManager', error));
         }catch(error) {
@@ -298,7 +313,7 @@ function PairingScreen(): JSX.Element {
                 handleStopScan,
             ),
             bleManagerEmitter.addListener(
-                'BleManagerDisconnectedPeripheral',
+                'BleManagerDisconnectPeripheral',
                 handleDisconnnectedPeripheral,
             ),
             bleManagerEmitter.addListener(
@@ -308,13 +323,20 @@ function PairingScreen(): JSX.Element {
         ];
 
         handleAndroidPermissions();
-    })
+
+        return () => {
+          console.debug('[app] main component unmounting. Removing listeners...');
+          for(const listener of listeners){
+            listener.remove();
+          }
+        };
+    }, []);
 
     return(
         <>
             <StatusBar />
             <SafeAreaView style={styles.body}>
-                <Pressable style={styles.scanButton} onPress={startScan}>
+                <Pressable style={styles.scanButton} onPress={isScanning ? handleStopScan : startScan}>
                     <Text style={styles.scanButtonText}>
                         {isScanning ? 'Scanning...' : 'Scan Bluetooth'}
                     </Text>
@@ -329,16 +351,16 @@ function PairingScreen(): JSX.Element {
                 {Array.from(peripherals.values()).length === 0 && (
                 <View style={styles.row}>
                     <Text style={styles.noPeripherals}>
-                    No Peripherals, press "Scan Bluetooth" above.
+                      {'No Peripherals, press "Scan Bluetooth" above.'}
                     </Text>
                 </View>
                 )}
 
                 <FlatList
-                data={Array.from(peripherals.values())}
-                contentContainerStyle={{rowGap: 12}}
-                renderItem={renderItem}
-                keyExtractor={item => item.id}
+                  data={Array.from(peripherals.values())}
+                  contentContainerStyle={{rowGap: 12}}
+                  renderItem={renderItem}
+                  keyExtractor={item => item.id}
                 />
             </SafeAreaView>
         </>
