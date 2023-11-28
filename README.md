@@ -19,8 +19,8 @@ CEN3907C Design Project - SwoleGator
 - Implemented Bluetooth-Low-Energy functionality on the simulated app made with Thunkable platform to connect to ESP32 device.
 - Implemented continuous accelerometer data transmission and handling on the app.
 - Implemented real-time graphing of the accelerometer data by integrating QuickChart.
-- Created Firebase database to store user signup information.
-- Linked Firebase database to app.
+- Created Firebase Project for user Authentication.
+- Integrate React Native Firebase into app for login/signup.
 - Created a signup screen where users include their credentials and these credentials are then saved in the Firebase database.
 - Started implementation of React Native app. Successfully scans for nearby BLE devices.
 - Started implementation of UI for the React Native app
