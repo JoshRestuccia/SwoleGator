@@ -1,6 +1,7 @@
 import {StyleSheet, View, Button, Text, TouchableOpacity, TextInput} from 'react-native'
 import React, {useState, useEffect} from 'react';
 import auth from '@react-native-firebase/auth';
+import RootNavigator from './RootNavigator';
 
 const Login = ({navigation}) => {
   const signIn = (email, password) => {
@@ -55,6 +56,7 @@ const Login = ({navigation}) => {
             Click here to create an account
           </Text>
         </View>
+
     </View>
   )
 }

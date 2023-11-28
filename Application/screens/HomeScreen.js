@@ -1,4 +1,5 @@
 import React from 'react';
+import RootNavigator from './RootNavigator';
 import { Text, View, TouchableOpacity, StyleSheet } from 'react-native';
 import auth from '@react-native-firebase/auth';
 
@@ -22,13 +23,13 @@ const HomeScreen = ({navigation}) =>{
             <Text onPress={() => navigation.navigate("Pair Device")} style={styles.textStyle}> Pair Device</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.button}>
+            <Text onPress={() => navigation.navigate("Graphing Screen")} style={styles.textStyle}>Start Lift </Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.button}>
+            <Text onPress={() => navigation.navigate("SwoleGator Data")} style={styles.textStyle}> SwoleGator Data</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.button}>
             <Text onPress={pressLogOut} style={styles.textStyle}> Log Out</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.button}>
-            <Text onPress={() => navigation.navigate("Pair Device")} style={styles.textStyle}> View Profile</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.button}>
-            <Text onPress={() => navigation.navigate("Pair Device")} style={styles.textStyle}> Start Lift</Text>
             </TouchableOpacity>
         </View>
     );

@@ -3,10 +3,12 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import PairingScreen from './screens/PairingScreen';
 import SignUp from './screens/SignUp';
 import Login from './screens/Login';
+import Data from './screens/Data';
 import HomeScreen from './screens/HomeScreen';
+import RootNavigator from './screens/RootNavigator';
+import GraphingScreen from './screens/GraphingScreen';
 const Stack = createNativeStackNavigator();
 export default function App() {
-  //const [user, setUser] = useState(false);
   return (
     <NavigationContainer>
     <Stack.Navigator
@@ -40,6 +42,21 @@ export default function App() {
         name="Pair Device"
         component={PairingScreen}
         options={{title: "Pair Device"}}
+        />
+        <Stack.Screen
+        name="Root Navigator"
+        component={RootNavigator}
+        option={{title: "Root Navigator"}}
+        />
+        <Stack.Screen
+        name="Graphing Screen"
+        component={GraphingScreen}
+        option={{title: "Graphing Screen"}}
+        />
+        <Stack.Screen
+        name="SwoleGator Data"
+        component={Data}
+        option={{title: "SwoleGator Data"}}
         />
       </Stack.Navigator>
     </NavigationContainer>
