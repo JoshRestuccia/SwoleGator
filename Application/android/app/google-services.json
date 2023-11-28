@@ -1,0 +1,29 @@
+{
+    "project_info": {
+      "project_number": "356893710307",
+      "project_id": "swolegator-9539f",
+      "storage_bucket": "swolegator-9539f.appspot.com"
+    },
+    "client": [
+      {
+        "client_info": {
+          "mobilesdk_app_id": "1:356893710307:android:a10a462a2381250daa32d6",
+          "android_client_info": {
+            "package_name": "com.swolegator"
+          }
+        },
+        "oauth_client": [],
+        "api_key": [
+          {
+            "current_key": "AIzaSyDD_vAM-ZVL1uQtotDLda_Zu3upvyGK4uY"
+          }
+        ],
+        "services": {
+          "appinvite_service": {
+            "other_platform_oauth_client": []
+          }
+        }
+      }
+    ],
+    "configuration_version": "1"
+  }
