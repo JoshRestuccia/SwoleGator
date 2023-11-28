@@ -43,20 +43,20 @@ export default function App() {
         component={PairingScreen}
         options={{title: "Pair Device"}}
         />
-        <Stack.Screen
+{/*         <Stack.Screen
         name="Root Navigator"
         component={RootNavigator}
-        option={{title: "Root Navigator"}}
-        />
+        options={{title: "Root Navigator"}}
+        /> */}
         <Stack.Screen
         name="Graphing Screen"
         component={GraphingScreen}
-        option={{title: "Graphing Screen"}}
+        options={{title: "Graphing Screen"}}
         />
         <Stack.Screen
         name="SwoleGator Data"
         component={Data}
-        option={{title: "SwoleGator Data"}}
+        options={{title: "SwoleGator Data"}}
         />
       </Stack.Navigator>
     </NavigationContainer>

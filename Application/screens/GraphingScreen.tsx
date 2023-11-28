@@ -75,7 +75,7 @@ function LineChart(): JSX.Element {
                 style={{
                     data: {
                         stroke: "tomato",
-                        strokeWidth: 2
+                        strokeWidth: 1
                     },
                     labels: { fill: "tomato"},
                 }}
@@ -86,7 +86,7 @@ function LineChart(): JSX.Element {
                 style={{
                     data: {
                         stroke: "green",
-                        strokeWidth: 2
+                        strokeWidth: 1
                     },
                     labels: { fill: "green"}
                 }}
@@ -97,7 +97,7 @@ function LineChart(): JSX.Element {
                 style={{
                     data: {
                         stroke: "blue",
-                        strokeWidth: 2
+                        strokeWidth: 1
                     },
                     labels: { fill: "blue"}
                 }}
