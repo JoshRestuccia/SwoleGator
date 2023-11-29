@@ -105,7 +105,7 @@ function PairingScreen(): JSX.Element {
         if(!peripheral.name){
             peripheral.name = 'NO NAME';
         }
-        if(peripheral.name && (peripheral.name === "ESP32")){
+        if(peripheral.name && (peripheral.name === "ESP32" || peripheral.name === "SwoleGator")){
           console.log("The SwoleGator Device has been found!");
           addOrUpdatePeripheral(peripheral.id, peripheral);
         }
