@@ -105,7 +105,7 @@ function PairingScreen(): JSX.Element {
         if(!peripheral.name){
             peripheral.name = 'NO NAME';
         }
-        if(peripheral.name && (peripheral.name === "SwoleGator Adapter")){
+        if(peripheral.name && (peripheral.name === "ESP32" || peripheral.name === "SwoleGator")){
           console.log("The SwoleGator Device has been found!");
           addOrUpdatePeripheral(peripheral.id, peripheral);
         }
@@ -166,7 +166,7 @@ function PairingScreen(): JSX.Element {
             // before retrieving services, it is often a good idea to let bonding & connection finish properly
             await sleep(900);
     
-            /* Test read current RSSI and Descriptor values, retrieve services first */
+             //Test read current RSSI and Descriptor values, retrieve services first
             const peripheralData = await BleManager.retrieveServices(peripheral.id);
 
             console.debug(
@@ -178,33 +178,33 @@ function PairingScreen(): JSX.Element {
             console.debug(
               `[connectPeripheral][${peripheral.id}] retrieved current RSSI value: ${rssi}.`,
             );
+
     
             if (peripheralData.characteristics) {
               //console.log(`[PERIPHERAL DATA CHARACTERISITCS]: ${JSON.stringify(peripheralData.characteristics)}`);
               for (let characteristic of peripheralData.characteristics) {
-                //console.log(`\t[CHARACTERISTIC]: ${JSON.stringify(characteristic)}`);
                 if (characteristic.descriptors) {
                   for (let descriptor of characteristic.descriptors) {
-                    if(descriptor.value === null){console.log("The value of the descriptor is NULL");}
-                    try {
-                      //console.log( `peripheral.id = ${peripheral.id} \n\tcharacteristic.service = ${characteristic.service} \n\tcharacteristic.characteristic = ${characteristic.characteristic} \n\tdescriptor.uuid = ${descriptor.uuid}`);
-                      let data = await BleManager.readDescriptor(
-                        peripheral.id,
-                        characteristic.service,
-                        characteristic.characteristic,
-                        descriptor.uuid,
-                      );
-                      console.debug(
-                        `[connectPeripheral][${peripheral.name}] descriptor read as:`,
-                        data,
-                      );
-                    } catch (error) {
-                      console.error(
-                        `[connectPeripheral][${peripheral.name}] failed to retrieve descriptor ${JSON.stringify(descriptor)} for characteristic ${JSON.stringify(characteristic)}:`,
-                        error,
-                      );
-                      console.warn(`[connectPeripheral] Resetting connection state to disconnected.`);
-                      BleManager.disconnect(peripheral.id);
+                    // Skip descriptors with UUID "2902"
+                    if (descriptor.uuid !== "2902") {
+                      try {
+                        let data = await BleManager.readDescriptor(
+                          peripheral.id,
+                          characteristic.service,
+                          characteristic.characteristic,
+                          descriptor.uuid,
+                        );
+                        console.debug("dev", peripheral.id, "serv", characteristic.service, "Char", characteristic.service);
+                        console.debug(
+                          `[connectPeripheral][${peripheral.id}] descriptor read as:`,
+                          data,
+                        );
+                      } catch (error) {
+                        console.error(
+                          `[connectPeripheral][${peripheral.id}] failed to retrieve descriptor ${descriptor.uuid} for characteristic ${characteristic.characteristic}:`,
+                          error,
+                        );
+                      }
                     }
                   }
                 }
@@ -212,6 +212,7 @@ function PairingScreen(): JSX.Element {
             }else{
               console.debug("[connectPeripheral] Could not find an instance of peripheralData.characteristics");
             }
+
     
             let p = peripherals.get(peripheral.id);
             if (p) {
