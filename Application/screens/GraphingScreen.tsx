@@ -3,7 +3,7 @@ import { View, Text, SafeAreaView, StatusBar } from 'react-native';
 import BleManager from 'react-native-ble-manager';
 import {
   VictoryChart,
-  VictoryScatter,
+  VictoryLine,
   VictoryLegend,
   VictoryTooltip,
   VictoryVoronoiContainer,
@@ -11,7 +11,9 @@ import {
 import containerStyles from '../styles/container-view-styles';
 
 function GraphingScreen(): JSX.Element {
-  const [data, setData] = useState('');
+  const [xData, setXData] = useState('0');
+  const [yData, setYData] = useState('0');
+  const [zData, setZData] = useState('0');
 
   useEffect(() => {
     // Set up continuous data reception
@@ -33,7 +35,9 @@ function GraphingScreen(): JSX.Element {
           const [x, y, z] = textData.split(',').map(parseFloat);
           console.log('Received data:', { x, y, z });
           // Set the data state with the formatted string
-          setData([x, y, z].toString());
+          setXData(x.toString());
+          setYData(y.toString());
+          setZData(z.toString());
         })
         .catch((error) => console.error('Read error:', error));
     }, 500); // Adjust the interval as needed
@@ -52,7 +56,7 @@ function GraphingScreen(): JSX.Element {
       <StatusBar />
       <SafeAreaView style={containerStyles.container}>
         <View>
-          <Text>Continuous Data: {data}</Text>
+          <Text>Continuous Data - X: {xData}, Y: {yData}, Z: {zData}</Text>
         </View>
         <VictoryChart
           height={400}
@@ -71,17 +75,52 @@ function GraphingScreen(): JSX.Element {
               }
             />
           }
-        >
-          <VictoryScatter
-            name="xData"
-            data={data.split(',').map((value, index) => ({ x: index + 1, y: parseFloat(value) }))}
-            style={{
-              data: {
-                fill: 'tomato',
-              },
-              labels: { fill: 'tomato' },
+          fixAxis="y"
+            domain={{
+            x: [0, 4],
+              y: [-10, 10], // Set the desired Y-axis domain based on your data range
             }}
+        >
+          {/* X Data */}
+          <VictoryLine
+             name="xData"
+              data={[{ x: 1, y: 0 },{ x: 1, y: parseFloat(xData) }]}
+              style={{
+                data: {
+                  stroke: 'tomato',
+                          strokeWidth: 6,
+                },
+                labels: { fill: 'tomato' },
+              }}
+            />
+
+          {/* Y Data */}
+          <VictoryLine
+            name="yData"
+            data={[{ x: 2, y: 0 },{ x: 2, y: parseFloat(yData) }]}
+                          style={{
+                            data: {
+                              stroke: 'green',
+                                      strokeWidth: 6,
+                            },
+                            labels: { fill: 'green' },
+                          }}
           />
+
+          {/* Z Data */}
+          <VictoryLine
+            name="zData"
+            data={[{ x: 3, y: 0 },{ x: 3, y: parseFloat(zData) }]}
+                          style={{
+                            data: {
+                              stroke: 'blue',
+                                      strokeWidth: 6,
+                            },
+                            labels: { fill: 'blue' },
+                          }}
+          />
+
+          {/* Legend */}
           <VictoryLegend
             x={20}
             y={350}
@@ -93,7 +132,21 @@ function GraphingScreen(): JSX.Element {
                 name: 'X_DATA',
                 symbol: {
                   fill: 'tomato',
-                  type: 'circle',
+                  type: 'square',
+                },
+              },
+              {
+                name: 'Y_DATA',
+                symbol: {
+                  fill: 'green',
+                  type: 'square',
+                },
+              },
+              {
+                name: 'Z_DATA',
+                symbol: {
+                  fill: 'blue',
+                  type: 'square',
                 },
               },
             ]}
