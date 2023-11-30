@@ -1,156 +1,160 @@
 import React, { useState, useEffect } from 'react';
+import { View, Text, SafeAreaView, StatusBar } from 'react-native';
+import BleManager from 'react-native-ble-manager';
 import {
-    View,
-    Pressable,
-    Text,
-    SafeAreaView,
-    StatusBar,
-    Dimensions
-} from 'react-native';
-
-import {
-    VictoryChart, 
-    VictoryLegend, 
-    VictoryLine, 
-    VictoryTheme, 
-    VictoryTooltip, 
-    VictoryVoronoiContainer,
+  VictoryChart,
+  VictoryLine,
+  VictoryLegend,
+  VictoryTooltip,
+  VictoryVoronoiContainer,
 } from 'victory-native';
-
-import styles from '../styles/container-view-styles'
-import {Datapoint, VictoryData, getData } from '../data/LoadData';
-
-const legendData = [
-    {
-        name: "X_DATA", 
-        symbol:{
-            fill:"tomato", 
-            type:"square",
-        },
-    },
-    {
-        name:"Y_DATA",
-        symbol:{
-            fill:"green",
-            type:"square"
-        }
-    },
-    {
-        name:"Z_DATA",
-        symbol:{
-            fill:"blue",
-            type:"square"
-        }
-    }
-];
-
-function LineChart(): JSX.Element {
-    var xdata = getData('x');
-    var ydata = getData('y');
-    var zdata = getData('z');
-    
-    return (
-        <VictoryChart
-            theme={VictoryTheme.material}
-            height={480} 
-            width={400}
-            domainPadding={{x: 10, y: 5}}
-            padding={50}
-            containerComponent={
-                <VictoryVoronoiContainer
-                    voronoiDimension='x'
-                    labels={ ({datum}) => `y: ${datum.y}`}
-                    labelComponent={
-                        <VictoryTooltip
-                            renderInPortal
-                            cornerRadius={0}
-                            flyoutStyle={{fill: "white"}}
-                        />
-                    }
-                />
-            }     
-        >
-            <VictoryLine name="xData"
-                data={xdata}
-                style={{
-                    data: {
-                        stroke: "tomato",
-                        strokeWidth: 1
-                    },
-                    labels: { fill: "tomato"},
-                }}
-            />
-
-            <VictoryLine name="yData"
-                data={ydata}
-                style={{
-                    data: {
-                        stroke: "green",
-                        strokeWidth: 1
-                    },
-                    labels: { fill: "green"}
-                }}
-            />
-
-            <VictoryLine name="zData"
-                data={zdata}
-                style={{
-                    data: {
-                        stroke: "blue",
-                        strokeWidth: 1
-                    },
-                    labels: { fill: "blue"}
-                }}
-            />
-            <VictoryLegend x={35} y={2}
-                orientation='horizontal'
-                gutter={30}
-                style={{
-                    border: {
-                        stroke: 'navy',
-                        strokeWidth: 3,
-                        fill: 'skyblue'
-                    },
-                    labels: {
-                        fontSize: 15,
-                        fontWeight: 'bold',
-                        fill: 'navy'
-                    },
-                }}
-                data={legendData}
-            />
-
-        </VictoryChart>
-    );
-};
+import containerStyles from '../styles/container-view-styles';
 
 function GraphingScreen(): JSX.Element {
+  const [xData, setXData] = useState('0');
+  const [yData, setYData] = useState('0');
+  const [zData, setZData] = useState('0');
 
-    var [dataState, setDataState] = useState(0);
+  useEffect(() => {
+    // Set up continuous data reception
+    const deviceID = "48:E7:29:B3:C8:82"; // Replace with your device ID
+    const serviceUUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b"; // Replace with your service UUID
+    const characteristicUUID = "00001800-0000-1000-8000-00805f9b34fb"; // Replace with your characteristic UUID
 
-    const handlePress = () => {
-        console.log(`Updating Data... `);
-        setDataState(dataState+1);
-        console.log(dataState);
+    BleManager.startNotification(deviceID, serviceUUID, characteristicUUID)
+      .then(() => {
+        console.log('Notification started');
+      })
+      .catch((error) => console.error('Notification error:', error));
+
+    const intervalId = setInterval(() => {
+      BleManager.read(deviceID, serviceUUID, characteristicUUID)
+        .then((data) => {
+          // Handle the received data here
+          const textData = String.fromCharCode.apply(null, new Uint8Array(data));
+          const [x, y, z] = textData.split(',').map(parseFloat);
+          console.log('Received data:', { x, y, z });
+          // Set the data state with the formatted string
+          setXData(x.toString());
+          setYData(y.toString());
+          setZData(z.toString());
+        })
+        .catch((error) => console.error('Read error:', error));
+    }, 500); // Adjust the interval as needed
+
+    return () => {
+      // Cleanup when component unmounts
+      clearInterval(intervalId);
+      BleManager.stopNotification(deviceID, serviceUUID, characteristicUUID)
+        .then(() => console.log('Notification stopped'))
+        .catch((error) => console.error('Notification stop error:', error));
     };
-    
-    return(
-        <>
-        <View style={styles.container}>
-            <StatusBar/>
-            <View style={styles.graphContainer}>
-                <LineChart/>
-            </View>
-            <View style={styles.buttonContainer}>
-                <Pressable style={styles.refreshButton} onPress={handlePress}>
-                    <Text style={styles.refreshButtonText}>
-                        {'Start Recording Data'}
-                    </Text>
-                </Pressable>
-            </View>
+  }, []);
+
+  return (
+    <>
+      <StatusBar />
+      <SafeAreaView style={containerStyles.container}>
+        <View>
+          <Text>Continuous Data - X: {xData}, Y: {yData}, Z: {zData}</Text>
         </View>
-        </>
-    );
-};
+        <VictoryChart
+          height={400}
+          width={400}
+          domainPadding={{ y: 10 }}
+          containerComponent={
+            <VictoryVoronoiContainer
+              voronoiDimension='x'
+              labels={({ datum }) => `y: ${datum.y}`}
+              labelComponent={
+                <VictoryTooltip
+                  renderInPortal
+                  cornerRadius={0}
+                  flyoutStyle={{ fill: 'white' }}
+                />
+              }
+            />
+          }
+          fixAxis="y"
+            domain={{
+            x: [0, 4],
+              y: [-10, 10], // Set the desired Y-axis domain based on your data range
+            }}
+        >
+          {/* X Data */}
+          <VictoryLine
+             name="xData"
+              data={[{ x: 1, y: 0 },{ x: 1, y: parseFloat(xData) }]}
+              style={{
+                data: {
+                  stroke: 'tomato',
+                          strokeWidth: 6,
+                },
+                labels: { fill: 'tomato' },
+              }}
+            />
+
+          {/* Y Data */}
+          <VictoryLine
+            name="yData"
+            data={[{ x: 2, y: 0 },{ x: 2, y: parseFloat(yData) }]}
+                          style={{
+                            data: {
+                              stroke: 'green',
+                                      strokeWidth: 6,
+                            },
+                            labels: { fill: 'green' },
+                          }}
+          />
+
+          {/* Z Data */}
+          <VictoryLine
+            name="zData"
+            data={[{ x: 3, y: 0 },{ x: 3, y: parseFloat(zData) }]}
+                          style={{
+                            data: {
+                              stroke: 'blue',
+                                      strokeWidth: 6,
+                            },
+                            labels: { fill: 'blue' },
+                          }}
+          />
+
+          {/* Legend */}
+          <VictoryLegend
+            x={20}
+            y={350}
+            title="Live Acceleration Data"
+            titleOrientation='top'
+            orientation='horizontal'
+            data={[
+              {
+                name: 'X_DATA',
+                symbol: {
+                  fill: 'tomato',
+                  type: 'square',
+                },
+              },
+              {
+                name: 'Y_DATA',
+                symbol: {
+                  fill: 'green',
+                  type: 'square',
+                },
+              },
+              {
+                name: 'Z_DATA',
+                symbol: {
+                  fill: 'blue',
+                  type: 'square',
+                },
+              },
+            ]}
+          />
+        </VictoryChart>
+      </SafeAreaView>
+    </>
+  );
+}
 
 export default GraphingScreen;
