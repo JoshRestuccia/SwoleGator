@@ -17,12 +17,19 @@ function GraphingScreen(): JSX.Element {
 
   useEffect(() => {
     // Set up continuous data reception
-    const deviceID = "48:E7:29:B3:C8:82"; // Replace with your device ID
-    const serviceUUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b"; // Replace with your service UUID
-    const characteristicUUID = "00001800-0000-1000-8000-00805f9b34fb"; // Replace with your characteristic UUID
+
+    //marias
+    //const deviceID = "48:E7:29:B3:C8:82"; // Replace with your device ID
+    //const serviceUUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b"; // Replace with your service UUID
+    //const characteristicUUID = "00001800-0000-1000-8000-00805f9b34fb"; // Replace with your characteristic UUID
+
+    //jennas
+        const deviceID = "48:E7:29:B4:F9:7E"; // Replace with your device ID
+        const serviceUUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b"; // Replace with your service UUID
+        const characteristicUUID = "00001800-0000-1000-8000-00805f9b34fb"; // Replace with your characteristic UUID
 
     BleManager.startNotification(deviceID, serviceUUID, characteristicUUID)
-      .then(() => {
+      .then(() => {c
         console.log('Notification started');
       })
       .catch((error) => console.error('Notification error:', error));
