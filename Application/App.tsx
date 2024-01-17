@@ -59,7 +59,7 @@ function GuestStackGroup() {
 export default function App() {
 
   const [initializing, setInitializing] = useState(true);
-  const [user, setUser] = useState();
+  const [user, setUser] = useState(auth().currentUser);
 
   console.log(user)
   // User State Change Listener
@@ -77,20 +77,17 @@ export default function App() {
 
   return(
     <NavigationContainer>
-      <Stack.Navigator>
-        {user? (
+      <Stack.Navigator initialRouteName={user? 'User Stack': 'Guest Stack'}>
           <Stack.Screen
             name="User Stack" 
             component={UserStackGroup}
             options={{title: "User Stack", headerShown: false}}
           />
-        ) : (
           <Stack.Screen
             name="Guest Stack"
             component={GuestStackGroup}
             options={{title: "Guest Stack", headerShown: false}}
           />
-        )}
       </Stack.Navigator>
     </NavigationContainer>
   )

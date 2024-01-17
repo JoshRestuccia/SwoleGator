@@ -9,7 +9,7 @@ const Login = ({navigation}) => {
       .signInWithEmailAndPassword(email, password)
       .then(() => {
         console.log('User account signed in!');
-        navigation.navigate("Home");
+        navigation.navigate('User Stack', {screen: 'Home'});
       })
       .catch(error => {
     
