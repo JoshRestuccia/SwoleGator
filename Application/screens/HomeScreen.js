@@ -4,32 +4,30 @@ import { Text, View, TouchableOpacity, StyleSheet } from 'react-native';
 import auth from '@react-native-firebase/auth';
 
 const HomeScreen = ({navigation}) =>{
-    const logOut = () => {
-        auth()
-        .signOut()
-        .then(() => console.log('User signed out!'));
-    };
     
     const pressLogOut = () => {
-        logOut()
-        navigation.navigate("Login")
-    }
+      auth()
+      .signOut()
+      .then(() => console.log('User signed out!'));
+      navigation.navigate('Guest Stack', { screen: 'Login'});
+    };
+
     return(
         <View style={styles.container}>
             <View style={styles.title}>
             <Text style={styles.title}>Welcome to SwoleGator! </Text>
             </View>
-            <TouchableOpacity style={styles.button}>
-            <Text onPress={() => navigation.navigate("Pair Device")} style={styles.textStyle}> Pair Device</Text>
+            <TouchableOpacity onPress={() => navigation.navigate("Pair Device")} style={styles.button}>
+              <Text style={styles.textStyle}> Pair Device</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.button}>
-            <Text onPress={() => navigation.navigate("Graphing Screen")} style={styles.textStyle}>Start Lift </Text>
+            <TouchableOpacity onPress={() => navigation.navigate("Graphing Screen")} style={styles.button}>
+              <Text style={styles.textStyle}>Start Lift </Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.button}>
-            <Text onPress={() => navigation.navigate("SwoleGator Data")} style={styles.textStyle}> SwoleGator Data</Text>
+            <TouchableOpacity onPress={() => navigation.navigate("SwoleGator Data")} style={styles.button}>
+              <Text style={styles.textStyle}> SwoleGator Data</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.button}>
-            <Text onPress={pressLogOut} style={styles.textStyle}> Log Out</Text>
+            <TouchableOpacity style={styles.button} onPress={pressLogOut}>
+              <Text style={styles.textStyle}> Log Out</Text>
             </TouchableOpacity>
         </View>
     );

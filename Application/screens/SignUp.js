@@ -1,16 +1,29 @@
 import {StyleSheet, View, Text, TouchableOpacity, TextInput} from 'react-native'
 import React, {useState, useEffect} from 'react';
 import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
 
 const SignUp = ({navigation}) => {
-  const onPress = () => {
-    signUp(username, email, password)
-    setEmail("")
-    setPassword("")
-    setName("")
+
+  function generateUserObj(first, last, username, email, password) {
+    return(
+      {
+        'first': first,
+        'last': last,
+        'username': username,
+        'email': email,
+        'password': password
+      }
+    )
   }
-  const signUp = (username, email, password) => {
-    if(!username || !email || !password){
+
+  const signUpPress = () => {
+    signUp(first, last, username, email, password);
+    const userObj = generateUserObj();
+    firestore().collection('Users').add(userObj);
+  }
+  const signUp = (first, last, username, email, password) => {
+    if(!username || !email || !password || !first || !last){
       alert('Not enough data to create account!')
     }
     else{
@@ -33,12 +46,24 @@ const SignUp = ({navigation}) => {
     });
     }
   }
+    const [first, setFirst] = useState();
+    const [last, setLast] = useState();
+    const [username, setName] = useState();
     const [email, setEmail] = useState();
     const [password, setPassword] = useState();
-    const [username, setName] = useState();
-    const [inUse, setInUse] = useState(false);
+
   return (
     <View style={styles.container}>
+      <TextInput
+      style={styles.textInput}
+        placeholder='Firstname'
+        onChangeText={setFirst}
+        value={first}/>
+      <TextInput
+      style={styles.textInput}
+        placeholder='Lastname'
+        onChangeText={setLast}
+        value={last}/>
       <TextInput
       style={styles.textInput}
         placeholder='Username'
@@ -55,7 +80,7 @@ const SignUp = ({navigation}) => {
         onChangeText={setPassword}
         value={password}
         secureTextEntry={true}/>
-        <TouchableOpacity onPress={onPress}>
+        <TouchableOpacity onPress={signUpPress}>
             <View style={styles.button}>
                 <Text style={styles.textStyle}>Sign Up</Text>
             </View>

@@ -1,7 +1,6 @@
 import {StyleSheet, View, Button, Text, TouchableOpacity, TextInput} from 'react-native'
 import React, {useState, useEffect} from 'react';
 import auth from '@react-native-firebase/auth';
-import RootNavigator from './RootNavigator';
 
 const Login = ({navigation}) => {
   const signIn = (email, password) => {
@@ -30,7 +29,7 @@ const Login = ({navigation}) => {
     const [email, setEmail] = useState();
     const [password, setPassword] = useState();
     
-    const onPress = () => {
+    const signInPressed = () => {
         signIn(email, password);
         setEmail("")
         setPassword("")
@@ -48,7 +47,7 @@ const Login = ({navigation}) => {
         onChangeText={setPassword}
         secureTextEntry={true}
         value={password}/>
-          <TouchableOpacity onPress={onPress}>
+          <TouchableOpacity onPress={signInPressed}>
             <View style={styles.button}>
                 <Text style={styles.textStyle}>Login</Text>
             </View>
