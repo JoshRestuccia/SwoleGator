@@ -9,18 +9,21 @@ const Login = ({navigation}) => {
       auth()
       .signInWithEmailAndPassword(email, password)
       .then(() => {
-        console.log('User account created & signed in!');
+        console.log('User account signed in!');
+        navigation.navigate("Home");
       })
       .catch(error => {
-        if (error.code === 'auth/email-already-in-use') {
-          console.log('That email address is already in use!');
-        }
     
         if (error.code === 'auth/invalid-email') {
           console.log('That email address is invalid!');
         }
-        if (error.code === 'auth/')
-        console.error(error);
+        if (error.code === 'auth/invalid-credential') {
+          console.log('Invalid credentials. Check email or password');
+        }
+        if (error.code === 'auth/'){
+          console.error(error);
+        }
+        console.log(error.code);
       })
     );
   }
@@ -29,7 +32,6 @@ const Login = ({navigation}) => {
     
     const onPress = () => {
         signIn(email, password);
-        navigation.navigate("Home")
         setEmail("")
         setPassword("")
     }

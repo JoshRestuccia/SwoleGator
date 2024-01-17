@@ -5,7 +5,6 @@ import auth from '@react-native-firebase/auth';
 const SignUp = ({navigation}) => {
   const onPress = () => {
     signUp(username, email, password)
-    navigation.navigate("Home")
     setEmail("")
     setPassword("")
     setName("")
@@ -16,21 +15,28 @@ const SignUp = ({navigation}) => {
     }
     else{
     return auth().createUserWithEmailAndPassword(email, password)
-    .then( cred => {
-        const {uid} = cred.user;
-        auth().currentUser.updateProfile({
-            displayName: username
-        })
-        return uid
+    .then( ()=> {
+      console.log('User account created and signed in!');
+      navigation.navigate("Home");
     })
-    .catch(
-        err => addWhitelistedNativeProps(err.code, err.message)
-    )
+    .catch(error => {
+      if (error.code === 'auth/email-already-in-use') {
+        console.log('That email address is already in use!');
+        setInUse(true);
+      }
+  
+      if (error.code === 'auth/invalid-email') {
+        console.log('That email address is invalid!');
+      }
+  
+      console.error(error);
+    });
     }
   }
     const [email, setEmail] = useState();
     const [password, setPassword] = useState();
     const [username, setName] = useState();
+    const [inUse, setInUse] = useState(false);
   return (
     <View style={styles.container}>
       <TextInput

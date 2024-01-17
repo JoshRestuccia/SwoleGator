@@ -29,7 +29,7 @@ function GraphingScreen(): JSX.Element {
         const characteristicUUID = "00001800-0000-1000-8000-00805f9b34fb"; // Replace with your characteristic UUID
 
     BleManager.startNotification(deviceID, serviceUUID, characteristicUUID)
-      .then(() => {c
+      .then(() => {
         console.log('Notification started');
       })
       .catch((error) => console.error('Notification error:', error));
