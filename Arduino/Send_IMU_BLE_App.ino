@@ -11,6 +11,19 @@
 Adafruit_MPU6050 mpu;
 #define SERVICE_UUID        "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
 #define CHARACTERISTIC_UUID "00001800-0000-1000-8000-00805f9b34fb"
+const int WINDOW_SIZE = 20;
+// Filter Variables
+int ind = 0;
+int totalx = 0;
+int READX[WINDOW_SIZE];
+int averagex = 0;
+int totaly = 0;
+int READY[WINDOW_SIZE];
+int averagey = 0;
+int totalz = 0;
+int READZ[WINDOW_SIZE];
+int averagez = 0;
+
 static BLECharacteristic *pCharacteristicx;
 //static BLECharacteristic *pCharacteristicy;
 //static BLECharacteristic *pCharacteristicz;
@@ -31,6 +44,11 @@ void setup() {
   Serial.begin(115200);
   while (!Serial)
     delay(10);
+  for (int i = 0; i < WINDOW_SIZE; i++){
+    READX[i] = 0;
+    READY[i] = 0;
+    READZ[i] = 0;
+  }
   
   if (!mpu.begin()) {
     Serial.println("Failed to find MPU6050 chip");
@@ -89,6 +107,26 @@ void loop() {
   char z[15];
   char del[15];
 
+  
+
+  totalx = totalx - READX[ind];
+  totaly = totaly - READY[ind];
+  totalz = totalz - READZ[ind];
+  READX[ind] = x_a;
+  READY[ind] = y_a;
+  READZ[ind] = z_a;
+  totalx = totalx + READX[ind];
+  totaly = totaly + READY[ind];
+  totalz = totalz + READZ[ind];
+  ind = ind + 1;
+
+  if (ind >= WINDOW_SIZE){
+    ind = 0;
+  }
+
+  averagex = totalx / WINDOW_SIZE;
+  averagey = totaly / WINDOW_SIZE;
+  averagez = totalz / WINDOW_SIZE;
 
   strcpy(x, floatToString(x_a, S, sizeof(S), 1));
   strcpy(y, floatToString(y_a, S, sizeof(S), 1));
@@ -113,15 +151,23 @@ void loop() {
   //pCharacteristicz->setValue(z_a);
   //Serial.print(accel);
   //Serial.println();
-  Serial.print("Acceleration: ");
+  /**Serial.print("Acceleration: ");
   Serial.print(x);
-  Serial.println();
-  /**Serial.print(", Y: ");
+  Serial.println();**/
+  Serial.print(x_a);
+  Serial.print(" ");
+  Serial.print(averagex);
+  Serial.print(" ");
   Serial.print(y_a);
-  Serial.print(", Z: ");
+  Serial.print(" ");
+  Serial.print(averagey);
+  Serial.print(" ");
   Serial.print(z_a);
-  Serial.println(" m/s^2");**/
+  Serial.print(" ");
+  Serial.println(averagez);
+  /**Serial.print(" ");
+  Serial.println(z_a);**/
 
   //pCharacteristic->setValue(Serial.readString().c_str());
-  delay(500);
+  delay(25);
 }
