@@ -24,6 +24,13 @@ int totalz = 0;
 int READZ[WINDOW_SIZE];
 int averagez = 0;
 
+//Velocity variables
+float prevvx = 0;
+float currvx;
+float av = 0;
+float x_aa = 0;
+float currv[10];
+
 static BLECharacteristic *pCharacteristicx;
 //static BLECharacteristic *pCharacteristicy;
 //static BLECharacteristic *pCharacteristicz;
@@ -89,7 +96,6 @@ void setup() {
   pAdvertising->setMinPreferred(0x12);
   BLEDevice::startAdvertising();
   Serial.println("Characteristic defined!");
-
   delay(100);
 }
 
@@ -97,7 +103,7 @@ void loop() {
   // put your main code here, to run repeatedly:
   sensors_event_t a, g, temp;
   mpu.getEvent(&a, &g, &temp);
-  
+
   float x_a = a.acceleration.x;
   float y_a = a.acceleration.y;
   float z_a = a.acceleration.z;
@@ -109,7 +115,7 @@ void loop() {
 
   
 
-  totalx = totalx - READX[ind];
+  /**totalx = totalx - READX[ind];
   totaly = totaly - READY[ind];
   totalz = totalz - READZ[ind];
   READX[ind] = x_a;
@@ -126,7 +132,25 @@ void loop() {
 
   averagex = totalx / WINDOW_SIZE;
   averagey = totaly / WINDOW_SIZE;
-  averagez = totalz / WINDOW_SIZE;
+  averagez = totalz / WINDOW_SIZE;**/
+  for (int n = 0; n < 10; n++){
+    float x_a = a.acceleration.x;
+    totalx = totalx - READX[ind];
+    READX[ind] = x_a;
+    totalx = totalx + READX[ind];
+    ind = ind + 1;
+    if (ind >= WINDOW_SIZE){
+      ind = 0;
+    }
+    averagex = totalx / WINDOW_SIZE;
+    currv[n] = (prevvx + (averagex)*0.001);
+    prevvx = currv[n];
+  }
+  currvx = currv[9] - currv[0];
+
+  /**float currv = (prevvx + (averagex)*0.001);
+  prevvx = currv;
+  for (i)**/
 
   strcpy(x, floatToString(x_a, S, sizeof(S), 1));
   strcpy(y, floatToString(y_a, S, sizeof(S), 1));
@@ -154,17 +178,14 @@ void loop() {
   /**Serial.print("Acceleration: ");
   Serial.print(x);
   Serial.println();**/
-  Serial.print(x_a);
-  Serial.print(" ");
-  Serial.print(averagex);
-  Serial.print(" ");
-  Serial.print(y_a);
-  Serial.print(" ");
+  Serial.print(currvx);
+  Serial.println(" ");
+  /**Serial.print(" ");
   Serial.print(averagey);
   Serial.print(" ");
   Serial.print(z_a);
   Serial.print(" ");
-  Serial.println(averagez);
+  Serial.println(averagez);**/
   /**Serial.print(" ");
   Serial.println(z_a);**/
 
