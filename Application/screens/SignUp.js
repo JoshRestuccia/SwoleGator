@@ -1,56 +1,70 @@
 import {StyleSheet, View, Text, TouchableOpacity, TextInput} from 'react-native'
 import React, {useState, useEffect} from 'react';
-import auth from '@react-native-firebase/auth';
 import firestore from '@react-native-firebase/firestore';
+import auth, { firebase } from '@react-native-firebase/auth';
 
 const SignUp = ({navigation}) => {
 
-  function generateUserObj(first, last, username, email, password) {
+  // Listener for User Registration
+  auth().onAuthStateChanged((user) => {
+    if(user){
+      const userObj = generateUserObj(email, first, last, username);
+      // Loading user data into database 
+      firestore().collection('users')
+        .doc(`${user.uid}`)
+        .set(userObj);
+    }
+  });
+  
+  const generateUserObj = (email, first, last, username) => {
     return(
       {
-        'first': first,
-        'last': last,
-        'username': username,
-        'email': email,
-        'password': password
+        email: email,
+        first: first,
+        last: last,
+        username: username,
       }
     )
+  };
+  
+  const signUpPress = () => {
+    signUpValidation();
+    // Reset Navigation Stack
+    navigation.reset({
+      index: 0,
+      routes: [{name: 'User Stack', params:{screen: 'Login'}}]
+    });
   }
 
-  const signUpPress = () => {
-    signUp(first, last, username, email, password);
-    const userObj = generateUserObj();
-    firestore().collection('Users').add(userObj);
-  }
-  const signUp = (first, last, username, email, password) => {
+  const signUpValidation = () => {
     if(!username || !email || !password || !first || !last){
       alert('Not enough data to create account!')
     }
     else{
-    return auth().createUserWithEmailAndPassword(email, password)
-    .then( ()=> {
-      console.log('User account created and signed in!');
-      navigation.navigate("Home");
-    })
-    .catch(error => {
-      if (error.code === 'auth/email-already-in-use') {
-        console.log('That email address is already in use!');
-        setInUse(true);
-      }
-  
-      if (error.code === 'auth/invalid-email') {
-        console.log('That email address is invalid!');
-      }
-  
-      console.error(error);
-    });
+        return (
+          auth().createUserWithEmailAndPassword(email, password)
+            .then( ()=> {
+              console.log('User account created and signed in!');
+            })
+            .catch(error => {
+              if (error.code === 'auth/email-already-in-use') {
+                console.log('That email address is already in use!');
+              }
+          
+              if (error.code === 'auth/invalid-email') {
+                console.log('That email address is invalid!');
+              }
+          
+              console.error(error);
+            })
+        );
     }
   }
-    const [first, setFirst] = useState();
-    const [last, setLast] = useState();
-    const [username, setName] = useState();
-    const [email, setEmail] = useState();
-    const [password, setPassword] = useState();
+    const [first, setFirst] = useState('');
+    const [last, setLast] = useState('');
+    const [username, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
 
   return (
     <View style={styles.container}>
@@ -85,7 +99,9 @@ const SignUp = ({navigation}) => {
                 <Text style={styles.textStyle}>Sign Up</Text>
             </View>
         </TouchableOpacity>
-        <View style={styles.textStyle}><Text style={styles.textStyle} onPress={() => navigation.navigate("Login")}>Already have an account? Login here.</Text></View>
+        <View style={styles.textStyle}>
+          <Text style={styles.textStyle} onPress={() => navigation.navigate('Guest Stack', {screen: 'Login'})}>Already have an account? Login here.</Text>
+        </View>
     </View>
   )
 }

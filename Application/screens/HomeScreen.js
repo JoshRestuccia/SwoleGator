@@ -8,7 +8,9 @@ const HomeScreen = ({navigation}) =>{
     const pressLogOut = () => {
       auth()
       .signOut()
-      .then(() => console.log('User signed out!'));
+      .then(() => {
+        console.log('User signed out!');
+      })
       navigation.navigate('Guest Stack', { screen: 'Login'});
     };
 
@@ -17,13 +19,13 @@ const HomeScreen = ({navigation}) =>{
             <View style={styles.title}>
             <Text style={styles.title}>Welcome to SwoleGator! </Text>
             </View>
-            <TouchableOpacity onPress={() => navigation.navigate("Pair Device")} style={styles.button}>
+            <TouchableOpacity onPress={() => navigation.navigate('User Stack', {screen: 'Pair Device'})} style={styles.button}>
               <Text style={styles.textStyle}> Pair Device</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate("Graphing Screen")} style={styles.button}>
+            <TouchableOpacity onPress={() => navigation.navigate('User Stack', {screen: 'Graphing Screen'})} style={styles.button}>
               <Text style={styles.textStyle}>Start Lift </Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate("SwoleGator Data")} style={styles.button}>
+            <TouchableOpacity onPress={() => navigation.navigate('User Stack', {screen: 'SwoleGator Data'})} style={styles.button}>
               <Text style={styles.textStyle}> SwoleGator Data</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.button} onPress={pressLogOut}>
