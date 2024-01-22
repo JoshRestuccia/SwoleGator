@@ -1,17 +1,9 @@
 import {StyleSheet, View, Button, Text, TouchableOpacity, TextInput} from 'react-native'
 import React, {useState, useEffect} from 'react';
-import auth from '@react-native-firebase/auth';
-import firestore from '@react-native-firebase/firestore';
+import { getUserData } from '../api/firestore/FirestoreAPI';
 
 const Data = () => {
-    const [userData, setUserData] = useState({});
-
-    firestore().collection('users').doc(auth().currentUser.uid).get()
-    .then((user) => {
-        setUserData(user.data());
-        console.log(userData.username);
-    });
-    
+    const userData = getUserData();
     return(
     <View>
         <Text>{`Hello, ${userData.username}`}</Text>

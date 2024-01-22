@@ -16,11 +16,9 @@ import {
 import BleManager, {
     BleDisconnectPeripheralEvent, 
     BleManagerDidUpdateValueForCharacteristicEvent, 
-    BleScanCallbackType, 
-    BleScanMatchMode, 
-    BleScanMode, 
     Peripheral 
 } from 'react-native-ble-manager';
+import firstore from '@react-native-firebase/firestore';
 import {Colors} from 'react-native/Libraries/NewAppScreen';
 
 const SERVICE_UUIDS: string[] = [];
@@ -107,6 +105,7 @@ function PairingScreen(): JSX.Element {
         }
         if(peripheral.name && (peripheral.name === "ESP32" || peripheral.name === "SwoleGator")){
           console.log("The SwoleGator Device has been found!");
+          console.log(peripheral);
           addOrUpdatePeripheral(peripheral.id, peripheral);
         }
     };

@@ -7,6 +7,7 @@ import Login from './screens/Login';
 import Data from './screens/Data';
 import HomeScreen from './screens/HomeScreen';
 import GraphingScreen from './screens/GraphingScreen';
+import Profile from './screens/Profile';
 
 import auth from '@react-native-firebase/auth';
 
@@ -34,6 +35,11 @@ function UserStackGroup() {
         name="SwoleGator Data"
         component={Data}
         options={{title: "SwoleGator Data"}}
+      />
+      <Stack.Screen
+        name="Profile"
+        component={Profile}
+        options={{title: "Profile"}}
       />
     </Stack.Navigator>
   );
