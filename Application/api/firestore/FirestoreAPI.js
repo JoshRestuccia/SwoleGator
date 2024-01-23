@@ -9,7 +9,7 @@ export const userRef = firestore().collection('users').doc(userUID);
 export function getUserData() {
     const [userData, setUserData] = useState({});
 
-    userRef.get()
+    firestore().collection('users').doc(userUID).get()
     .then((user) => {
         setUserData(user.data());
         //console.log(userData.username);
@@ -21,7 +21,7 @@ export function getUserData() {
 export function getNumberOfWorkouts(){
     const [numWorkouts, setNumWorkouts] = useState(0);
 
-    userRef.collection('workouts').get()
+    firestore().collection('users').doc(userUID).collection('workouts').get()
     .then((snap) => {
         setNumWorkouts(snap.size);
     });
@@ -30,15 +30,26 @@ export function getNumberOfWorkouts(){
 }
 
 export function saveWorkoutData(workoutName, data){
+    const dataObj = createDataObj(data);
     try{
-        userRef.collection('workouts').add({
-                    name: workoutName
-            }).collection('data').add({
-                    x: data.x,
-                    y: data.y,
-                    z: data.z
-                })
+        firestore().collection('users').doc(userUID)
+        .collection('workouts').add(`${workoutName}`)
+        .collection('data').add(JSON.parse(dataObj));
     }catch(error){
         console.error(error);
     }
+}
+
+const createDataObj = (data) => {
+    const textData = String.fromCharCode.apply(null, new Uint8Array(data));
+    const [x, y, z] = textData.split(',').map(parseFloat);
+    console.log('Received data:', { x, y, z });
+    console.log('Creating Data Object...');
+    const dataObj = {
+            x: x,
+            y: y, 
+            z: z
+    };
+    console.log('Data Object:\n', dataObj, '\n');
+    return dataObj;
 }

@@ -1,5 +1,4 @@
 import React from 'react';
-import RootNavigator from './RootNavigator';
 import { Text, View, TouchableOpacity, StyleSheet } from 'react-native';
 import auth from '@react-native-firebase/auth';
 import { getUserData } from '../api/firestore/FirestoreAPI';

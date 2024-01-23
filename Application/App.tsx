@@ -10,11 +10,13 @@ import GraphingScreen from './screens/GraphingScreen';
 import Profile from './screens/Profile';
 
 import auth from '@react-native-firebase/auth';
+import { BLEProvider } from './api/ble/BLEContext';
 
 const Stack = createNativeStackNavigator();
 
 function UserStackGroup() {
   return(
+    <BLEProvider>
     <Stack.Navigator initialRouteName='Home'>
       <Stack.Screen
         name="Home"
@@ -42,6 +44,7 @@ function UserStackGroup() {
         options={{title: "Profile"}}
       />
     </Stack.Navigator>
+    </BLEProvider>
   );
 };
 
@@ -97,7 +100,6 @@ export default function App() {
       </Stack.Navigator>
     </NavigationContainer>
   )
-
 }
 
 

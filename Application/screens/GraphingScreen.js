@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, SafeAreaView, StatusBar, StyleSheet, TextInput,
-NativeModules, NativeEventEmitter} from 'react-native';
+NativeModules, NativeEventEmitter, TouchableOpacity } from 'react-native';
 import BleManager from 'react-native-ble-manager';
-import userRef, { getNumberOfWorkouts } from '../api/firestore/FirestoreAPI';
+import userRef, { saveWorkoutData, getNumberOfWorkouts } from '../api/firestore/FirestoreAPI';
 
 import {
   VictoryChart,
@@ -13,9 +13,6 @@ import {
 } from 'victory-native';
 import containerStyles from '../styles/container-view-styles';
 
-const bleManagerModule = NativeModules.BleManager;
-const bleManagerEmitter = new NativeEventEmitter(bleManagerModule);
-
 
 function GraphingScreen() {
   const [xData, setXData] = useState('0');
@@ -23,30 +20,13 @@ function GraphingScreen() {
   const [zData, setZData] = useState('0');
 
   const workouts = getNumberOfWorkouts();
-
-  const defualtName = `Workout #${workouts+1}`;
-  const [workoutName, setWorkoutName] = useState(defualtName);
+  const defaultName = `Workout #${workouts+1}`;
+  const [workoutName, setWorkoutName] = useState(defaultName);
   const [workoutData, setWorkoutData] = useState([]);
 
-  const handleBLECharacteristicUpdate = ({value}) => {
-    const newData = {...workoutData, ...parsePeripheralData(value)};
-    setWorkoutData(newData);
-    userRef.collection('workouts').collection(workoutName).set(newData);
-  }
-
-  const parsePeripheralData = (value) => {
-    const textData = String.fromCharCode.apply(null, new Uint8Array(value));
-    const [x, y, z] = textData.split(',').map(parseFloat);
-    console.log('Received data:', { x, y, z });
-    console.log('Creating Data Object...');
-    const dataObj = [{
-      x: x,
-      y: y, 
-      z: z
-    }];
-    console.log(dataObj);
-    return dataObj;
-  }
+  const handleSaveWorkout = (name) => {
+    saveWorkoutData(workoutData);
+  }  
 
   useEffect(() => {
     // Set up continuous data reception
@@ -57,22 +37,17 @@ function GraphingScreen() {
         //const deviceID = "48:E7:29:B4:F9:7E"; // Replace with your device ID
     //james'
         const deviceID = "D8:BC:38:E5:C3:EE"; // Replace with your device ID
-        
+
         const serviceUUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b"; // Replace with your service UUID
         const characteristicUUID = "00001800-0000-1000-8000-00805f9b34fb"; // Replace with your characteristic UUID
     
     
-    BleManager.startNotification(deviceID, serviceUUID, characteristicUUID)
+     /*BleManager.startNotification(deviceID, serviceUUID, characteristicUUID)
       .then(() => {
         console.log('Notification started');
       })
-      .catch((error) => console.error('Notification error:', error));
-    const listeners = [
-      bleManagerEmitter.addListener(
-        'BleManagerDidUpdateValueForCharacteristic', 
-        handleBLECharacteristicUpdate
-      ),
-    ];
+      .catch((error) => console.error('Notification error:', error));  */
+
     const intervalId = setInterval(() => {
       BleManager.read(deviceID, serviceUUID, characteristicUUID)
         .then((data) => {
@@ -84,6 +59,13 @@ function GraphingScreen() {
           setXData(x.toString());
           setYData(y.toString());
           setZData(z.toString());
+          const newData = {
+            x: x, 
+            y: y, 
+            z: z
+          }
+          setWorkoutData(workoutData => [...workoutData, newData]);
+          console.log('\n :::WORKOUT_DATA::::: \n',workoutData,'\n\n');
           // Perform Calculations
 
           // Save Data to the current workout
@@ -95,9 +77,7 @@ function GraphingScreen() {
     return () => {
       // Cleanup when component unmounts
       clearInterval(intervalId);
-      for(const listener of listeners){
-        listener.remove();
-      }
+
       BleManager.stopNotification(deviceID, serviceUUID, characteristicUUID)
         .then(() => console.log('Notification stopped'))
         .catch((error) => console.error('Notification stop error:', error));
@@ -108,12 +88,17 @@ function GraphingScreen() {
     <>
       <StatusBar />
       <SafeAreaView style={containerStyles.container}>
-        <View>
+        <View style={styles.nameChangeContainer}>
           <TextInput
             style={styles.textInput}
-              placeholder={defualtName}
-              onChangeText={setWorkoutName}
+              placeholder={defaultName}
+              onChangeText={(text) => setWorkoutName(text)}
               value={workoutName}/>
+          <TouchableOpacity
+            style={styles.nameSelector}
+            onPress={handleSaveWorkout}>
+              <Text style={styles.saveButtonText}>Save Workout Data</Text>
+          </TouchableOpacity>
         </View>
         <View style={styles.container}>
           <Text style={styles.textStyle}>Continuous Data - X: {xData}, Y: {yData}, Z: {zData}</Text>
@@ -222,19 +207,36 @@ export default GraphingScreen;
 const styles = StyleSheet.create({
   textInput: {
     borderBottomColor:'grey',
-    borderBottomWidth: 1,
+    borderBottomWidth: 2,
     fontSize:18,
-    marginLeft: 35,
-    marginRight: 35,
-    marginTop: 20,
+    width: 225,
+    height: 50
   },
   textStyle:{
     fontSize: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start',
   },
   container:{
+    alignItems: 'center'
+  },
+  nameSelector: {
+    justifyContent: 'center',
     alignItems: 'center',
-    alignContent: 'center'
+    height: 50,
+    width: 100,
+    backgroundColor: 'lightblue',
+    borderRadius: 10,
+    
+  },
+  saveButtonText:{
+    fontSize: 15,
+    textAlign: 'center'
+  },
+  nameChangeContainer: {
+    flexDirection: 'row',
+    flex: 0.5,
+    justifyContent: 'space-evenly',
+    marginTop: 25,
   }
 })
