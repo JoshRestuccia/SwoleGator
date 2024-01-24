@@ -1,11 +1,25 @@
-ALPHA BUILD
+# SwoleGator Alpha Build
+James Blackmon
+Maria Carmona
+Joshua Restuccia
+Jenna Sheldon
+Mary Williams
 
-* Usability *
+## Usability
+### Interface
+### Navigation
+### Perception
+### Responsiveness
 
-** Interface ** 
+## Build Quality 
+### Robustness
+No major crashes or glitches are apparent in this build. The app connects to Bluetooth for an extended period of time and is able to continuously receive and store data, as well as display the data on the app screens.
+### Consistency
+There is consistency in the software aspects of logins and app behavior in our build. The app will predictably find our device to connect to, and only our app. The hardware aspect is calibrated with each use to ensure consistency in measurements from sensors. 
+### Aesthetic Rigor
 
-** Navigation **
+## Vertical Features
+### External Interface
+### Persistent State
+### Internal Systems
 
-** Perception ** 
-
-** Responsiveness **
