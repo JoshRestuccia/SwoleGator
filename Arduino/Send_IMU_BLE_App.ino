@@ -31,7 +31,7 @@ float prev;
 float av = 0;
 float x_aa = 0;
 float currv[10];
-float currvx[20];
+float currvx[10];
 int reps = 0;
 
 static BLECharacteristic *pCharacteristicx;
@@ -136,7 +136,7 @@ void loop() {
   averagey = totaly / WINDOW_SIZE;
   averagez = totalz / WINDOW_SIZE;**/
   //Stores 10 velocity values in array
-  for (int i = 0; i < 20; i++){
+  for (int i = 0; i < 10; i++){
     for (int n = 0; n < 10; n++){
       float x_a = a.acceleration.x;
       totalx = totalx - READX[ind];
@@ -150,12 +150,17 @@ void loop() {
       currv[n] = (prevvx + (averagex)*0.001);
       prevvx = currv[n];
     }
-    currvx[i] = ((currv[9] - currv[0]) * 10) - 0.81;
+    currvx[i] = ((currv[9] - currv[0]) * 1000) - 81.02;
   }
   //currvx = ((currv[19] - currv[10]) * 10) - 0.81;
   //prev = ((currv[9] - currv[0]) * 10) - 0.81;
-  if ((currvx[0] > currvx[19])){
+  /**if ((currvx[0] > 0.00) && (currvx[9] < 0.00)){
     reps = reps + 1;
+  }**/
+  for (int j = 1; j < 10; j++){
+    if ((currvx[j-1] > 0.00) && (currvx[j] < 0.00)){
+      reps = reps + 1;
+    }
   }
   
 
@@ -191,7 +196,23 @@ void loop() {
   Serial.println();**/
   Serial.print(currvx[0]);
   Serial.print(" ");
-  Serial.print(currvx[19]);
+  Serial.print(currvx[1]);
+  Serial.print(" ");
+  Serial.print(currvx[2]);
+  Serial.print(" ");
+  Serial.print(currvx[3]);
+  Serial.print(" ");
+  Serial.print(currvx[4]);
+  Serial.print(" ");
+  Serial.print(currvx[5]);
+  Serial.print(" ");
+  Serial.print(currvx[6]);
+  Serial.print(" ");
+  Serial.print(currvx[7]);
+  Serial.print(" ");
+  Serial.print(currvx[8]);
+  Serial.print(" ");
+  Serial.print(currvx[9]);
   Serial.print(" ");
   Serial.println(reps);
   /**Serial.print(" ");
