@@ -26,10 +26,13 @@ int averagez = 0;
 
 //Velocity variables
 float prevvx = 0;
-float currvx;
+//float currvx;
+float prev;
 float av = 0;
 float x_aa = 0;
 float currv[10];
+float currvx[20];
+int reps = 0;
 
 static BLECharacteristic *pCharacteristicx;
 //static BLECharacteristic *pCharacteristicy;
@@ -66,8 +69,7 @@ void setup() {
   Serial.println("MPU6050 Found!");
 
   mpu.setAccelerometerRange(MPU6050_RANGE_8_G);
-  mpu.setFilterBandwidth(MPU6050_BAND_21_HZ);
-
+  mpu.setFilterBandwidth(MPU6050_BAND_5_HZ);
   BLEDevice::init("SwoleGator");
   BLEServer *pServer = BLEDevice::createServer();
   BLEService *pService = pServer->createService(SERVICE_UUID);
@@ -133,20 +135,29 @@ void loop() {
   averagex = totalx / WINDOW_SIZE;
   averagey = totaly / WINDOW_SIZE;
   averagez = totalz / WINDOW_SIZE;**/
-  for (int n = 0; n < 10; n++){
-    float x_a = a.acceleration.x;
-    totalx = totalx - READX[ind];
-    READX[ind] = x_a;
-    totalx = totalx + READX[ind];
-    ind = ind + 1;
-    if (ind >= WINDOW_SIZE){
-      ind = 0;
+  //Stores 10 velocity values in array
+  for (int i = 0; i < 20; i++){
+    for (int n = 0; n < 10; n++){
+      float x_a = a.acceleration.x;
+      totalx = totalx - READX[ind];
+      READX[ind] = x_a;
+      totalx = totalx + READX[ind];
+      ind = ind + 1;
+      if (ind >= WINDOW_SIZE){
+        ind = 0;
+      }
+      averagex = totalx / WINDOW_SIZE;
+      currv[n] = (prevvx + (averagex)*0.001);
+      prevvx = currv[n];
     }
-    averagex = totalx / WINDOW_SIZE;
-    currv[n] = (prevvx + (averagex)*0.001);
-    prevvx = currv[n];
+    currvx[i] = ((currv[9] - currv[0]) * 10) - 0.81;
   }
-  currvx = currv[9] - currv[0];
+  //currvx = ((currv[19] - currv[10]) * 10) - 0.81;
+  //prev = ((currv[9] - currv[0]) * 10) - 0.81;
+  if ((currvx[0] > currvx[19])){
+    reps = reps + 1;
+  }
+  
 
   /**float currv = (prevvx + (averagex)*0.001);
   prevvx = currv;
@@ -178,8 +189,11 @@ void loop() {
   /**Serial.print("Acceleration: ");
   Serial.print(x);
   Serial.println();**/
-  Serial.print(currvx);
-  Serial.println(" ");
+  Serial.print(currvx[0]);
+  Serial.print(" ");
+  Serial.print(currvx[19]);
+  Serial.print(" ");
+  Serial.println(reps);
   /**Serial.print(" ");
   Serial.print(averagey);
   Serial.print(" ");
