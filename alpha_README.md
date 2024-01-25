@@ -8,8 +8,10 @@ Mary Williams
 Repository Link: https://github.com/JoshRestuccia/SwoleGator
 
 ## Project Summary
+At the time of the Alpha Build, the SwoleGator device successfully measures velocity and repetition count of the motion done by a weightlifter. It communciates this data to the SwoleGator application through Bluetooth to be displayed and stored to the user's profile in the application. The app features functional profile login and logout, the ability to view a user's profile, connect to the SwoleGator device, and view lift data in real time. The application is also setup to eventually feature a social environment, where users can post their lifts to be viewed and shared by friends or trainers. In addition, while the hardware only measures a single direction of velocity, in the future it will be calibrated by exercise type to measure the useful velocity of that particular exercise to be a more widely adaptable and useful product. 
 
 ## Navigation & Other Useful Instructions
+The application opens to a login screen, where the user can choose to login with an existing account or create a new account. Once either of these actions is completed, the user is taken to a home screen. On this screen, the user should connect to the hardware device using the top button, titled "connect device". This is as simple as clicking "scan for devices" and then clicking on the SwoleGator option when it pops up. The application will only display a compatible SwoleGator device to avoid connections to extraneous Bluetooth devices in the area. Once connected, the SwoleGator button will change colors, showing successful connection. The user can then go back to the home screen and navigate to "start lift", where they will choose an exercise type and follow instructions for calibration, and then begin their lift and view lift data in real time. Once a lift has been completed, the user can return to the homescreen once again and view their profile to see all past lift data. The final button is a logout option, which is self-explanatory to users.
 
 
 # Alpha Build Required Components
