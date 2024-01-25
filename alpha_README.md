@@ -1,8 +1,8 @@
 # SwoleGator Alpha Build
-James Blackmon
-Maria Carmona
-Joshua Restuccia
-Jenna Sheldon
+James Blackmon, 
+Maria Carmona, 
+Joshua Restuccia, 
+Jenna Sheldon, 
 Mary Williams
 
 Repository Link: https://github.com/JoshRestuccia/SwoleGator
