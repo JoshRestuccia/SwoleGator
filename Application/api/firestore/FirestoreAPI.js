@@ -20,11 +20,13 @@ const createDataObj = (data) => {
 
 export const FirestoreProvider = ({children}) => {
   
-    const [currentUser, setCurrentUser] = useState(null); 
+    const [currentUser, setCurrentUser] = useState(null);
+    const [currentEmail, setCurrentEmail] = useState(''); 
 
     useEffect(() => {
         const unsubscribe = auth().onAuthStateChanged((authUser) => {
             setCurrentUser(authUser);
+            setCurrentEmail(authUser.email);
         });
 
         return () => {
@@ -133,11 +135,18 @@ export const FirestoreProvider = ({children}) => {
 
     const addFriend = async (friendEmail) => {
         try{
+            // Check if own email
+            const ownEmail = await firestore().collection('users')
+            .where('email', '==', currentEmail).get();
+            if(ownEmail.empty){
+                console.warn('You can\'t be friends with yourself!!');
+                return;
+            }
             // Check if friends already
             const friendsAlready = await firestore().collection('users')
             .doc(currentUser.uid).collection('friends')
             .where('email', '==', friendEmail).get();
-            if(friendsAlready){
+            if(friendsAlready.empty){
                 console.warn(`You've already added ${friendEmail}`);
                 return;
             }
@@ -171,17 +180,17 @@ export const FirestoreProvider = ({children}) => {
 
     const getFriends = async () => {
         try{
-            const friendsSnap = await firestore().collection('users')
-            .doc(currentUser.uid).collection('friends')
-            .orderBy('friendedDate','desc').limit(3).get();
-        
-            const newFriends = [];
-            friendsSnap.forEach((friendDoc) => {
-                const friendData = friendDoc.data();
-                newFriends.push(friendData);
+            const friendsCollection = firestore().collection('users')
+            .doc(currentUser.uid).collection('friends').orderBy('friendedDate','desc')
+            .limit(3);
+            const snapshot = await friendsCollection.get();
+            const newFriends = snapshot.docs.map((index, doc) => {
+                const friendObj = createFriendObj(doc.id, doc.data());
+                console.log(friendObj);
+                return {id: index, ...doc.data()};
             });
             return newFriends;
-        }catch(err){ console.error(err) };
+        }catch(err){ console.error(err)};
     };
 
     const signOut = async() => {

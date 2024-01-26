@@ -75,7 +75,7 @@ export default function Profile({navigation}) {
       setFriendPromptVisible(false);
     }
     
-    const renderItem = ({friend}) => {
+    const renderItem = (friend) => {
       const friendData = getFriendData(friend.uid);
       return(
         <TouchableHighlight>
@@ -88,27 +88,22 @@ export default function Profile({navigation}) {
     };
 
     useEffect(() => {
-      const fetchUserData = async() => {
+      const fetchData = async() => {
         try{
-          const userDataFirestore = await getUserData();
-          setUserData(userDataFirestore);
-        }catch(error){
-          throw error;
+          if(currentUser){
+            const userDataFirestore = await getUserData();
+            setUserData(userDataFirestore);
+            const fr = await getFriends();
+            setFriends(fr);
+          }
+        }catch(err){
+          console.error(err);
         }
       };
-      if(currentUser){
-        fetchUserData();
-      }
-      const fetchFriends = async() => {
-        try{
-          const fr = await getFriends();
-          setFriends(fr);
-        }catch(error){
-          throw error;
-        }
-      }
-      fetchFriends();
-    }, [currentUser, getUserData, getFriends]);
+      fetchData();
+      return(() => {});
+
+    }, [currentUser, getUserData, getFriends, setFriends]);
 
     return(
     <View style={styles.container}>
@@ -126,10 +121,10 @@ export default function Profile({navigation}) {
         </View>
         {/* Friends Info */}
         <View style={styles.friendsInfo}>
-          {(friends.length !== 0) ? 
+          {(friends && friends.length !== 0) ? 
             (<FlatList
               data={friends}
-              keyExtractor={(friend,index) => index.toString()}
+              keyExtractor={(item) => item.id}
               renderItem={renderItem}
             />) : 
             (
