@@ -16,7 +16,11 @@ const HomeScreen = ({navigation}) =>{
       console.log('Signout button pressed.');
       try{
         await signOut();
-        navigation.navigate('Guest Stack');
+        // Reset Navigation Stack
+        navigation.reset({
+          index: 0,
+          routes: [{name: 'Guest Stack', params:{screen: 'Login'}}]
+        });
       }catch(error){
         console.error('Error signing out...');
       }

@@ -1,8 +1,5 @@
 import {StyleSheet, View, Text, TouchableOpacity, TextInput} from 'react-native'
 import React, {useState, useEffect} from 'react';
-import firestore from '@react-native-firebase/firestore';
-import auth, { firebase } from '@react-native-firebase/auth';
-
 import {useFirestore} from '../api/firestore/FirestoreAPI';
 
 const SignUp = ({navigation}) => {
@@ -17,7 +14,7 @@ const SignUp = ({navigation}) => {
       // Reset Navigation Stack
       navigation.reset({
         index: 0,
-        routes: [{name: 'User Stack', params:{screen: 'Login'}}]
+        routes: [{name: 'User Stack', params:{screen: 'Home'}}]
       });
     }
   }
