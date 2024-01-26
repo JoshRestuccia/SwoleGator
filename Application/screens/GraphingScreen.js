@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, SafeAreaView, StatusBar, StyleSheet, TextInput,
-NativeModules, NativeEventEmitter, TouchableOpacity } from 'react-native';
+import { View, Text, SafeAreaView, StatusBar, StyleSheet, 
+  TextInput, TouchableOpacity } from 'react-native';
 import BleManager from 'react-native-ble-manager';
-import userRef, { saveWorkoutData, getNumberOfWorkouts } from '../api/firestore/FirestoreAPI';
+import { saveWorkoutData, getNumberOfWorkouts } from '../api/firestore/FirestoreAPI';
 
 import {
   VictoryChart,

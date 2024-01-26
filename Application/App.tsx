@@ -1,6 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import LoadingScreen from './screens/LoadingScreen';
 import PairingScreen from './screens/PairingScreen';
 import SignUp from './screens/SignUp';
 import Login from './screens/Login';
@@ -11,6 +12,7 @@ import Profile from './screens/Profile';
 
 import auth from '@react-native-firebase/auth';
 import { BLEProvider } from './api/ble/BLEContext';
+import { FirestoreProvider } from './api/firestore/FirestoreAPI';
 
 const Stack = createNativeStackNavigator();
 
@@ -67,38 +69,29 @@ function GuestStackGroup() {
 
 export default function App() {
 
-  const [initializing, setInitializing] = useState(true);
-  const [user, setUser] = useState(auth().currentUser);
-
-  console.log(user)
-  // User State Change Listener
-  function onAuthStateChanged(user: any) {
-    setUser(user);
-    if(initializing) setInitializing(false);
-  }
-
-  useEffect(() => {
-    const authorizedUser = auth().onAuthStateChanged(onAuthStateChanged);
-    return authorizedUser;
-  }, []);
-
-  if(initializing) return null;
-
   return(
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName={user? 'User Stack': 'Guest Stack'}>
-          <Stack.Screen
-            name="User Stack" 
-            component={UserStackGroup}
-            options={{title: "User Stack", headerShown: false}}
-          />
-          <Stack.Screen
-            name="Guest Stack"
-            component={GuestStackGroup}
-            options={{title: "Guest Stack", headerShown: false}}
-          />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <FirestoreProvider>
+      <NavigationContainer>
+
+        <Stack.Navigator initialRouteName={auth().currentUser ? 'User Stack': 'Guest Stack'}>
+            <Stack.Screen
+              name="Loading"
+              component={LoadingScreen}
+              options={{title: 'Loading', headerShown: false}}
+            />
+            <Stack.Screen
+              name="User Stack" 
+              component={UserStackGroup}
+              options={{title: "User Stack", headerShown: false}}
+            />
+            <Stack.Screen
+              name="Guest Stack"
+              component={GuestStackGroup}
+              options={{title: "Guest Stack", headerShown: false}}
+            />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </FirestoreProvider>      
   )
 }
 

@@ -77,14 +77,14 @@ function PairingScreen(){
             underlayColor="#0082FC"
             onPress={() => {togglePeripheralConnection(item)}}>
             <View style={[styles.row, {backgroundColor}]}>
-            <Text style={styles.peripheralName}>
-                {/* completeLocalName (item.name) & shortAdvertisingName (advertising.localName) may not always be the same */}
-                {/*item.name} - {item?.advertising?.localName*/}
-                {item?.advertising?.localName}
-                {isConnecting && ' - Connecting...'}
-            </Text>
-            <Text style={styles.rssi}>RSSI: {item.rssi}</Text>
-            <Text style={styles.peripheralId}>{item.id}</Text>
+              <Text style={styles.peripheralName}>
+                  {/* completeLocalName (item.name) & shortAdvertisingName (advertising.localName) may not always be the same */}
+                  {/*item.name} - {item?.advertising?.localName*/}
+                  {item?.advertising?.localName}
+                  {isConnecting && ' - Connecting...'}
+              </Text>
+              <Text style={styles.rssi}>RSSI: {item.rssi}</Text>
+              <Text style={styles.peripheralId}>{item.id}</Text>
             </View>
         </TouchableHighlight>
         );

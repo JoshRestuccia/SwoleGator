@@ -3,62 +3,31 @@ import React, {useState, useEffect} from 'react';
 import firestore from '@react-native-firebase/firestore';
 import auth, { firebase } from '@react-native-firebase/auth';
 
-const SignUp = ({navigation}) => {
+import {useFirestore} from '../api/firestore/FirestoreAPI';
 
-  // Listener for User Registration
-  auth().onAuthStateChanged((user) => {
-    if(user){
-      const userObj = generateUserObj(email, first, last, username);
-      // Loading user data into database 
-      firestore().collection('users')
-        .doc(`${user.uid}`)
-        .set(userObj);
-    }
-  });
+const SignUp = ({navigation}) => {
   
-  const generateUserObj = (email, first, last, username) => {
-    return(
-      {
-        email: email,
-        first: first,
-        last: last,
-        username: username,
-      }
-    )
-  };
-  
+  const {
+    signUp,
+  } = useFirestore();
+
   const signUpPress = () => {
-    signUpValidation();
-    // Reset Navigation Stack
-    navigation.reset({
-      index: 0,
-      routes: [{name: 'User Stack', params:{screen: 'Login'}}]
-    });
+    if(signUpValidation()){
+      signUp(email, first, last, username, password);
+      // Reset Navigation Stack
+      navigation.reset({
+        index: 0,
+        routes: [{name: 'User Stack', params:{screen: 'Login'}}]
+      });
+    }
   }
 
   const signUpValidation = () => {
     if(!username || !email || !password || !first || !last){
       alert('Not enough data to create account!')
+      return false;
     }
-    else{
-        return (
-          auth().createUserWithEmailAndPassword(email, password)
-            .then( ()=> {
-              console.log('User account created and signed in!');
-            })
-            .catch(error => {
-              if (error.code === 'auth/email-already-in-use') {
-                console.log('That email address is already in use!');
-              }
-          
-              if (error.code === 'auth/invalid-email') {
-                console.log('That email address is invalid!');
-              }
-          
-              console.error(error);
-            })
-        );
-    }
+    return true;
   }
     const [first, setFirst] = useState('');
     const [last, setLast] = useState('');

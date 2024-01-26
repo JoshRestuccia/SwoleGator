@@ -1,24 +1,45 @@
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import { Text, View, TouchableOpacity, StyleSheet } from 'react-native';
-import auth from '@react-native-firebase/auth';
-import { getUserData } from '../api/firestore/FirestoreAPI';
+
+import { useFirestore } from '../api/firestore/FirestoreAPI';
 
 const HomeScreen = ({navigation}) =>{
-    const userData = getUserData();
+    const {
+      currentUser,
+      getUserData,
+      signOut
+    } = useFirestore();
+    
+    const[userData, setUserData] = useState(null);
 
-    const pressLogOut = () => {
-      auth()
-      .signOut()
-      .then(() => {
-        console.log('User signed out!');
-      })
-      navigation.navigate('Guest Stack', { screen: 'Login'});
+    const pressLogOut = async() => {
+      console.log('Signout button pressed.');
+      try{
+        await signOut();
+        navigation.navigate('Guest Stack');
+      }catch(error){
+        console.error('Error signing out...');
+      }
     };
+
+    useEffect(() => {
+      const fetchUserData = async() => {
+        try{
+          const userDataFirestore = await getUserData();
+          setUserData(userDataFirestore);
+        }catch(error){
+          throw error;
+        }
+      };
+      if(currentUser){
+        fetchUserData();
+      }
+    }, [currentUser, getUserData]);
 
     return(
         <View>
             <View style={styles.title}>
-              <Text style={styles.titleText}>{`Welcome to SwoleGator, ${userData.first}!`} </Text>
+              <Text style={styles.titleText}>{`Welcome to SwoleGator, ${userData?.first}!`} </Text>
             </View>
             <View style={styles.container}>
               <TouchableOpacity onPress={() => navigation.navigate('User Stack', {screen: 'Pair Device'})} style={styles.button}>
