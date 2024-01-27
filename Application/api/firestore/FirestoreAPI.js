@@ -9,22 +9,10 @@ export const FirestoreProvider = ({children}) => {
     const [currentUser, setCurrentUser] = useState(null);
     const [currentEmail, setCurrentEmail] = useState(''); 
     const [friends, setFriends] = useState([]);
+    const [numWorkouts, setNumWorkouts] = useState(0);
+    const [isLoading, setIsLoading] = useState(false);
 
-    // FORMATTING FUNCTIONS
-    const createDataObj = (data) => {
-        const textData = String.fromCharCode.apply(null, new Uint8Array(data));
-        const [x, y, z] = textData.split(',').map(parseFloat);
-        console.log('Received data:', { x, y, z });
-        console.log('Creating Data Object...');
-        const dataObj = {
-                x: x,
-                y: y, 
-                z: z
-        };
-        console.log('Data Object:\n', dataObj, '\n');
-        return dataObj;
-    };
-    
+    // FORMATTING FUNCTIONS    
     const formattedFriend = (initialFormat, friendUID, friendData) => {
         if(initialFormat){
             return({
@@ -79,6 +67,19 @@ export const FirestoreProvider = ({children}) => {
         }
     };
 
+    const getNumberOfWorkouts = async () => {
+        try{
+            if(currentUser){
+                const workoutDocsRef = firestore().collection('users')
+                .doc(currentUser.uid).collection('workouts');
+                const workoutDocs = await workoutDocsRef.get();
+                return workoutDocs.size;
+            }
+        }catch(err){
+            throw err;
+        }
+    };
+
     const authStateChanged = async(authUser) => {
         if(authUser){
             setCurrentUser(authUser);
@@ -86,7 +87,9 @@ export const FirestoreProvider = ({children}) => {
             console.log('About to fetch friends...');
             const tempFriends = await friendsFromDatabase();
             //console.log('TempFriends:',tempFriends);
-            setFriends(tempFriends);    
+            setFriends(tempFriends);  
+            const tempWorkouts = await getNumberOfWorkouts();
+            setNumWorkouts(tempWorkouts); 
         }
     };
 
@@ -163,22 +166,19 @@ export const FirestoreProvider = ({children}) => {
         }      
     };
 
-    const getNumberOfWorkouts = () => {
-        const [numWorkouts, setNumWorkouts] = useState(0);
-        firestore().collection('users').doc(userUID)
-            .collection('workouts').get()
-            .then((snap) => {
-                setNumWorkouts(snap.size);
-            });
-        return numWorkouts;
-    };
-
-    const saveWorkoutData = (workoutName, data) => {
-        const dataObj = createDataObj(data);
-        firestore().collection('users').doc(currentUser.uid)
-            .collection('workouts').add(`${workoutName}`)
-            .collection('data').add(JSON.parse(dataObj))
-            .catch(err => console.error(err));
+    const saveWorkoutData = async (workoutName, data) => {
+        try{
+            setIsLoading(true);
+            const dataArray = Array.from(data);
+            dataArray.forEach(async (dataPoint) => {
+                await firestore().collection('users').doc(currentUser.uid)
+                .collection('workouts').doc(workoutName)
+                .collection('data').add(dataPoint);
+            })
+            setIsLoading(false);
+        }catch(err){
+            throw err;
+        }
     };
 
     const addFriend = async (friendEmail) => {
@@ -244,6 +244,8 @@ export const FirestoreProvider = ({children}) => {
     const contextValue = {
         currentUser,
         friends,
+        numWorkouts,
+        isLoading,
         setFriends,
         friendsFromDatabase,
         signUp,

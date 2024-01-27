@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, SafeAreaView, StatusBar, StyleSheet, 
   TextInput, TouchableOpacity } from 'react-native';
 import BleManager from 'react-native-ble-manager';
-import { saveWorkoutData, getNumberOfWorkouts } from '../api/firestore/FirestoreAPI';
+import { useFirestore } from '../api/firestore/FirestoreAPI';
 
 import {
   VictoryChart,
@@ -15,18 +15,24 @@ import containerStyles from '../styles/container-view-styles';
 
 
 function GraphingScreen() {
+  const {saveWorkoutData, numWorkouts, isLoading} = useFirestore();
   const [xData, setXData] = useState('0');
   const [yData, setYData] = useState('0');
   const [zData, setZData] = useState('0');
 
-  const workouts = getNumberOfWorkouts();
-  const defaultName = `Workout #${workouts+1}`;
+  const defaultName = `Workout #${numWorkouts+1}`;
   const [workoutName, setWorkoutName] = useState(defaultName);
   const [workoutData, setWorkoutData] = useState([]);
 
-  const handleSaveWorkout = (name) => {
-    saveWorkoutData(workoutData);
+  const handleSaveWorkout = async() => {
+    await saveWorkoutData(workoutName, workoutData);
   }  
+
+  const handleDataFormat = (bleData) => {
+    const textData = String.fromCharCode.apply(null, new Uint8Array(bleData));
+    const [x, y, z] = textData.split(',').map(parseFloat);
+    return {x: x, y: y, z: z};
+  };
 
   useEffect(() => {
     // Set up continuous data reception
@@ -52,19 +58,19 @@ function GraphingScreen() {
       BleManager.read(deviceID, serviceUUID, characteristicUUID)
         .then((data) => {
           // Handle the received data here
-          const textData = String.fromCharCode.apply(null, new Uint8Array(data));
-          const [x, y, z] = textData.split(',').map(parseFloat);
-          console.log('Received data:', { x, y, z });
+          const textData = handleDataFormat(data);
+          console.log('Received data:', textData);
           // Set the data state with the formatted string
-          setXData(x.toString());
-          setYData(y.toString());
-          setZData(z.toString());
+          setXData(textData.x.toString());
+          setYData(textData.y.toString());
+          setZData(textData.z.toString());
           const newData = {
-            x: x, 
-            y: y, 
-            z: z
-          }
-          setWorkoutData(workoutData => [...workoutData, newData]);
+            x: textData.x, 
+            y: textData.y, 
+            z: textData.z
+          };
+          console.log('NEW DATA\n', newData);
+          setWorkoutData((workoutData) => [...workoutData, newData]);
           console.log('\n :::WORKOUT_DATA::::: \n',workoutData,'\n\n');
           // Perform Calculations
 
@@ -97,7 +103,7 @@ function GraphingScreen() {
           <TouchableOpacity
             style={styles.nameSelector}
             onPress={handleSaveWorkout}>
-              <Text style={styles.saveButtonText}>Save Workout Data</Text>
+              <Text style={styles.saveButtonText}>{isLoading ? (`Loading...`) : (`Save Workout Data`)}</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.container}>
