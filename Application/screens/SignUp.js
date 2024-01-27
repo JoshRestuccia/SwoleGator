@@ -8,14 +8,11 @@ const SignUp = ({navigation}) => {
     signUp,
   } = useFirestore();
 
-  const signUpPress = () => {
+  const signUpPress = async() => {
     if(signUpValidation()){
-      signUp(email, first, last, username, password);
+      await signUp(email, first, last, username, password);
       // Reset Navigation Stack
-      navigation.reset({
-        index: 0,
-        routes: [{name: 'User Stack', params:{screen: 'Home'}}]
-      });
+      navigation.navigate({name: 'User Stack', params:{screen: 'Home'}});
     }
   }
 

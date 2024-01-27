@@ -139,7 +139,7 @@ export default function Profile({navigation}) {
                   contentContainerStyle={{rowGap: 12}}
                 />
               : <View>
-                  <Text>No friends to show</Text>
+                  <Text style={styles.noFriendsText}>No friends to show</Text>
                 </View>
             }
           <TouchableOpacity style={styles.addFriends}onPress={openFriendPrompt}>
@@ -213,11 +213,11 @@ const styles = StyleSheet.create({
       fontWeight: 'bold',
     },
     friendsInfo: {
-      flex: 3,
+      flex: 2,
       width:'100%',
       backgroundColor: 'lightblue',
       borderRadius: 12,
-      justifyContent: 'center',
+      justifyContent: 'flex-start',
     },
     friendsHeader:{
       fontSize: 40,
@@ -251,6 +251,12 @@ const styles = StyleSheet.create({
       fontWeight: '300',
       color: 'black'
     },
+    noFriendsText:{
+      fontSize: 14,
+      fontWeight: '300',
+      color: 'black',
+      alignSelf: 'center'
+    }
 });
 
 

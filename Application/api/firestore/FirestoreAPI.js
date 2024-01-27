@@ -80,12 +80,14 @@ export const FirestoreProvider = ({children}) => {
     };
 
     const authStateChanged = async(authUser) => {
-        setCurrentUser(authUser);
-        setCurrentEmail(authUser.email);
-        console.log('About to fetch friends...');
-        const tempFriends = await friendsFromDatabase();
-        //console.log('TempFriends:',tempFriends);
-        setFriends(tempFriends);
+        if(authUser){
+            setCurrentUser(authUser);
+            setCurrentEmail(authUser.email);
+            console.log('About to fetch friends...');
+            const tempFriends = await friendsFromDatabase();
+            //console.log('TempFriends:',tempFriends);
+            setFriends(tempFriends);    
+        }
     };
 
     // useEffect BLOCK
@@ -100,28 +102,29 @@ export const FirestoreProvider = ({children}) => {
     }, [currentUser]);
 
     // MAIN EXPORTED FUNCTIONS
-    const signUp = (email, first, last, username, password) => {
-        auth().createUserWithEmailAndPassword(email, password)
-        .then( (user)=> {
-            const userObj = generateUserObj(email, first, last, username);
+    const signUp = async (email, first, last, username, password) => {
+        try{
+            const authUser = await auth().createUserWithEmailAndPassword(email, password).user;
+            const authUserObj = generateUserObj(email, first, last, username);
+            
             // Loading user data into database 
-            firestore().collection('users')
-                .doc(`${user.uid}`)
-                .set(userObj);
-            setCurrentUser(user);
-            console.log('User account created!');
-          })
-        .catch(error => {
-        if (error.code === 'auth/email-already-in-use') {
-            console.log('That email address is already in use!');
+            await firestore().collection('users')
+                .doc(authUser.uid)
+                .set(authUserObj);
+            
+            setCurrentUser(authUser);
+            console.log('User account created!', currentUser);
+        }catch(err){
+            if (err.code === 'auth/email-already-in-use') {
+                console.log('That email address is already in use!');
+            }
+        
+            if (err.code === 'auth/invalid-email') {
+                console.log('That email address is invalid!');
+            }
+            console.error(err);
+            throw err;
         }
-    
-        if (error.code === 'auth/invalid-email') {
-            console.log('That email address is invalid!');
-        }
-    
-        console.error(error);
-        });
     };
 
     const getUserData = async() => {

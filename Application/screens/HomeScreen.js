@@ -10,7 +10,8 @@ const HomeScreen = ({navigation}) =>{
       signOut
     } = useFirestore();
     
-    const[userData, setUserData] = useState(null);
+    const [userData, setUserData] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
 
     const pressLogOut = async() => {
       console.log('Signout button pressed.');
@@ -27,18 +28,19 @@ const HomeScreen = ({navigation}) =>{
     };
 
     useEffect(() => {
-      const fetchUserData = async() => {
+      const fetchData = async() => {
         try{
-          const userDataFirestore = await getUserData();
-          setUserData(userDataFirestore);
-        }catch(error){
-          throw error;
+          if(currentUser){
+            const userDataFirestore = await getUserData();
+            setUserData(userDataFirestore);
+            setIsLoading(false);
+          }
+        }catch(err){
+          console.error(err);
         }
       };
-      if(currentUser){
-        fetchUserData();
-      }
-    }, [currentUser, getUserData]);
+      fetchData();
+    }, [currentUser]);
 
     return(
         <View>
