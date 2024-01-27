@@ -2,6 +2,7 @@ import React, {useState, useEffect} from 'react';
 import {StyleSheet, Modal, View, Image, Text, FlatList, TouchableHighlight, TouchableOpacity, TextInput} from 'react-native';
 import { useFirestore } from '../api/firestore/FirestoreAPI';
 import SettingsScreen from './Settings';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Profile({navigation}) {
     const [isLoading, setIsLoading] = useState(true);
@@ -11,10 +12,8 @@ export default function Profile({navigation}) {
 
     const {
       friends,
-      setFriends,
       currentUser,
       getUserData,
-      friendsFromDatabase,
       addFriend
     } = useFirestore();
 
@@ -29,8 +28,8 @@ export default function Profile({navigation}) {
             console.log('[Profile:FriendPrompt] Adding friend!');
             await addFriend(friendEmail);
             setFriendEmail('');
-            closeFriendPrompt();
             setIsLoading(false);
+            closeFriendPrompt();
           }catch(error){
             console.error(error);
             setIsLoading(false);
@@ -85,17 +84,16 @@ export default function Profile({navigation}) {
       setFriendPromptVisible(false);
     }
     
-    const renderItem = async ({item: friend}) => {
-      if(!friend) return null;
-      return(
-        <TouchableHighlight>
-          <View>
-            {/* <Image src={{uri: friendData.profileImage }} style={styles.profileImage}/> */}
-            <Text style={styles.userName}>{friend.username}</Text>
-            <Text style={styles.userName}>Friends Since: {friend.friendedDate}</Text>
-          </View>
-        </TouchableHighlight>
-      );
+    const renderItem = ({item}) => {
+      if(item){
+      console.log('Friend being rendered: ', item.email);
+        return(
+          <View style={styles.friendBadge}>
+            <Text style={styles.friendText}>{item.username}</Text>
+            <Text style={styles.friendText}>{item.friendedDate}</Text>
+          </View> 
+        );
+      }
     };
 
     useEffect(() => {
@@ -104,9 +102,9 @@ export default function Profile({navigation}) {
           if(currentUser){
             const userDataFirestore = await getUserData();
             setUserData(userDataFirestore);
-            const tempFriends = await friendsFromDatabase();
-            setFriends(tempFriends);
             setIsLoading(false);
+
+            console.log('Friends:', friends);
           }
         }catch(err){
           console.error(err);
@@ -116,7 +114,7 @@ export default function Profile({navigation}) {
     }, [currentUser]);
 
     return(
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
         {/* Settings Button */}        
         <TouchableOpacity style={styles.settingsButton} onPress={openSettings}>
           <Text style={styles.buttonText}> Settings </Text>
@@ -136,9 +134,10 @@ export default function Profile({navigation}) {
               : friends && (friends.length !== 0) ? 
                 <FlatList
                   data={friends}
-                  keyExtractor={(item) => item.id}
+                  keyExtractor={(item) => item.uid}
                   renderItem={renderItem}
-                /> 
+                  contentContainerStyle={{rowGap: 12}}
+                />
               : <View>
                   <Text>No friends to show</Text>
                 </View>
@@ -163,14 +162,14 @@ export default function Profile({navigation}) {
         >
           <FriendPrompt/>
         </Modal>
-    </View>
+    </SafeAreaView>
     )
 };
 
 
 const styles = StyleSheet.create({
     container: {
-      flex: 2,
+      flex: 1,
       alignItems: 'center',
     },
     profileImage: {
@@ -180,7 +179,7 @@ const styles = StyleSheet.create({
       marginBottom: 20,
     },
     userInfo: {
-      flex:1,
+      flex:2,
       flexDirection: 'column',
       alignItems: 'center',
     },
@@ -198,6 +197,7 @@ const styles = StyleSheet.create({
       borderRadius: 12,
       width: 200,
       height: 50,
+      alignSelf: 'center'
     },
     settingsButton: {
       backgroundColor: '#3498db', // Blue color (adjust as needed)
@@ -213,19 +213,44 @@ const styles = StyleSheet.create({
       fontWeight: 'bold',
     },
     friendsInfo: {
-      flex: 2,
-      flexDirection: 'column',
-      height: '20%',
-      width: '100%',
+      flex: 3,
+      width:'100%',
       backgroundColor: 'lightblue',
       borderRadius: 12,
-      alignItems: 'center'
+      justifyContent: 'center',
     },
     friendsHeader:{
       fontSize: 40,
       fontWeight: 'bold',
       marginBottom: 10,
-    }
+      alignSelf: 'center'
+    },
+    friendBadge: {
+      width: '75%',
+      padding: 20,
+      borderRadius: 8,
+      shadowColor: '#000',
+      shadowOffset: { width: 3, height: 3 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      backgroundColor: 'white', // Add a contrasting background color
+      alignSelf: 'center'
+    },
+    friendName:{
+      fontSize: 15,
+      fontWeight: 'bold',
+      color: 'gray'
+    },
+    row: {
+      marginLeft: 10,
+      marginRight: 10,
+      borderRadius: 20,
+    },
+    friendText: {
+      fontSize: 14,
+      fontWeight: '300',
+      color: 'black'
+    },
 });
 
 

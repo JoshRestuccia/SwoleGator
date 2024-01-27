@@ -57,18 +57,21 @@ export const FirestoreProvider = ({children}) => {
     const friendsFromDatabase = async() => {
         if(currentUser){
             try{
+                console.log(`Trying to reach ${currentUser.email}'s friends`);
                 const friendsCollection = firestore().collection('users')
-                .doc(currentUser.uid).collection('friends')
-                .orderBy('friendedDate', 'desc');
+                .doc(currentUser.uid).collection('friends');
+                //.orderBy('friendedDate', 'desc');
                 
                 const friendsSnapshot = await friendsCollection.get();
                 const updatedFriendsList = [];
+                console.log('Number of Friends: ', friendsSnapshot.docs.length);
                 for(const friendDoc of friendsSnapshot.docs){
                     const formatted = formattedFriend(false, friendDoc.id, friendDoc.data());
+                    console.log('Formatted Friend:', formatted);
                     updatedFriendsList.push(formatted);
-                    console.log(formatted);
                 }
-                return updatedFriendsList;
+                const friendsList = Array.from(updatedFriendsList);
+                return friendsList;
             }catch(err){
                 console.error(err);
                 throw err;
@@ -76,15 +79,19 @@ export const FirestoreProvider = ({children}) => {
         }
     };
 
+    const authStateChanged = async(authUser) => {
+        setCurrentUser(authUser);
+        setCurrentEmail(authUser.email);
+        console.log('About to fetch friends...');
+        const tempFriends = await friendsFromDatabase();
+        //console.log('TempFriends:',tempFriends);
+        setFriends(tempFriends);
+    };
+
     // useEffect BLOCK
     useEffect(() => {
 
-        const unsubscribe = auth().onAuthStateChanged( async(authUser) => {
-            setCurrentUser(authUser);
-            setCurrentEmail(authUser.email);
-            //const tempFriends = await friendsFromDatabase();
-            //setFriends(tempFriends);
-        });
+        const unsubscribe = auth().onAuthStateChanged(authStateChanged);
 
         return () => {
             console.debug('[FirestoreContext] Main Firestore Context is unmounting...');
