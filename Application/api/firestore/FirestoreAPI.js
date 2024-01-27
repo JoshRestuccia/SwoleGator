@@ -4,47 +4,46 @@ import auth from '@react-native-firebase/auth';
 
 const FirestoreContext = createContext();
 
-const createDataObj = (data) => {
-    const textData = String.fromCharCode.apply(null, new Uint8Array(data));
-    const [x, y, z] = textData.split(',').map(parseFloat);
-    console.log('Received data:', { x, y, z });
-    console.log('Creating Data Object...');
-    const dataObj = {
-            x: x,
-            y: y, 
-            z: z
-    };
-    console.log('Data Object:\n', dataObj, '\n');
-    return dataObj;
-};
-
 export const FirestoreProvider = ({children}) => {
   
     const [currentUser, setCurrentUser] = useState(null);
     const [currentEmail, setCurrentEmail] = useState(''); 
+    const [friends, setFriends] = useState([]);
 
-    useEffect(() => {
-        const unsubscribe = auth().onAuthStateChanged((authUser) => {
-            setCurrentUser(authUser);
-            setCurrentEmail(authUser.email);
-        });
-
-        return () => {
-            console.debug('[FirestoreContext] Main Firestore Context is unmounting...');
-            unsubscribe();
+    // FORMATTING FUNCTIONS
+    const createDataObj = (data) => {
+        const textData = String.fromCharCode.apply(null, new Uint8Array(data));
+        const [x, y, z] = textData.split(',').map(parseFloat);
+        console.log('Received data:', { x, y, z });
+        console.log('Creating Data Object...');
+        const dataObj = {
+                x: x,
+                y: y, 
+                z: z
+        };
+        console.log('Data Object:\n', dataObj, '\n');
+        return dataObj;
+    };
+    
+    const formattedFriend = (initialFormat, friendUID, friendData) => {
+        if(initialFormat){
+            return({
+                uid: friendUID,
+                username: friendData.username || 'No Username',
+                email: friendData.email,
+                profileImage: friendData.profileImage || 'default-profile-image-url',
+                friendsSince: firestore.FieldValue.serverTimestamp()
+            });
         }
-    }, [currentUser]);
-
-    const createFriendObj = (friendUID, friendData) => {
-        console.log(`[UID:${friendUID}]FriendData:${friendData}`);
         return({
             uid: friendUID,
+            username: friendData.username || 'No Username',
             email: friendData.email,
-            username: friendData.username,
-            friendData: firestore.Timestamp.fromDate(new Date())
+            profileImage: friendData.profileImage || 'default-profile-image-url',
+            friendsSince: friendData.friendedDate
         });
     };
-
+    
     const generateUserObj = (email, first, last, username) => {
         return(
             {
@@ -55,6 +54,45 @@ export const FirestoreProvider = ({children}) => {
             });
     };
 
+    const friendsFromDatabase = async() => {
+        if(currentUser){
+            try{
+                const friendsCollection = firestore().collection('users')
+                .doc(currentUser.uid).collection('friends')
+                .orderBy('friendedDate', 'desc');
+                
+                const friendsSnapshot = await friendsCollection.get();
+                const updatedFriendsList = [];
+                for(const friendDoc of friendsSnapshot.docs){
+                    const formatted = formattedFriend(false, friendDoc.id, friendDoc.data());
+                    updatedFriendsList.push(formatted);
+                    console.log(formatted);
+                }
+                return updatedFriendsList;
+            }catch(err){
+                console.error(err);
+                throw err;
+            }
+        }
+    };
+
+    // useEffect BLOCK
+    useEffect(() => {
+
+        const unsubscribe = auth().onAuthStateChanged( async(authUser) => {
+            setCurrentUser(authUser);
+            setCurrentEmail(authUser.email);
+            //const tempFriends = await friendsFromDatabase();
+            //setFriends(tempFriends);
+        });
+
+        return () => {
+            console.debug('[FirestoreContext] Main Firestore Context is unmounting...');
+            unsubscribe();
+        }
+    }, [currentUser]);
+
+    // MAIN EXPORTED FUNCTIONS
     const signUp = (email, first, last, username, password) => {
         auth().createUserWithEmailAndPassword(email, password)
         .then( (user)=> {
@@ -135,25 +173,22 @@ export const FirestoreProvider = ({children}) => {
 
     const addFriend = async (friendEmail) => {
         try{
-            // Check if own email
-            const ownEmail = await firestore().collection('users')
-            .where('email', '==', currentEmail).get();
-            if(ownEmail.empty){
-                console.warn('You can\'t be friends with yourself!!');
-                return;
-            }
             // Check if friends already
+            console.log(`[FirestoreAPI::addFriend] Function hit.`);
             const friendsAlready = await firestore().collection('users')
             .doc(currentUser.uid).collection('friends')
             .where('email', '==', friendEmail).get();
-            if(friendsAlready.empty){
+            //Check if trying to add own email
+            if(friendEmail === currentEmail){
+                console.warn('You can\'t be friends with yourself!!');
+                return;
+            }else if(!friendsAlready.empty){
                 console.warn(`You've already added ${friendEmail}`);
                 return;
             }
             // Get friend to add
             const friendSnap = await firestore().collection('users')
             .where('email', '==', friendEmail).get();
-
             if(friendSnap.empty){
                 throw new Error(`Friend ${friendEmail} was not found`);
             };
@@ -161,7 +196,7 @@ export const FirestoreProvider = ({children}) => {
             const friendUID = friendSnap.docs[0].id;
             // add friend to users/<userUID>/friends
             await firestore().collection('users').doc(currentUser.uid)
-            .collection('friends').add(createFriendObj(friendUID, friendData));
+            .collection('friends').add(formattedFriend(true, friendUID, friendData));
             console.log(`Added Friend: ${friendData.email}`);
         }catch(error){
             throw error;
@@ -170,27 +205,19 @@ export const FirestoreProvider = ({children}) => {
 
     const getFriendData = async(friendUID) => {
         try{
-            const friendData = await firestore().collection('users')
+            const friendDoc = await firestore().collection('users')
             .doc(friendUID).get();
-            return friendData;
-        }catch(error){
-            throw error;
+            if(friendDoc.exists){
+                const friendData = friendDoc.data();
+                const formattedFriendData = formattedFriend(false, friendUID, friendData);
+                return formattedFriendData;
+            }else{
+                return null;
+            }
+        }catch(err){
+            console.error(err);
+            throw err;
         }
-    };
-
-    const getFriends = async () => {
-        try{
-            const friendsCollection = firestore().collection('users')
-            .doc(currentUser.uid).collection('friends').orderBy('friendedDate','desc')
-            .limit(3);
-            const snapshot = await friendsCollection.get();
-            const newFriends = snapshot.docs.map((index, doc) => {
-                const friendObj = createFriendObj(doc.id, doc.data());
-                console.log(friendObj);
-                return {id: index, ...doc.data()};
-            });
-            return newFriends;
-        }catch(err){ console.error(err)};
     };
 
     const signOut = async() => {
@@ -203,8 +230,12 @@ export const FirestoreProvider = ({children}) => {
         }
     };
 
+    // CONTEXT VALUE (WHICH FUNCTIONS TO EXPORT)
     const contextValue = {
         currentUser,
+        friends,
+        setFriends,
+        friendsFromDatabase,
         signUp,
         signIn,
         saveWorkoutData,
@@ -212,7 +243,6 @@ export const FirestoreProvider = ({children}) => {
         getNumberOfWorkouts,
         addFriend,
         getFriendData,
-        getFriends,
         signOut
     }
 

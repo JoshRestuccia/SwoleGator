@@ -4,35 +4,45 @@ import { useFirestore } from '../api/firestore/FirestoreAPI';
 import SettingsScreen from './Settings';
 
 export default function Profile({navigation}) {
+    const [isLoading, setIsLoading] = useState(true);
     const [isSettingsVisible, setSettingsVisible] = useState(false);
     const [friendPromptVisible, setFriendPromptVisible] = useState(false);
     const [userData, setUserData] = useState(null);
-    const [friends, setFriends] = useState([]);
 
     const {
+      friends,
+      setFriends,
       currentUser,
       getUserData,
-      getFriendData,
-      getFriends,
+      friendsFromDatabase,
+      addFriend
     } = useFirestore();
 
     const FriendPrompt = () => {
-      const [friendEmail, setFriendEmail] = useState();
-      const {addFriend} = useFirestore();
+      const [isLoading, setIsLoading] = useState(false);
+      const [friendEmail, setFriendEmail] = useState('');
       
       const handleSubmitFriendEmail = async() => {
         if(friendEmail){
           try{
+            setIsLoading(true);
+            console.log('[Profile:FriendPrompt] Adding friend!');
             await addFriend(friendEmail);
             setFriendEmail('');
             closeFriendPrompt();
+            setIsLoading(false);
           }catch(error){
             console.error(error);
+            setIsLoading(false);
           }
         } else { 
           console.warn('Cannot add friend. Email is empty');
         }
       };
+
+      useEffect(() => {
+        console.log(`FriendEmail: ${friendEmail}`);
+      }, [friendEmail]);
     
       return(
         <View>
@@ -75,13 +85,14 @@ export default function Profile({navigation}) {
       setFriendPromptVisible(false);
     }
     
-    const renderItem = (friend) => {
-      const friendData = getFriendData(friend.uid);
+    const renderItem = async ({item: friend}) => {
+      if(!friend) return null;
       return(
         <TouchableHighlight>
           <View>
             {/* <Image src={{uri: friendData.profileImage }} style={styles.profileImage}/> */}
-            <Text style={styles.username}>{friendData.username}</Text>
+            <Text style={styles.userName}>{friend.username}</Text>
+            <Text style={styles.userName}>Friends Since: {friend.friendedDate}</Text>
           </View>
         </TouchableHighlight>
       );
@@ -93,48 +104,47 @@ export default function Profile({navigation}) {
           if(currentUser){
             const userDataFirestore = await getUserData();
             setUserData(userDataFirestore);
-            const fr = await getFriends();
-            setFriends(fr);
+            const tempFriends = await friendsFromDatabase();
+            setFriends(tempFriends);
+            setIsLoading(false);
           }
         }catch(err){
           console.error(err);
         }
       };
       fetchData();
-      return(() => {});
-
-    }, [currentUser, getUserData, getFriends, setFriends]);
+    }, [currentUser]);
 
     return(
     <View style={styles.container}>
-        {/* Settings Button */}
+        {/* Settings Button */}        
         <TouchableOpacity style={styles.settingsButton} onPress={openSettings}>
           <Text style={styles.buttonText}> Settings </Text>
-        </TouchableOpacity>
-        {/* User profile image */}
-        {/*<Image source={{ uri: userData.imageUrl }} style={styles.profileImage} />*/}
-        {/* User details */}
+        </TouchableOpacity>          
+        {/* User profile data */}
         <View style={styles.userInfo}>
-            <Text style={styles.userName}>{`Username: ${userData?.username}`}</Text>
+            {/*<Image source={{ uri: userData.imageUrl }} style={styles.profileImage} />*/}
+            <Text style={styles.userName}>{`${userData?.username}`}</Text>
             <Text>{`Age: ${userData?.age}`}</Text>
             <Text>{`Workouts Completed: ${userData?.workoutsCompleted}`}</Text>
         </View>
-        {/* Friends Info */}
+        {/* Friends Data */}
         <View style={styles.friendsInfo}>
-          {(friends && friends.length !== 0) ? 
-            (<FlatList
-              data={friends}
-              keyExtractor={(item) => item.id}
-              renderItem={renderItem}
-            />) : 
-            (
-              <View>
-                <Text>No friends to show</Text>
-              </View>
-            )
-          }
+          <Text style={styles.friendsHeader}> Friends </Text>
+            {isLoading ? 
+              <Text>Loading friends...</Text> 
+              : friends && (friends.length !== 0) ? 
+                <FlatList
+                  data={friends}
+                  keyExtractor={(item) => item.id}
+                  renderItem={renderItem}
+                /> 
+              : <View>
+                  <Text>No friends to show</Text>
+                </View>
+            }
           <TouchableOpacity style={styles.addFriends}onPress={openFriendPrompt}>
-            <Text>Add Friends</Text>
+            <Text style={styles.buttonText}>Add Friends</Text>
           </TouchableOpacity>
         </View>
         {/* Settings Screen Modal */}
@@ -150,7 +160,6 @@ export default function Profile({navigation}) {
           visible={friendPromptVisible}
           transparent={true}
           onRequestClose={closeFriendPrompt}
-          style={styles.modal}
         >
           <FriendPrompt/>
         </Modal>
@@ -161,9 +170,8 @@ export default function Profile({navigation}) {
 
 const styles = StyleSheet.create({
     container: {
-      flex: 1,
+      flex: 2,
       alignItems: 'center',
-      justifyContent: 'center',
     },
     profileImage: {
       width: 150,
@@ -172,10 +180,12 @@ const styles = StyleSheet.create({
       marginBottom: 20,
     },
     userInfo: {
+      flex:1,
+      flexDirection: 'column',
       alignItems: 'center',
     },
     userName: {
-      fontSize: 20,
+      fontSize: 30,
       fontWeight: 'bold',
       marginBottom: 10,
     },
@@ -186,18 +196,36 @@ const styles = StyleSheet.create({
       backgroundColor: '#0a398a',
       margin: 10,
       borderRadius: 12,
+      width: 200,
+      height: 50,
     },
     settingsButton: {
       backgroundColor: '#3498db', // Blue color (adjust as needed)
       padding: 10,
       borderRadius: 8,
-      marginTop: 20,
+      marginTop: 15,
+      alignSelf:'flex-end',
+      marginRight: 15
     },
     buttonText: {
       color: '#fff', // White color for text
       textAlign: 'center',
       fontWeight: 'bold',
     },
+    friendsInfo: {
+      flex: 2,
+      flexDirection: 'column',
+      height: '20%',
+      width: '100%',
+      backgroundColor: 'lightblue',
+      borderRadius: 12,
+      alignItems: 'center'
+    },
+    friendsHeader:{
+      fontSize: 40,
+      fontWeight: 'bold',
+      marginBottom: 10,
+    }
 });
 
 
