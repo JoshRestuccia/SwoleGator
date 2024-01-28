@@ -1,40 +1,24 @@
 import {StyleSheet, View, Button, Text, TouchableOpacity, TextInput} from 'react-native'
 import React, {useState, useEffect} from 'react';
-import auth from '@react-native-firebase/auth';
-import RootNavigator from './RootNavigator';
+
+import { useFirestore } from '../api/firestore/FirestoreAPI';
+
 
 const Login = ({navigation}) => {
-  const signIn = (email, password) => {
-    return(
-      auth()
-      .signInWithEmailAndPassword(email, password)
-      .then(() => {
-        console.log('User account signed in!');
-        navigation.navigate("Home");
-      })
-      .catch(error => {
-    
-        if (error.code === 'auth/invalid-email') {
-          console.log('That email address is invalid!');
-        }
-        if (error.code === 'auth/invalid-credential') {
-          console.log('Invalid credentials. Check email or password');
-        }
-        if (error.code === 'auth/'){
-          console.error(error);
-        }
-        console.log(error.code);
-      })
-    );
-  }
     const [email, setEmail] = useState();
     const [password, setPassword] = useState();
     
-    const onPress = () => {
+    const {
+      signIn,
+    } = useFirestore();
+
+    const signInPressed = () => {
         signIn(email, password);
         setEmail("")
         setPassword("")
+        navigation.navigate('User Stack', {screen: 'Home'});
     }
+
   return (
     <View style={styles.container}>
       <TextInput
@@ -48,13 +32,13 @@ const Login = ({navigation}) => {
         onChangeText={setPassword}
         secureTextEntry={true}
         value={password}/>
-          <TouchableOpacity onPress={onPress}>
+          <TouchableOpacity onPress={signInPressed}>
             <View style={styles.button}>
                 <Text style={styles.textStyle}>Login</Text>
             </View>
         </TouchableOpacity>
         <View style={styles.textStyle}>
-          <Text style={styles.textStyle} onPress={()=>navigation.navigate("Sign Up")}>
+          <Text style={styles.textStyle} onPress={()=>navigation.navigate('Guest Stack', {screen: 'Sign Up'})}>
             Click here to create an account
           </Text>
         </View>

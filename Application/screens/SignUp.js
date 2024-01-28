@@ -1,44 +1,46 @@
 import {StyleSheet, View, Text, TouchableOpacity, TextInput} from 'react-native'
 import React, {useState, useEffect} from 'react';
-import auth from '@react-native-firebase/auth';
+import {useFirestore} from '../api/firestore/FirestoreAPI';
 
 const SignUp = ({navigation}) => {
-  const onPress = () => {
-    signUp(username, email, password)
-    setEmail("")
-    setPassword("")
-    setName("")
+  
+  const {
+    signUp,
+  } = useFirestore();
+
+  const signUpPress = async() => {
+    if(signUpValidation()){
+      await signUp(email, first, last, username, password);
+      // Reset Navigation Stack
+      navigation.navigate({name: 'User Stack', params:{screen: 'Home'}});
+    }
   }
-  const signUp = (username, email, password) => {
-    if(!username || !email || !password){
+
+  const signUpValidation = () => {
+    if(!username || !email || !password || !first || !last){
       alert('Not enough data to create account!')
+      return false;
     }
-    else{
-    return auth().createUserWithEmailAndPassword(email, password)
-    .then( ()=> {
-      console.log('User account created and signed in!');
-      navigation.navigate("Home");
-    })
-    .catch(error => {
-      if (error.code === 'auth/email-already-in-use') {
-        console.log('That email address is already in use!');
-        setInUse(true);
-      }
-  
-      if (error.code === 'auth/invalid-email') {
-        console.log('That email address is invalid!');
-      }
-  
-      console.error(error);
-    });
-    }
+    return true;
   }
-    const [email, setEmail] = useState();
-    const [password, setPassword] = useState();
-    const [username, setName] = useState();
-    const [inUse, setInUse] = useState(false);
+    const [first, setFirst] = useState('');
+    const [last, setLast] = useState('');
+    const [username, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+
   return (
     <View style={styles.container}>
+      <TextInput
+      style={styles.textInput}
+        placeholder='Firstname'
+        onChangeText={setFirst}
+        value={first}/>
+      <TextInput
+      style={styles.textInput}
+        placeholder='Lastname'
+        onChangeText={setLast}
+        value={last}/>
       <TextInput
       style={styles.textInput}
         placeholder='Username'
@@ -55,12 +57,14 @@ const SignUp = ({navigation}) => {
         onChangeText={setPassword}
         value={password}
         secureTextEntry={true}/>
-        <TouchableOpacity onPress={onPress}>
+        <TouchableOpacity onPress={signUpPress}>
             <View style={styles.button}>
                 <Text style={styles.textStyle}>Sign Up</Text>
             </View>
         </TouchableOpacity>
-        <View style={styles.textStyle}><Text style={styles.textStyle} onPress={() => navigation.navigate("Login")}>Already have an account? Login here.</Text></View>
+        <View style={styles.textStyle}>
+          <Text style={styles.textStyle} onPress={() => navigation.navigate('Guest Stack', {screen: 'Login'})}>Already have an account? Login here.</Text>
+        </View>
     </View>
   )
 }
