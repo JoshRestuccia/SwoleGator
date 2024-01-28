@@ -88,8 +88,8 @@ const styles = StyleSheet.create({
       padding:10,
       marginLeft:35,
       marginRight: 35,
-      marginTop: 25,
-      marginBottom: 20,
+      marginTop: 10,
+      marginBottom: 10,
       borderRadius: 30,
     },
     textStyle:{
