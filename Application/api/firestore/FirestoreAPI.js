@@ -150,8 +150,9 @@ export const FirestoreProvider = ({children}) => {
 
     const signIn = async (email, password) => {
         try{
-            await auth().signInWithEmailAndPassword(email, password);
+            const authUser = await auth().signInWithEmailAndPassword(email, password);
             console.log('User account signed in!');
+            return authUser;
         }catch(error) {
             if (error.code === 'auth/invalid-email') {
                 console.log('That email address is invalid!');

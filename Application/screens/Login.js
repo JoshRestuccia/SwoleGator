@@ -5,18 +5,33 @@ import { useFirestore } from '../api/firestore/FirestoreAPI';
 
 
 const Login = ({navigation}) => {
-    const [email, setEmail] = useState();
-    const [password, setPassword] = useState();
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
     
     const {
       signIn,
     } = useFirestore();
 
-    const signInPressed = () => {
-        signIn(email, password);
-        setEmail("")
-        setPassword("")
-        navigation.navigate('User Stack', {screen: 'Home'});
+    const signInPressed = async() => {
+      try{
+        if(email !== '' && password != ''){
+          const user = await signIn(email, password);
+          setEmail("");
+          setPassword("");
+          if(user){
+            navigation.reset({
+              index: 0,
+              routes: [{name: 'User Stack'}]
+            });
+          }else{
+            console.warn('Did not sign in...');
+          }
+        }else{
+          console.warn('Please enter email and password');
+        }
+      }catch(err){
+        console.error("Error signing user in", err);
+      }
     }
 
   return (
