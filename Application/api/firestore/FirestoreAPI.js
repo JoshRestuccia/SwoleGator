@@ -22,7 +22,7 @@ export const FirestoreProvider = ({children}) => {
                 profileImage: friendData.profileImage || 'default-profile-image-url',
                 friendsSince: firestore.FieldValue.serverTimestamp()
             });
-        }
+        } 
         return({
             uid: friendUID,
             username: friendData.username || 'No Username',
@@ -107,23 +107,34 @@ export const FirestoreProvider = ({children}) => {
     // MAIN EXPORTED FUNCTIONS
     const signUp = async (email, first, last, username, password) => {
         try{
-            const authUser = await auth().createUserWithEmailAndPassword(email, password).user;
+            const authUID = await auth().createUserWithEmailAndPassword(email, password)
+            .then( cred => {
+                const {uid} = cred.user;
+                auth().currentUser.updateProfile({
+                    displayName: username
+                })
+                return uid
+            })
+            console.log(authUID);
+            if(!authUID){
+                console.log("User not created");
+            }
             const authUserObj = generateUserObj(email, first, last, username);
             
             // Loading user data into database 
             await firestore().collection('users')
-                .doc(authUser.uid)
+                .doc(authUID)
                 .set(authUserObj);
-            
-            setCurrentUser(authUser);
+            const currUser = await firestore().collection('users').doc(authUID).get();
+            setCurrentUser(currUser);
             console.log('User account created!', currentUser);
         }catch(err){
             if (err.code === 'auth/email-already-in-use') {
-                console.log('That email address is already in use!');
+                alert('That email address is already in use!');
             }
         
             if (err.code === 'auth/invalid-email') {
-                console.log('That email address is invalid!');
+                alert('That email address is invalid!');
             }
             console.error(err);
             throw err;

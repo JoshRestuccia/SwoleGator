@@ -51,7 +51,7 @@ const HomeScreen = ({navigation}) =>{
               <TouchableOpacity onPress={() => navigation.navigate('User Stack', {screen: 'Pair Device'})} style={styles.button}>
                 <Text style={styles.textStyle}> Pair Device</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => navigation.navigate('User Stack', {screen: 'Graphing Screen'})} style={styles.button}>
+              <TouchableOpacity onPress={() => navigation.navigate('User Stack', {screen: 'Exercise Selection'})} style={styles.button}>
                 <Text style={styles.textStyle}>Start Lift </Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => navigation.navigate('User Stack', {screen: 'SwoleGator Data'})} style={styles.button}>

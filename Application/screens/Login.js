@@ -24,10 +24,10 @@ const Login = ({navigation}) => {
               routes: [{name: 'User Stack'}]
             });
           }else{
-            console.warn('Did not sign in...');
+            alert("Incorrect login credentials. Please try again.");
           }
         }else{
-          console.warn('Please enter email and password');
+          alert("Login field left empty. Please enter all relevant credentials.")
         }
       }catch(err){
         console.error("Error signing user in", err);
