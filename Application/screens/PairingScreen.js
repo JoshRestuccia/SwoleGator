@@ -20,8 +20,9 @@ function PairingScreen(){
       isConnecting,
       scannedDevices,
       connectedDevice,
-      connectPeripheral,
-      disconnnectPeripheral,
+      handleRetrieveConnected,
+      handleConnectPeripheral,
+      handleDisconnectPeripheral,
       startBLEScan,
       stopBLEScan,
     } = useBLE();
@@ -35,38 +36,21 @@ function PairingScreen(){
       stopBLEScan();
     };
 
-    const togglePeripheralConnection = (peripheral) => {
-      if(connectedDevice && (connectedDevice.id === peripheral.id)){
-        disconnnectPeripheral(peripheral);
-      }else{
-        console.log(peripheral);
-        connectPeripheral(peripheral);
+    const togglePeripheralConnection = async (peripheral) => {
+      if(!peripheral) return;
+      try{
+        if(connectedDevice && (connectedDevice.id === peripheral.id)){
+          await handleDisconnectPeripheral();
+        }else{
+          await handleConnectPeripheral(peripheral);
+        }
+      }catch(err){
+        console.error(err);
       }
     };
 
     const retrieveConnected = async () => {
-        try {
-          const connectedPeripherals = await BleManager.getConnectedPeripherals();
-          if (connectedPeripherals.length === 0) {
-            console.warn('[retrieveConnected] No connected peripherals found.');
-            return;
-          }
-    
-          console.debug(
-            '[retrieveConnected] connectedPeripherals',
-            connectedPeripherals,
-          );
-    
-          for (var i = 0; i < connectedPeripherals.length; i++) {
-            var peripheral = connectedPeripherals[i];
-            addOrUpdatePeripheral(peripheral.id, {...peripheral, connected: true});
-          }
-        } catch (error) {
-          console.error(
-            '[retrieveConnected] unable to retrieve connected peripherals.',
-            error,
-          );
-        }
+        await handleRetrieveConnected();
     };
 
     const renderItem = (item) => {
@@ -75,7 +59,7 @@ function PairingScreen(){
         return (
         <TouchableHighlight
             underlayColor="#0082FC"
-            onPress={() => {togglePeripheralConnection(item)}}>
+            onPress={async () => {togglePeripheralConnection(item)}}>
             <View style={[styles.row, {backgroundColor}]}>
               <Text style={styles.peripheralName}>
                   {/* completeLocalName (item.name) & shortAdvertisingName (advertising.localName) may not always be the same */}

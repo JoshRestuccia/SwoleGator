@@ -6,88 +6,72 @@ const BLEContext = createContext();
 const SERVICE_UUIDS = [];
 const SECONDS_TO_SCAN_FOR = 5;
 const ALLOW_DUPLICATES = true;
+const READING_INTERVAL = 25;
+
+const serviceUUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b"; // Replace with your service UUID
+const characteristicUUID = "00001800-0000-1000-8000-00805f9b34fb"; // Replace with your characteristic UUID
 
 const bleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(bleManagerModule);
 
 export const BLEProvider = ({children}) => {
     const [isScanning, setIsScanning] = useState(false);
-    const [isConnecting, setIsConnecting] = useState(false);
     const [scannedDevices, setScannedDevices] = useState([]);
+    const [isConnecting, setIsConnecting] = useState(false);
     const [connectedDevice, setConnectedDevice] = useState(null);
+    const [isReadingData, setIsReadingData] = useState(false);
+    const [readInterval, setReadInterval] = useState(null);
+    const [bleData, setBleData] = useState(null);
 
-    const addOrUpdatePeripheral = (peripheral) => {
-        setScannedDevices((prevScans) => {
-            console.log(prevScans);
-            // If it doesnt exists, we are adding it
-            if(!prevScans.find((prevDev) => prevDev.id === peripheral.id)){
-                return [...prevScans, peripheral];
-            }
-            return prevScans;
-        });
-        console.debug(`[BLEContext::addOrUpdatePeripheral] Updated Peripheral (${peripheral.id})`);
-    }
 
-    const startBLEScan = () => {
+    const startBLEScan = async () => {
         if(!isScanning){
+            setIsScanning(true);
             //Reset Peripheral Map
             setScannedDevices([]);
             console.log('[BLEContext::startBLEScan] starting scan');
-            setIsScanning(true);
             BleManager.scan(SERVICE_UUIDS, SECONDS_TO_SCAN_FOR, ALLOW_DUPLICATES)
             .then(() => console.log('[BLEContext] Scanning has started...'))
             .catch(err => console.error('[BLEContext::startBLEScan]',err));
-            
         }
     };
 
-    const stopBLEScan = () => {
+    const stopBLEScan = async () => {
+        if(isScanning){
+            await BleManager.stopScan();
+        };
+    };
+
+    const handleBLEScanStopped = () => {
         setIsScanning(false);
-        console.log('[BLEContext::stopBLEScan] stopped scanning');
+        console.log('[BLEContext::handleBLEScanStopped] stopped scanning');
     };
 
-    const discoverPeripheral = (peripheral) => {
-        console.debug('[BLEContext::discoverPeripheral] discovered a new peripheral');
-        if(!peripheral.name){
-            peripheral.name = 'NO NAME';
-        }
-        if(peripheral.name && (peripheral.name === "ESP32" || peripheral.name === "SwoleGator")){
-            console.log("The SwoleGator Device has been found!");
-            addOrUpdatePeripheral(peripheral);
-        }
+    const handleConnectPeripheral = async (peripheral) => {
+        try{
+            if(peripheral.id){
+                setIsConnecting(true);
+                //console.debug('Peripheral ID = ', peripheral.id);
+                await BleManager.connect(peripheral.id);
+                console.debug(`[BLEContext::handleConnectPeripheral] Connected Peripheral ${peripheral.name}::${peripheral.id}`);
+                setConnectedDevice(peripheral);
+                setIsConnecting(false);
+            }
+        }catch(err){
+            console.error(`[BLEContext::handleConnectPeripheral] An error occurred while connecting`, err); 
+        }       
     };
 
-    const connectPeripheral = (peripheral) => {
-        setIsConnecting(true);
-        console.log('Peripheral ID = ', peripheral?.id);
-        BleManager.connect(peripheral?.id)
-        .then(() => {
-            console.debug(`[BLEContext::connectPeripheral] Connected Peripheral ${peripheral.name}::${peripheral.id}`);
-            setConnectedDevice(peripheral);
-            setIsConnecting(false);
-        })
-        .catch(err => {
-            console.error(`[BLEContext::connectPeripheral] An error occurred while connecting`, err)
-            setIsConnecting(false);   
-        });        
-    };
-
-    const disconnnectPeripheral = () => {
+    const handleDisconnectPeripheral = async () => {
         if(connectedDevice){
-            BleManager.disconnect(connectedDevice.id)
-            .then(() => {
+            try{
+                await BleManager.disconnect(connectedDevice.id);
                 console.log(`[BLEContext::handleDisconnectedPeripheral] disconnected ${connectedDevice.id}`);
                 setConnectedDevice(null);
-            })
-            .catch((err) => {
-                console.error(`[BLEContext::handleDisconnectedPeripheral] failed with error`, err);
-            })
-            setConnectedDevice(null);
+            }catch(err){
+                console.error(err);
+            }
         }
-    };
-
-    const updateValueForCharacteristic = (data) => {
-        console.debug(`[BLEContext::handleUpdateValueForCharacteristic] received data from ${data?.peripheral}`)
     };
 
     const handleAndroidPermissions = () => {
@@ -135,9 +119,7 @@ export const BLEProvider = ({children}) => {
 
     useEffect(() => {
         try{
-            BleManager.start({showAlert: false, forceLegacy: true})
-                .then(() => console.debug('BleManager started...'))
-                .catch(error => console.error('Error starting BleManager', error));
+            BleManager.start({showAlert: false, forceLegacy: true});
         }catch(error) {
             console.error('Unexpected error while starting BleManager.', error);
             return;
@@ -146,19 +128,23 @@ export const BLEProvider = ({children}) => {
         const listeners = [
             bleManagerEmitter.addListener(
                 'BleManagerDiscoverPeripheral',
-                discoverPeripheral,
+                handleDiscoverPeripheral,
+            ),
+            bleManagerEmitter.addListener(
+                'BleManagerConnectPeripheral',
+                handleConnectPeripheral,
             ),
             bleManagerEmitter.addListener(
                 'BleManagerDisconnectPeripheral',
-                disconnnectPeripheral,
+                handleDisconnectPeripheral,
             ),
             bleManagerEmitter.addListener(
                 'BleManagerDidUpdateValueForCharacteristic',
-                updateValueForCharacteristic,
+                handleUpdateValue,
             ),
             bleManagerEmitter.addListener(
                 'BleManagerStopScan',
-                stopBLEScan
+                handleBLEScanStopped
             )
         ];
 
@@ -169,19 +155,77 @@ export const BLEProvider = ({children}) => {
             for(const listener of listeners){
                 listener.remove();
             }
+            BleManager.stopScan();
+            clearInterval(readInterval);
         }
-    }, [connectedDevice])
+    }, [readInterval]);
+
+    const handleDiscoverPeripheral = (peripheral) => {
+        if(!peripheral.name){
+            peripheral.name = 'NO NAME';
+        }
+        if(peripheral.name && (peripheral.name === 'ESP32' || peripheral.name === 'SwoleGator')){
+            console.log(`[BLEContext::handleDiscoverPeripheral] Discovered new peripheral (${peripheral.name})`);
+            setScannedDevices([...scannedDevices, peripheral]);
+        }
+    };
+
+    const handleUpdateValue = (data) => {
+        setBleData(data.value);
+    };
+    
+    const startReadingData = () => {
+        if(!isReadingData){
+            setIsReadingData(true);
+            const intervalId = setInterval(() => {
+                BleManager.read(connectedDevice.id, serviceUUID, characteristicUUID)
+                .then((data) => {
+                    //console.log(`$$$Received Data: `, data);
+                    setBleData(data);
+                })
+                .catch((err) => {
+                    console.error(err);
+                    setIsReadingData(false);
+                    clearInterval(intervalId);
+                });
+            }, 500);
+            setReadInterval(intervalId);
+        }
+    };
+
+    const stopReadingData = () => {
+        setIsReadingData(false);
+        clearInterval(readInterval);
+    };
+
+    const handleRetrieveConnected = async () => {
+        try{
+            const connectedPeripherals = await BleManager.getConnectedPeripherals();
+            if(connectedPeripherals.length === 0){
+                console.warn(`[BLEContext::retrieveConnected] No connected peripherals`);
+            }else{
+                connectedPeripherals.forEach((peripheral) => console.log(peripheral));
+            }
+        }catch(err){
+            console.error(`[BLEContext::retrieveConnected] Error retrieving connected peripherals`, err);
+        }
+    };
 
     return(
         <BLEContext.Provider value={{
+            bleData,
             isScanning,
             isConnecting,
+            isReadingData,
             scannedDevices,
             connectedDevice,
-            connectPeripheral,
-            disconnnectPeripheral,
+            handleConnectPeripheral,
+            handleDisconnectPeripheral,
             startBLEScan,
             stopBLEScan,
+            startReadingData,
+            stopReadingData,
+            handleRetrieveConnected
             }}>
             {children}
         </BLEContext.Provider>

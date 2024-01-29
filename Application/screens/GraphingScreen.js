@@ -8,9 +8,8 @@ import {
   TextInput,
   TouchableOpacity,
 } from 'react-native';
-import BleManager from 'react-native-ble-manager';
 import { useFirestore } from '../api/firestore/FirestoreAPI';
-
+import { useBLE } from '../api/ble/BLEContext';
 import {
   VictoryChart,
   VictoryBar,
@@ -21,7 +20,15 @@ import {
 import containerStyles from '../styles/container-view-styles';
 
 function GraphingScreen() {
+  const {
+    bleData,
+    isReadingData,
+    connectedDevice,
+    startReadingData,
+    stopReadingData
+  } = useBLE();
   const { saveWorkoutData, numWorkouts, isLoading } = useFirestore();
+  
   const [maxVelocity, setMaxVelocity] = useState('0');
   const [repCount, setRepCount] = useState('0');
   const [currentVelocity, setCurrentVelocity] = useState('0');
@@ -33,49 +40,46 @@ function GraphingScreen() {
 
   const handleSaveWorkout = async () => {
     await saveWorkoutData(workoutName, workoutData);
+    stopReadingData();
+    setWorkoutData([]); // Clear workout data for next session
   };
 
- const handleDataFormat = (bleData) => {
-   const textData = String.fromCharCode.apply(null, new Uint8Array(bleData));
+ const handleDataFormat = (data) => {
+   const textData = String.fromCharCode.apply(null, new Uint8Array(data));
    const [maxV, rep, currentV] = textData.split(',').map(parseFloat);
-
-   // Update peakVelocity only if the new currentV is greater
-   setPeakVelocity((prevPeakVelocity) => Math.max(prevPeakVelocity, currentV));
-
+   console.log([maxV.toString(), rep.toString(), currentV.toString()]);
+   
    return { maxV, rep, currentV };
  };
 
-
   useEffect(() => {
-    const deviceID = "48:E7:29:B4:F9:7E"; // Replace with your device ID
-    const serviceUUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b"; // Replace with your service UUID
-    const characteristicUUID = "00001800-0000-1000-8000-00805f9b34fb"; // Replace with your characteristic UUID
+    if(connectedDevice && !isReadingData){
+      console.log('Starting to read data...');
+      startReadingData();
+    }
+    return(() => {
+      if(connectedDevice && isReadingData){
+        console.log('Stopping data read...');
+        stopReadingData();
+      }
+    });
+  }, [connectedDevice, isReadingData]);
 
-    const intervalId = setInterval(() => {
-      BleManager.read(deviceID, serviceUUID, characteristicUUID)
-        .then((data) => {
-          const { maxV, rep, currentV } = handleDataFormat(data);
-          console.log('Received data:', { maxV, rep, currentV });
+  // When bleData is updated
+  useEffect(() => {
+    // format and move data to workoutData[]
+    if(bleData){
+      const {maxV, rep, currentV} = handleDataFormat(bleData);
+      setMaxVelocity(maxV);
+      setRepCount(rep);
+      setCurrentVelocity(currentV);
+      // Update peakVelocity only if the new currentV is greater
+      setPeakVelocity((prevPeakVelocity) => Math.max(prevPeakVelocity, currentV));
+      setWorkoutData([...workoutData, {maxV, rep, currentV}]);
+      console.log(workoutData);
+    }
+  },[bleData])
 
-          setMaxVelocity(maxV.toString());
-          setRepCount(rep.toString());
-          setCurrentVelocity(currentV.toString());
-
-          const newData = {
-            maxV: parseFloat(maxV),
-            rep: parseFloat(rep),
-            currentV: parseFloat(currentV),
-          };
-
-          setWorkoutData((workoutData) => [...workoutData, newData]);
-        })
-        .catch((error) => console.error('Read error:', error));
-    }, 500);
-
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, []);
 
   return (
     <>
