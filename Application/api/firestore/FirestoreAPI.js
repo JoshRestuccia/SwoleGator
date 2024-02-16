@@ -9,8 +9,9 @@ export const FirestoreProvider = ({children}) => {
     const [currentUser, setCurrentUser] = useState(null);
     const [currentEmail, setCurrentEmail] = useState(''); 
     const [friends, setFriends] = useState([]);
-    const [numWorkouts, setNumWorkouts] = useState(0);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isDataLoading, setIsDataLoading] = useState(false);
+    const [isFriendsLoading, setIsFriendsLoading] = useState(false);
+    const [currentWorkoutType, setCurrentWorkoutType] = useState('');
 
     // FORMATTING FUNCTIONS    
     const formattedFriend = (initialFormat, friendUID, friendData) => {
@@ -39,12 +40,14 @@ export const FirestoreProvider = ({children}) => {
                 first: first,
                 last: last,
                 username: username,
+                totalWorkouts: 0,
             });
     };
 
     const friendsFromDatabase = async() => {
         if(currentUser){
             try{
+                setIsFriendsLoading(true);
                 console.log(`Trying to reach ${currentUser.email}'s friends`);
                 const friendsCollection = firestore().collection('users')
                 .doc(currentUser.uid).collection('friends');
@@ -58,6 +61,7 @@ export const FirestoreProvider = ({children}) => {
                     console.log('Formatted Friend:', formatted);
                     updatedFriendsList.push(formatted);
                 }
+                setIsFriendsLoading(false);
                 const friendsList = Array.from(updatedFriendsList);
                 return friendsList;
             }catch(err){
@@ -67,18 +71,67 @@ export const FirestoreProvider = ({children}) => {
         }
     };
 
-    const getNumberOfWorkouts = async () => {
+    const getTotalNumOfWorkouts = async() => {
         try{
             if(currentUser){
-                const workoutDocsRef = firestore().collection('users')
-                .doc(currentUser.uid).collection('workouts');
-                const workoutDocs = await workoutDocsRef.get();
-                return workoutDocs.size;
+                const snap = await firestore().collection('users')
+                .doc(currentUser.uid).get();
+                const data = snap.data();
+                return data.totalWorkouts;
             }
         }catch(err){
             throw err;
         }
     };
+
+    const getNumberWorkoutsOfType = async (type) => {
+        try{
+            if(currentUser){
+                const snap = await firestore().collection('users')
+                .doc(currentUser.uid).collection('workouts')
+                .doc(type).get();
+                if(snap.exists){
+                    const data = snap.data();
+                    return data.total;
+                }
+            }
+        }catch(err){
+            throw err;
+        }
+    };
+
+    const getAllWorkoutData = async () => {
+        try{
+            const userRef = firestore().collection('users').doc(currentUser.uid);
+            const workoutsSnap = await userRef.collection('workouts').get();
+            const workoutDataObj = {};
+            console.log("Fetching workoutsSnap:", workoutsSnap);
+            await Promise.all(workoutsSnap.docs.map(async (workoutDoc) => {     
+                const workoutType = workoutDoc.id;
+                const workoutRef = workoutDoc.ref;
+                const sessionsSnap = await workoutRef.collection('sessions').get();
+                const sessions = sessionsSnap.docs;
+                const workoutTypeData = [];
+                console.log("Fetching sessionsSnap for", workoutType, ":", sessionsSnap, '\n Total of ', sessions.length, 'sessions.');
+                await Promise.all(sessionsSnap.docs.map(async (session) => {
+                    try{
+                        console.log('Getting session data for: ', session.id);
+                        const sessionName = session.id;
+                        const sessionDataDoc = await session.ref.collection('data').get();
+                        const sessionData = sessionDataDoc.docs.map((datapoint) => datapoint.data());
+                        console.log("Pushing workoutTypeData for", workoutType, ":", workoutTypeData);
+                        workoutTypeData.push({name: sessionName, data: sessionData});
+                    }catch(err){
+                        console.error(err);
+                    }
+                }));
+                workoutDataObj[workoutType] = workoutTypeData;
+            }));
+            return workoutDataObj;
+        }catch(err){
+            console.error(err);
+        }
+    }
 
     const authStateChanged = async(authUser) => {
         if(authUser){
@@ -88,8 +141,7 @@ export const FirestoreProvider = ({children}) => {
             const tempFriends = await friendsFromDatabase();
             //console.log('TempFriends:',tempFriends);
             setFriends(tempFriends);  
-            const tempWorkouts = await getNumberOfWorkouts();
-            setNumWorkouts(tempWorkouts); 
+            await getTotalNumOfWorkouts();
         }
     };
 
@@ -103,6 +155,21 @@ export const FirestoreProvider = ({children}) => {
             unsubscribe();
         }
     }, [currentUser]);
+
+    useEffect(() => {
+        const fetchWorkoutData = async () => {
+            try{
+                if(currentWorkoutType){
+                    await getNumberWorkoutsOfType(currentWorkoutType);
+                }
+            }catch(err){
+                throw err;
+            }
+        };
+        return async() => {
+            await fetchWorkoutData();
+        }
+    }, [currentWorkoutType])
 
     // MAIN EXPORTED FUNCTIONS
     const signUp = async (email, first, last, username, password) => {
@@ -178,20 +245,72 @@ export const FirestoreProvider = ({children}) => {
         }      
     };
 
-    const saveWorkoutData = async (workoutName, data) => {
+    const saveWorkoutData = async (workoutName, data, type) => {
         try{
-            setIsLoading(true);
+            setIsDataLoading(true);
+            await firestore().collection('users').doc(currentUser.uid)
+            .collection('workouts').doc(type).set({total: 0});
             const dataArray = Array.from(data);
             dataArray.forEach(async (dataPoint) => {
                 await firestore().collection('users').doc(currentUser.uid)
-                .collection('workouts').doc(workoutName)
+                .collection('workouts').doc(type)
+                .collection('sessions').doc(workoutName)
                 .collection('data').add(dataPoint);
-            })
-            setIsLoading(false);
+            });
+            
+            await firestore().collection('users').doc(currentUser.uid)
+            .collection('workouts').doc(type)
+            .collection('sessions').doc(workoutName)
+            .set({reps: 0}); // must set a field value in order for the collection to be referencable
+
+            await updateTotalWorkoutsOfType(type);
+            await updateTotalWorkouts();
+            setIsDataLoading(false);
         }catch(err){
             throw err;
         }
     };
+
+    const updateTotalWorkouts = async() => {
+        if(currentUser){
+            const userRef = firestore().collection('users').doc(currentUser.uid);
+            try{
+                await firestore().runTransaction(async(transaction) => {
+                    const userDoc = await transaction.get(userRef);
+                    if(!userDoc.exists){
+                        throw 'User document does not exist';
+                    }
+
+                    const total = userDoc.data().totalWorkouts || 0;
+                    transaction.update(userRef, {totalWorkouts: total+1});
+                });
+                console.log('Total workouts updated successfully!');
+            }catch(err){
+                console.error(`Error updating totalWorkouts for user ${currentUser.email}`, err);
+            }
+        }
+    };
+
+    const updateTotalWorkoutsOfType = async(type) => {
+        if(currentUser){
+            try{
+                const workoutTypeRef = firestore().collection('users').doc(currentUser.uid)
+                .collection('workouts').doc(type);  
+
+                await firestore().runTransaction(async(transaction) => {
+                    const workoutTypeDoc = await transaction.get(workoutTypeRef);
+                    if(!workoutTypeDoc.exists){
+                        transaction.set(workoutTypeRef, {total: 0});
+                    }
+                    const total = workoutTypeDoc.data().total || 0;
+                    transaction.update(workoutTypeRef, {total: total+1});
+                });
+                console.log(`Total Workouts of type ${type} updated successfully!`);
+            }catch(err){
+                console.error(`Error updating totalWorkoutsOfType(${type}) for user ${currentUser.email}`, err);
+            }
+        }
+    }
 
     const addFriend = async (friendEmail) => {
         try{
@@ -256,15 +375,20 @@ export const FirestoreProvider = ({children}) => {
     const contextValue = {
         currentUser,
         friends,
-        numWorkouts,
-        isLoading,
+        isDataLoading,
+        isFriendsLoading,
+        currentWorkoutType,
+        setIsDataLoading,
+        setCurrentWorkoutType,
+        getNumberWorkoutsOfType,
+        getTotalNumOfWorkouts,
+        getAllWorkoutData,
         setFriends,
         friendsFromDatabase,
         signUp,
         signIn,
         saveWorkoutData,
         getUserData,
-        getNumberOfWorkouts,
         addFriend,
         getFriendData,
         signOut

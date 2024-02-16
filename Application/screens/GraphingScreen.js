@@ -27,19 +27,25 @@ function GraphingScreen() {
     startReadingData,
     stopReadingData
   } = useBLE();
-  const { saveWorkoutData, numWorkouts, isLoading } = useFirestore();
+  const { 
+    saveWorkoutData,  
+    isLoading, 
+    currentWorkoutType,
+    getNumberWorkoutsOfType,
+  } = useFirestore();
   
   const [maxVelocity, setMaxVelocity] = useState('0');
   const [repCount, setRepCount] = useState('0');
   const [currentVelocity, setCurrentVelocity] = useState('0');
   const [peakVelocity, setPeakVelocity] = useState('0');
 
-  const defaultName = `Workout #${numWorkouts + 1}`;
+  const [total, setTotal] = useState(0);
+  let defaultName = `${currentWorkoutType} Workout #${total + 1}`;
   const [workoutName, setWorkoutName] = useState(defaultName);
   const [workoutData, setWorkoutData] = useState([]);
 
   const handleSaveWorkout = async () => {
-    await saveWorkoutData(workoutName, workoutData);
+    await saveWorkoutData(workoutName, workoutData, currentWorkoutType);
     stopReadingData();
     setWorkoutData([]); // Clear workout data for next session
   };
@@ -79,12 +85,22 @@ function GraphingScreen() {
       console.log(workoutData);
     }
   },[bleData])
-
+ 
+  useEffect(() => {
+    const onMount = async () => {
+      let n = await getNumberWorkoutsOfType(currentWorkoutType);
+      setTotal(n);
+    };
+    return async() => {
+      await onMount();
+    }
+  }, [currentWorkoutType]);
 
   return (
     <>
       <StatusBar />
       <SafeAreaView style={containerStyles.container}>
+        <Text style={styles.textStyle}> Current Excercise: {currentWorkoutType}</Text>
         <View style={styles.nameChangeContainer}>
           <TextInput
             style={styles.textInput}

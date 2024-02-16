@@ -5,34 +5,63 @@ import SettingsScreen from './Settings';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Profile({navigation}) {
-    const [isLoading, setIsLoading] = useState(true);
     const [isSettingsVisible, setSettingsVisible] = useState(false);
     const [friendPromptVisible, setFriendPromptVisible] = useState(false);
     const [userData, setUserData] = useState(null);
+    const [isDataLoading, setIsDataLoading] = useState(true);
+
+    const [squats, setSquats] = useState(0);
+    const [presses, setPresses] = useState(0);
+    const [curls, setCurls] = useState(0);
+    const [deadlifts, setDeadlifts] = useState(0);
+    const [total, setTotal] = useState(0);
 
     const {
       friends,
       currentUser,
       getUserData,
-      addFriend
+      addFriend,
+      isFriendsLoading,
+      getNumberWorkoutsOfType,
+      getTotalNumOfWorkouts
     } = useFirestore();
 
+    useEffect(() => {
+      const updateWorkoutData = async () => { 
+        try{
+          let n = await getNumberWorkoutsOfType('Squat');
+          setSquats(n || 0);
+          n = await getNumberWorkoutsOfType('Bench Press');
+          setPresses(n || 0);
+          n = await getNumberWorkoutsOfType('Barbell Curl');
+          setCurls(n || 0);
+          n = await getNumberWorkoutsOfType('Deadlift');
+          setDeadlifts(n || 0);  
+          n = await getTotalNumOfWorkouts();
+          setTotal(n || 0);
+        }catch(err){
+          throw err;
+        }
+      };
+      return(async () => {
+        setIsDataLoading(true);
+        await updateWorkoutData();
+        setIsDataLoading(false);
+      });
+    }, [userData])
+
     const FriendPrompt = () => {
-      const [isLoading, setIsLoading] = useState(false);
       const [friendEmail, setFriendEmail] = useState('');
       
       const handleSubmitFriendEmail = async() => {
         if(friendEmail){
           try{
-            setIsLoading(true);
             console.log('[Profile:FriendPrompt] Adding friend!');
             await addFriend(friendEmail);
             setFriendEmail('');
-            setIsLoading(false);
             closeFriendPrompt();
           }catch(error){
             console.error(error);
-            setIsLoading(false);
           }
         } else { 
           console.warn('Cannot add friend. Email is empty');
@@ -102,7 +131,6 @@ export default function Profile({navigation}) {
           if(currentUser){
             const userDataFirestore = await getUserData();
             setUserData(userDataFirestore);
-            setIsLoading(false);
 
             console.log('Friends:', friends);
           }
@@ -111,7 +139,7 @@ export default function Profile({navigation}) {
         }
       };
       fetchData();
-    }, [currentUser]);
+    }, [currentUser, friends]);
 
     return(
     <SafeAreaView style={styles.container}>
@@ -120,16 +148,27 @@ export default function Profile({navigation}) {
           <Text style={styles.buttonText}> Settings </Text>
         </TouchableOpacity>          
         {/* User profile data */}
-        <View style={styles.userInfo}>
-            {/*<Image source={{ uri: userData.imageUrl }} style={styles.profileImage} />*/}
-            <Text style={styles.userName}>{`${userData?.username}`}</Text>
-            <Text>{`Age: ${userData?.age}`}</Text>
-            <Text>{`Workouts Completed: ${userData?.workoutsCompleted}`}</Text>
-        </View>
+        {isDataLoading ? 
+          ( <View style={styles.userInfo}>
+              <Text style={styles.userName}>{`${userData?.username}`}</Text>
+              <Text> Loading Data... </Text>
+            </View>)
+        :
+          ( <View  style={styles.userInfo}>
+              {/*<Image source={{ uri: userData.imageUrl }} style={styles.profileImage} />*/}
+              <Text style={styles.userName}>{`${userData?.username}`}</Text>
+              <Text>{`Age: ${userData?.age}`}</Text>
+              <Text>{`Workouts Completed: ${total}`}</Text>
+              <Text>{`Squats Sessions: ${squats}`}</Text>
+              <Text>{`Deadlift Sessions: ${deadlifts}`}</Text>
+              <Text>{`Bench Press Sessions: ${presses}`}</Text>
+              <Text>{`Barbell Curl Sessions: ${curls}`}</Text>
+            </View>)
+        }
         {/* Friends Data */}
         <View style={styles.friendsInfo}>
           <Text style={styles.friendsHeader}> Friends </Text>
-            {isLoading ? 
+            {isFriendsLoading ? 
               <Text>Loading friends...</Text> 
               : friends && (friends.length !== 0) ? 
                 <FlatList

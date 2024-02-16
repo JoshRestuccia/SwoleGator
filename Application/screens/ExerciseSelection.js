@@ -2,23 +2,33 @@ import React, {useState, useEffect} from 'react';
 import { Text, View, TouchableOpacity, StyleSheet } from 'react-native';
 
 import { useFirestore } from '../api/firestore/FirestoreAPI';
-const ExerciseSelection = ({navigation}) =>
-{ return(
+const ExerciseSelection = ({navigation}) =>{ 
+  const {
+    setCurrentWorkoutType
+  } = useFirestore();
+  
+  handleWorkoutSelect = (type) => {
+    setCurrentWorkoutType(type);
+    console.log(`Currently working on ${type}`);
+    navigation.navigate('User Stack', {screen: 'Graphing Screen'});
+  };
+  
+  return(
     <View>
         <View style={styles.title}>
           <Text style={styles.titleText}>{`Select exercise below to start lift`} </Text>
         </View>
         <View style={styles.container}>
-          <TouchableOpacity onPress={() => navigation.navigate('User Stack', {screen: 'Graphing Screen'})} style={styles.button}>
+          <TouchableOpacity onPress={() => handleWorkoutSelect('Squat')} style={styles.button}>
             <Text style={styles.textStyle}> Squat</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate('User Stack', {screen: 'Graphing Screen'})} style={styles.button}>
+          <TouchableOpacity onPress={() => handleWorkoutSelect('Deadlift')} style={styles.button}>
             <Text style={styles.textStyle}>Deadlift </Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate('User Stack', {screen: 'Graphing Screen'})} style={styles.button}>
+          <TouchableOpacity onPress={() => handleWorkoutSelect('Barbell Curl')} style={styles.button}>
             <Text style={styles.textStyle}> Barbell Curl</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate('User Stack', {screen: 'Graphing Screen'})} style={styles.button}>
+          <TouchableOpacity onPress={() => handleWorkoutSelect('Bench Press')} style={styles.button}>
             <Text style={styles.textStyle}> Bench Press </Text>
           </TouchableOpacity>
         </View>
