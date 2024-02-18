@@ -1,19 +1,22 @@
-import {StyleSheet, View, Button, Text, TouchableOpacity, TextInput} from 'react-native'
+import {StyleSheet, SafeAreaView, View, Button, Text, TouchableOpacity, TextInput} from 'react-native'
 import React, {useState, useEffect} from 'react';
 import { Picker } from '@react-native-picker/picker';
 import { useFirestore } from '../api/firestore/FirestoreAPI';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import RecentDataGraph from '../victory/RecentData';
 
 const Data = () => {
     const {
         currentUser,
         getUserData,
         getAllWorkoutData,
+        getMostRecentSession
     } = useFirestore();
     const [userData, setUserData] = useState(null);
     const [allWorkoutData, setAllWorkoutData] = useState({});
     const [workoutDataOfType, setWorkoutDataOfType] = useState([]);
     const [typeSelection, setTypeSelection] = useState(null);
+    const [recentData, setRecentData] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         const fetchData = async() => {
@@ -32,6 +35,7 @@ const Data = () => {
         };
         
         if(currentUser){
+            setIsLoading(true);
             fetchData();
         }
          
@@ -39,17 +43,48 @@ const Data = () => {
 
     useEffect(() => {
         if(typeSelection){
-            console.log(`======================================\n`);
+            /*console.log(`======================================\n`);
             console.log(`All workout data: \n\t\t`, allWorkoutData);
             console.log(`Workout Data of Type [${typeSelection}]: \n`);
             for(const session of allWorkoutData[typeSelection]){
                 console.log(`Session Name: ${session?.name}`);
                 console.log(`Session Data: ${session?.data}`);
-            }
-            setWorkoutDataOfType(allWorkoutData[typeSelection] || []);
-            console.log(`======================================\n`);
+            }*/
+            setWorkoutDataOfType(allWorkoutData[typeSelection] || []);   
+            //console.log(`======================================\n`);
         }
-    }, [allWorkoutData, typeSelection]);
+    }, [typeSelection, allWorkoutData]);
+
+    useEffect(() => {
+        const getNameAndSetData = async () => {
+            try{
+                const mostRecentName = await getMostRecentSession(typeSelection);
+                console.log(mostRecentName);
+                if(workoutDataOfType.length > 0 && mostRecentName){
+                    for(const session of Object.values(allWorkoutData[typeSelection])){
+                        if(session.name === mostRecentName){
+                            //console.log('Session Data: ', session.data);
+                            setRecentData(session.data);
+                        }
+                    }
+                }else{
+                    console.log('No workout data of the selected type', typeSelection);
+                }
+            }catch(err){
+                console.error(`There was an error getting the most recent session name from Firestore`);
+            }
+        };
+        
+        if(workoutDataOfType.length > 0 && typeSelection){
+            getNameAndSetData();
+        }
+
+    }, [typeSelection, workoutDataOfType]);
+
+    useEffect(() => {
+        //console.log('Recent Data: ', recentData);
+        setIsLoading(false);
+    }, [recentData]);
 
     return(
     <SafeAreaView>
@@ -62,20 +97,16 @@ const Data = () => {
                 <Picker.Item key={workoutType} label={workoutType} value={workoutType}/>
             ))}
         </Picker>
-        {Object.keys(workoutDataOfType).length > 0 ? (
-            <View>
-                {/* Display information for selected workout type */}
-                <Text>Workout Data for {typeSelection}:</Text>
-                {/* Render workout data here */}
-            </View>
-        ) : (
-            <Text>Loading workout data...</Text>
-        )}
         <View>
             <Text> Overall Trends </Text>
         </View>
         <View>
             <Text> Last Set </Text>
+            {(!isLoading && recentData.length > 0) ? 
+                (<RecentDataGraph raw_data={recentData}/>)
+            :
+                (<Text>Loading workout data...</Text>)
+            }
         </View>
         <View>
             <Text>{`Hello, ${userData?.username}`}</Text>

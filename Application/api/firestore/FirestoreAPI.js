@@ -1,5 +1,5 @@
 import React, {useState, useEffect, createContext, useContext} from 'react';
-import firestore from '@react-native-firebase/firestore';
+import firestore, { firebase } from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 
 const FirestoreContext = createContext();
@@ -43,6 +43,77 @@ export const FirestoreProvider = ({children}) => {
                 totalWorkouts: 0,
             });
     };
+
+    const generateVictoryDataObject = (data) => {
+
+        const max = (repData) => {
+            let maxV = 0;
+            repData.forEach((rep) => {
+                if(rep.maxV > maxV){
+                    maxV = rep.maxV;
+                }
+            });
+            return maxV;
+        };
+        
+        const calculateAverageVeloForRep = (repData) => {
+            let sum = 0.0;
+            let cnt = 0.0;
+            //console.log(`Starting Avg Calculation for rep data`);
+            repData.forEach((rep) => {
+                //console.log('REP: ',rep);
+                sum += parseFloat(rep.currV);
+                cnt += 1;
+                //console.log(`SUM: ${sum} :: CNT: ${cnt}`); 
+            });
+            const avg = sum/cnt;
+            //console.log(`AVG(${avg}) = SUM(${sum}) / CNT(${cnt})`);
+            return avg;
+        };
+
+        const repData = {};
+        data.forEach(({currentV, maxV, rep}) => {
+            if(!repData[rep]){
+                repData[rep] = [];
+            }
+            repData[rep].push({maxV: maxV, currV: currentV, rep: rep});
+        });
+        
+        //Get all average Velocities
+        const avgVelos = {};
+        Object.keys(repData).forEach((rep) => {
+            if(!avgVelos[rep]){
+                const repAvg = calculateAverageVeloForRep(repData[rep]);
+                //console.log(`\nRep #${rep} Avg: `, parseFloat(repAvg));
+                avgVelos[rep] = repAvg;
+            }
+        });
+        
+        // Get all max Velocities
+        const maxVelos = {};
+        Object.keys(repData).forEach((rep) => {
+            if(!maxVelos[rep]){
+                const repMax = max(repData[rep]);
+                maxVelos[rep] = repMax;
+            }
+        });
+
+        const avgVs = Object.keys(avgVelos).map(rep => ({
+            rep: parseInt(rep),
+            data: parseFloat(avgVelos[rep])
+        }));
+        const maxVs = Object.keys(repData).map(rep => ({
+            rep: parseInt(rep),
+            data: parseFloat(maxVelos[rep])
+        }));
+        const victoryDataObject = {
+            maxVs: maxVs,
+            avgVs: avgVs
+        };
+        console.log(victoryDataObject);
+        return victoryDataObject;
+    };
+
 
     const friendsFromDatabase = async() => {
         if(currentUser){
@@ -105,33 +176,54 @@ export const FirestoreProvider = ({children}) => {
             const userRef = firestore().collection('users').doc(currentUser.uid);
             const workoutsSnap = await userRef.collection('workouts').get();
             const workoutDataObj = {};
-            console.log("Fetching workoutsSnap:", workoutsSnap);
+            //console.log("Fetching workoutsSnap:", workoutsSnap);
             await Promise.all(workoutsSnap.docs.map(async (workoutDoc) => {     
                 const workoutType = workoutDoc.id;
                 const workoutRef = workoutDoc.ref;
                 const sessionsSnap = await workoutRef.collection('sessions').get();
-                const sessions = sessionsSnap.docs;
                 const workoutTypeData = [];
-                console.log("Fetching sessionsSnap for", workoutType, ":", sessionsSnap, '\n Total of ', sessions.length, 'sessions.');
+                //console.log("Fetching sessionsSnap for", workoutType, ":", sessionsSnap, '\n Total of ', sessions.length, 'sessions.');
                 await Promise.all(sessionsSnap.docs.map(async (session) => {
                     try{
                         console.log('Getting session data for: ', session.id);
                         const sessionName = session.id;
-                        const sessionDataDoc = await session.ref.collection('data').get();
-                        const sessionData = sessionDataDoc.docs.map((datapoint) => datapoint.data());
-                        console.log("Pushing workoutTypeData for", workoutType, ":", workoutTypeData);
-                        workoutTypeData.push({name: sessionName, data: sessionData});
+                        await session.ref.collection('data').get().then((sessionDataDoc) => {
+                            const sessionData = sessionDataDoc.docs.map((datapoint) => datapoint.data());
+                            console.log("Pushing workoutTypeData for", workoutType, ":", workoutTypeData);
+                            console.log(Array.from(Object.values(sessionData)));
+                            workoutTypeData.push({name: sessionName, data: Array.from(Object.values(sessionData))});
+                        });
                     }catch(err){
                         console.error(err);
                     }
                 }));
                 workoutDataObj[workoutType] = workoutTypeData;
             }));
+            //Example of how to get data out of the array
+            //console.log(workoutDataObj['Bench Press'][0].data);
             return workoutDataObj;
         }catch(err){
             console.error(err);
         }
-    }
+    };
+
+    const getMostRecentSession = async (type) => {
+        try{
+            const userRef = firestore().collection('users').doc(currentUser.uid);
+            const workoutsRef = userRef.collection('workouts').doc(type);
+            const sessionSnap = await workoutsRef.collection('sessions')
+                .orderBy('date', 'desc').limit(1).get();
+            if(!sessionSnap.empty){
+                const mostRecentName = sessionSnap.docs[0].id;
+                return mostRecentName;
+            }else{
+                return null;
+            }
+        }catch(err){
+            console.error(`There was an error fetching the most receent session.`, err);
+            throw err;
+        }
+    };
 
     const authStateChanged = async(authUser) => {
         if(authUser){
@@ -257,11 +349,11 @@ export const FirestoreProvider = ({children}) => {
                 .collection('sessions').doc(workoutName)
                 .collection('data').add(dataPoint);
             });
-            
+            const timestamp = firebase.firestore.Timestamp.now();
             await firestore().collection('users').doc(currentUser.uid)
             .collection('workouts').doc(type)
             .collection('sessions').doc(workoutName)
-            .set({reps: 0}); // must set a field value in order for the collection to be referencable
+            .set({date: timestamp}); // must set a field value in order for the collection to be referencable
 
             await updateTotalWorkoutsOfType(type);
             await updateTotalWorkouts();
@@ -383,6 +475,7 @@ export const FirestoreProvider = ({children}) => {
         getNumberWorkoutsOfType,
         getTotalNumOfWorkouts,
         getAllWorkoutData,
+        getMostRecentSession,
         setFriends,
         friendsFromDatabase,
         signUp,
@@ -391,7 +484,8 @@ export const FirestoreProvider = ({children}) => {
         getUserData,
         addFriend,
         getFriendData,
-        signOut
+        signOut,
+        generateVictoryDataObject
     }
 
     return(
