@@ -1,8 +1,9 @@
-import {StyleSheet, SafeAreaView, View, Button, Text, TouchableOpacity, TextInput} from 'react-native'
+import {StyleSheet, StatusBar, SafeAreaView, View, Button, Text, TouchableOpacity, TextInput, ScrollView} from 'react-native'
 import React, {useState, useEffect} from 'react';
 import { Picker } from '@react-native-picker/picker';
 import { useFirestore } from '../api/firestore/FirestoreAPI';
 import RecentDataGraph from '../victory/RecentData';
+import OverallDataGraph from '../victory/OverallData';
 
 const Data = () => {
     const {
@@ -16,6 +17,7 @@ const Data = () => {
     const [workoutDataOfType, setWorkoutDataOfType] = useState([]);
     const [typeSelection, setTypeSelection] = useState(null);
     const [recentData, setRecentData] = useState([]);
+    const [recentName, setRecentName] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
@@ -64,6 +66,7 @@ const Data = () => {
                     for(const session of Object.values(allWorkoutData[typeSelection])){
                         if(session.name === mostRecentName){
                             //console.log('Session Data: ', session.data);
+                            setRecentName(session.name);
                             setRecentData(session.data);
                         }
                     }
@@ -87,33 +90,71 @@ const Data = () => {
     }, [recentData]);
 
     return(
-    <SafeAreaView>
-        
+    <SafeAreaView style={styles.mainContainer}>
         <Picker
             selectedValue={typeSelection}
             onValueChange={(itemValue) => setTypeSelection(itemValue)}
+            style={styles.picker}
         >
             {Object.keys(allWorkoutData).map((workoutType) => (
                 <Picker.Item key={workoutType} label={workoutType} value={workoutType}/>
             ))}
         </Picker>
-        <View>
-            <Text> Overall Trends </Text>
-        </View>
-        <View>
-            <Text> Last Set </Text>
-            {(!isLoading && recentData.length > 0) ? 
-                (<RecentDataGraph raw_data={recentData}/>)
-            :
-                (<Text>Loading workout data...</Text>)
-            }
-        </View>
-        <View>
-            <Text>{`Hello, ${userData?.username}`}</Text>
-            <Text>This will eventually show data in firestore</Text>
-        </View>
+        <ScrollView style={styles.scrollContainer}>
+            <Text style={styles.header}> {`${userData?.username}'s Workout Data`} </Text>
+            <View style={styles.recent}>
+                <Text style={styles.sectionHeader}>
+                    {recentName && `(${recentName})`}
+                </Text>
+                {(!isLoading && recentData.length > 0) ? 
+                    (<RecentDataGraph raw_data={recentData}/>)
+                :
+                    (<Text>Loading workout data...</Text>)
+                }
+            </View>
+            <View style={styles.overall}>
+                <Text style={styles.sectionHeader}>
+                    {`Overall Trends`}
+                </Text>
+                {(!isLoading && typeSelection) ? 
+                    (<OverallDataGraph type={typeSelection}/>)
+                :
+                    (<Text>Loading workout data...</Text>)
+                }
+            </View>
+        </ScrollView>
     </SafeAreaView>
     )
 }
 
-export default Data
+export default Data;
+
+const styles = StyleSheet.create({
+    mainContainer: {
+        flex: 1,
+        justifyContent: 'flex-end'
+    },
+    scrollContainer:{
+        backgroundColor: 'lightgray',
+        paddingTop: 25,
+    },
+    header:{
+        fontSize: 30, 
+        textAlign: 'center'
+    },
+    recent: {
+        flex: 0.5
+    },
+    overall:{
+        flex: 0.5,
+        paddingBottom: 50
+    },
+    sectionHeader:{
+        textAlign: 'center',
+        fontSize: 24,
+        fontWeight: 'bold'
+    },
+    picker: {
+        backgroundColor: 'lightblue',
+    },
+})

@@ -1,14 +1,10 @@
 import React, {useState, useEffect}from "react";
 import { StyleSheet } from "react-native";
 import { 
-    VictoryContainer,
     VictoryLine,
-    VictoryAnimation,
     VictoryVoronoiContainer,
     VictoryTheme,
     VictoryChart,
-    Background,
-    VictoryAxis,
     VictoryScatter
 } from "victory-native";
 import { useFirestore } from "../api/firestore/FirestoreAPI";
@@ -80,18 +76,6 @@ const RecentDataGraph = ({raw_data}) => {
         }
     }, [victoryData]);
     
-    const getLineColor = (rep, avg) => {
-        const max = victoryData.maxVs[rep];
-        if(avg >= (max*0.9) && avg <= max){
-            return 'purple';
-        }else if(avg > max){
-            return 'red';
-        }else{
-            return 'blue';
-        }
-    };
-
-
     return(
         <VictoryChart 
             style={styles.chart}

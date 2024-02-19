@@ -114,6 +114,181 @@ export const FirestoreProvider = ({children}) => {
         return victoryDataObject;
     };
 
+    const checkCalculationsSaved = async (workoutType, sessionName) => {
+        try{
+            const sessionRef = firestore().collection('users').doc(currentUser.uid)
+                                    .collection('workouts').doc(workoutType)
+                                    .collection('sessions').doc(sessionName);
+            const querySnap = await sessionRef.collection('calc').get();
+            return !querySnap.empty;
+        }catch(err){
+            console.error('Error checking if calc has been created');
+            return false;
+        }
+    };
+
+    const addWorkoutCalculationsToFirestore = async (victDataObj, workoutType, sessionName) => {
+        if(currentUser){
+            try{
+                const calcExists = await checkCalculationsSaved(workoutType, sessionName);
+                if(!calcExists){
+                    await firestore().collection('users').doc(currentUser.uid)
+                            .collection('workouts').doc(workoutType)
+                            .collection('sessions').doc(sessionName)
+                            .collection('calc').add(victDataObj);
+                    console.log('Calculations saved to Firestore');
+                }else{
+                    console.log('Calculations are already present! No need to add again.');
+                }
+            }catch(err){
+                console.error('Error adding victory data to Firestore:', err);
+            }
+        }
+    };
+
+    const generateVictoryDataByTimescale = async (timescale, workoutType) => {
+        const calcDataRange = (timescale) => {
+            const endDate = new Date(); // today
+            let startDate = new Date();
+            switch(timescale){
+                case 'week':
+                    startDate.setDate(endDate.getDate() - 7); // subtract a week
+                    break;
+                case 'month':
+                    startDate.setDate(endDate.getMonth() - 1); // subtract a month
+                    break;
+                case 'year':
+                    startDate.setDate(endDate.getFullYear() - 1); // subtract a year
+                    break;
+                default:
+                    console.warn('Invalid timescale selected. Defaulting to today.');
+                    startDate = endDate;
+                    break;
+            };
+            return [startDate, endDate];
+        };
+
+        const fetchSessionsWithinDateRange = async (startDate, endDate) => {
+            try{
+                const sessionRef = firestore().collection('users').doc(currentUser.uid)
+                                    .collection('workouts').doc(workoutType)
+                                    .collection('sessions');
+                const querySnap = await sessionRef.where('date', '>=', firestore.Timestamp.fromDate(startDate))
+                                                    .where('date', '<=', firestore.Timestamp.fromDate(endDate)).get();
+
+                const sessions = querySnap.docs.map((session) => ({
+                    name: session.id,
+                    date: session.get('date'),
+                    data: session.data()
+                }));
+
+                return sessions;
+            }catch(err){
+                console.error(`Error fetching sessions within range (${startDate},${endDate})`);
+            }
+        };
+
+        const aggregateSessionData = async (sessions) => {
+            const allSessions = {};
+            
+            for(const session of sessions){
+                const sessionRef = firestore().collection('users').doc(currentUser.uid)
+                                                .collection('workouts').doc(workoutType)
+                                                .collection('sessions').doc(session.name);
+                const calcRef = sessionRef.collection('calc');
+                const calcSnap = await calcRef.get();
+                const data = calcSnap.docs[0].data();
+                console.log('calcSnapData: \n', data);                
+                allSessions[session.date]= data;
+            }
+            console.log(allSessions);
+            return allSessions;
+        };
+
+        const cleanData = (dirtyData) => {
+            const calcAverage = (data) => {
+                let sum = 0;
+                let cnt = 0;
+                for(const dp of data){
+                    sum += dp.data;
+                    cnt++;
+                }
+                return (sum/cnt);
+            };
+            const max = (data) => {
+                let maxV = 0;
+                for(const dp of data){
+                    if(dp.data > maxV){
+                        maxV = dp.data;
+                    }
+                }
+                return maxV;
+            };
+            const fixDateFormat = (dateString) => {
+                if(!dateString){
+                    console.error('Invalid timestamp format: Date String undefined.');
+                    return null;
+                }
+                //console.log('Date String:: ', dateString);
+                const matches = dateString.match(/(\d+)/g);
+
+                if(matches){
+                    //console.log(`Seconds: ${matches[0]} :: Nanoseconds: ${matches[1]}`);
+                    const seconds = parseInt(matches[0]);
+                    const nanoseconds = parseInt(matches[1]);
+                    const milliseconds = seconds*1000 + nanoseconds/1e6;
+                    const date = new Date(milliseconds);
+                    return date;
+                }else{
+                    console.error('Invalid timestamp format');
+                }
+            };
+
+            const sessionMaxes = {};
+            const sessionAvgs = {};
+
+            for(const session of Object.entries(dirtyData)){
+                // Get sessionAvg from avg of rep avgs
+                const sessionAvg = calcAverage(session[1].avgVs);
+                // Get sessionMax from max of rep maxes
+                const sessionMax = max(session[1].maxVs);
+                // Save the data to be shown in victory
+                sessionAvgs[session[0]] = sessionAvg;
+                sessionMaxes[session[0]] = sessionMax;
+            }
+            //console.log(Object.entries(sessionAvgs)[0]);
+            const sessionAvgVs = Object.keys(sessionAvgs).map(timestamp => ({
+                date: fixDateFormat(timestamp),
+                value: parseFloat(sessionAvgs[timestamp])
+            }));
+            const sessionMaxVs = Object.keys(sessionMaxes).map(timestamp => ({
+                date: fixDateFormat(timestamp),
+                data: parseFloat(sessionMaxes[timestamp])
+            }));
+            const cleanData = {
+                sessionMaxes: sessionMaxVs,
+                sessionAverages: sessionAvgVs
+            };
+            //console.log('Dirty Data:\n', dirtyData);
+            //console.log('Clean Data:\n', cleanData);
+            return cleanData;
+        };
+
+        if(currentUser){
+            try{
+                const dataRange = calcDataRange(timescale);
+                const sessionsWithinRange = await fetchSessionsWithinDateRange(dataRange[0], dataRange[1]);
+                if(sessionsWithinRange.length > 0){
+                    const dataFromSessions = await aggregateSessionData(sessionsWithinRange);
+                    const clean = cleanData(dataFromSessions) || null;
+                    return clean;
+                }
+            }catch(err){
+                console.error(err);
+            }
+        }
+
+    };
 
     const friendsFromDatabase = async() => {
         if(currentUser){
@@ -187,11 +362,14 @@ export const FirestoreProvider = ({children}) => {
                     try{
                         console.log('Getting session data for: ', session.id);
                         const sessionName = session.id;
+                        const sessionDate = session.get('date');
                         await session.ref.collection('data').get().then((sessionDataDoc) => {
                             const sessionData = sessionDataDoc.docs.map((datapoint) => datapoint.data());
                             console.log("Pushing workoutTypeData for", workoutType, ":", workoutTypeData);
                             console.log(Array.from(Object.values(sessionData)));
-                            workoutTypeData.push({name: sessionName, data: Array.from(Object.values(sessionData))});
+                            const victoryData = generateVictoryDataObject(sessionData);
+                            addWorkoutCalculationsToFirestore(victoryData, workoutType, sessionName);
+                            workoutTypeData.push({name: sessionName, date: sessionDate, data: Array.from(Object.values(sessionData))});
                         });
                     }catch(err){
                         console.error(err);
@@ -485,7 +663,8 @@ export const FirestoreProvider = ({children}) => {
         addFriend,
         getFriendData,
         signOut,
-        generateVictoryDataObject
+        generateVictoryDataObject,
+        generateVictoryDataByTimescale,
     }
 
     return(
