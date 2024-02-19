@@ -93,7 +93,6 @@ const OverallDataGraph = ({type}) => {
         <Picker.Item label="Year" value="year" />
       </Picker>
       <View>
-        <Text>Overall Trends</Text>
         { (!isLoadingData && trendData && tickValues) ?
             (<VictoryChart
                 theme={VictoryTheme.material}
