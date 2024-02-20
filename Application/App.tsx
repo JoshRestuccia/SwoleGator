@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LoadingScreen from './screens/LoadingScreen';
@@ -9,7 +9,6 @@ import Data from './screens/Data';
 import HomeScreen from './screens/HomeScreen';
 import GraphingScreen from './screens/GraphingScreen';
 import Profile from './screens/Profile';
-import ExerciseSelection from './screens/ExerciseSelection';
 
 import auth from '@react-native-firebase/auth';
 import { BLEProvider } from './api/ble/BLEContext';
@@ -45,11 +44,6 @@ function UserStackGroup() {
         name="Profile"
         component={Profile}
         options={{title: "Profile"}}
-      />
-      <Stack.Screen
-        name="Exercise Selection"
-        component={ExerciseSelection}
-        options={{title: ""}}
       />
     </Stack.Navigator>
     </BLEProvider>

@@ -2,37 +2,31 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  SafeAreaView,
-  StatusBar,
   StyleSheet,
   TextInput,
   TouchableOpacity,
 } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import { useFirestore } from '../api/firestore/FirestoreAPI';
 import { useBLE } from '../api/ble/BLEContext';
-import {
-  VictoryChart,
-  VictoryBar,
-  VictoryLegend,
-  VictoryTooltip,
-  VictoryVoronoiContainer,
-} from 'victory-native';
+import LiveDataGraph from '../victory/LiveData';
 import containerStyles from '../styles/container-view-styles';
 
 function GraphingScreen() {
   const {
     bleData,
     isReadingData,
-    connectedDevice,
     startReadingData,
     stopReadingData
   } = useBLE();
   const { 
+    isDataLoading,
     saveWorkoutData,  
-    isLoading, 
-    currentWorkoutType,
     getNumberWorkoutsOfType,
   } = useFirestore();
+
+  const [workoutStarted, setWorkoutStarted] = useState(false);
+  const [currentWorkoutType, setCurrentWorkoutType] = useState('Squat');
   
   const [maxVelocity, setMaxVelocity] = useState('0');
   const [repCount, setRepCount] = useState('0');
@@ -40,14 +34,25 @@ function GraphingScreen() {
   const [peakVelocity, setPeakVelocity] = useState('0');
 
   const [total, setTotal] = useState(0);
-  let defaultName = `${currentWorkoutType} Workout #${total + 1}`;
-  const [workoutName, setWorkoutName] = useState(defaultName);
+  const [isLoading, setIsLoading] = useState(false);
+  const [workoutName, setWorkoutName] = useState('');
   const [workoutData, setWorkoutData] = useState([]);
 
-  const handleSaveWorkout = async () => {
-    await saveWorkoutData(workoutName, workoutData, currentWorkoutType);
-    stopReadingData();
+  const cleanUp = () => {
     setWorkoutData([]); // Clear workout data for next session
+    setRepCount(0);
+    setMaxVelocity(0);
+    setCurrentVelocity(0);
+    setPeakVelocity(0);
+  };
+
+  const handleSaveWorkout = async () => {
+    stopReadingData();
+    setWorkoutStarted(false);
+    setIsLoading(true);
+    await saveWorkoutData(workoutName, workoutData, currentWorkoutType);
+    cleanUp();
+    setIsLoading(false);
   };
 
  const handleDataFormat = (data) => {
@@ -59,22 +64,18 @@ function GraphingScreen() {
  };
 
   useEffect(() => {
-    if(connectedDevice && !isReadingData){
+    if(workoutStarted){
       console.log('Starting to read data...');
       startReadingData();
+    }else{
+      console.log('Workout not yet started.');
     }
-    return(() => {
-      if(connectedDevice && isReadingData){
-        console.log('Stopping data read...');
-        stopReadingData();
-      }
-    });
-  }, [connectedDevice, isReadingData]);
+  }, [workoutStarted]);
 
   // When bleData is updated
   useEffect(() => {
     // format and move data to workoutData[]
-    if(bleData){
+    if(isReadingData && bleData){
       const {maxV, rep, currentV} = handleDataFormat(bleData);
       setMaxVelocity(maxV);
       setRepCount(rep);
@@ -84,124 +85,88 @@ function GraphingScreen() {
       setWorkoutData([...workoutData, {maxV, rep, currentV}]);
       console.log(workoutData);
     }
-  },[bleData])
+  },[isReadingData, bleData])
  
   useEffect(() => {
     const onMount = async () => {
-      let n = await getNumberWorkoutsOfType(currentWorkoutType);
+      setIsLoading(true);
+      let n = await getNumberWorkoutsOfType(currentWorkoutType); //getAllWorkoutsOfType ==> length
       setTotal(n);
+      setIsLoading(false);
     };
-    return async() => {
-      await onMount();
-    }
+    onMount();
   }, [currentWorkoutType]);
 
+  useEffect(() => {
+    if(!isLoading){
+      let defaultName = `${currentWorkoutType} Workout #${total + 1}`;
+      setWorkoutName(defaultName);
+    }
+  }, [isLoading, total]);
+
+  const handleBeginWorkout = () => {
+    console.log(`Starting workout ${workoutName}`);
+    setWorkoutStarted(true);
+  };
+
   return (
-    <>
-      <StatusBar />
-      <SafeAreaView style={containerStyles.container}>
-        <Text style={styles.textStyle}> Current Excercise: {currentWorkoutType}</Text>
-        <View style={styles.nameChangeContainer}>
-          <TextInput
-            style={styles.textInput}
-            placeholder={defaultName}
-            onChangeText={(text) => setWorkoutName(text)}
-            value={workoutName}
-          />
-          <TouchableOpacity
-            style={styles.nameSelector}
-            onPress={handleSaveWorkout}>
-            <Text style={styles.saveButtonText}>
-              {isLoading ? `Loading...` : `Save Workout Data`}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.chartContainer}>
-          {/* Vertical Bar Chart */}
-          <VictoryChart
-            height={200}
-            domainPadding={{ x: 10 }}
-            containerComponent={
-              <VictoryVoronoiContainer
-                voronoiDimension='x'
-                labels={({ datum }) => `y: ${datum.y}`}
-                labelComponent={
-                  <VictoryTooltip
-                    renderInPortal
-                    cornerRadius={0}
-                    flyoutStyle={{ fill: 'white' }}
-                  />
-                }
+    <View style={containerStyles.container}>
+      <Picker
+        selectedValue={currentWorkoutType}
+        onValueChange={(value) => setCurrentWorkoutType(value)}
+      >
+        <Picker.Item label="Squat" value="Squat" />
+        <Picker.Item label="Deadlift" value="Deadlift" />
+        <Picker.Item label="Bench Press" value="Bench Press" />
+        <Picker.Item label="Barbell Curl" value="Barbell Curl" />
+      </Picker>
+      <Text style={styles.textStyle}> Current Excercise: {currentWorkoutType}</Text>
+      <View style={styles.nameChangeContainer}>
+        <TextInput
+          style={styles.textInput}
+          placeholder={isLoading ? (`Loading...`) : (`${currentWorkoutType} Workout #${total + 1}`)}
+          onChangeText={(text) => setWorkoutName(text)}
+          value={workoutName}
+        />
+        <TouchableOpacity
+          style={styles.nameSelector}
+          onPress={handleSaveWorkout}>
+          <Text style={styles.saveButtonText}>
+            {isDataLoading ? `Loading...` : `Save Workout Data`}
+          </Text>
+        </TouchableOpacity>
+      </View>
+      <View> 
+        {!workoutStarted ? 
+          (
+            <TouchableOpacity
+              onPress={handleBeginWorkout}
+            >
+              <Text> Begin Workout </Text>
+            </TouchableOpacity>
+          ) 
+          : 
+          (
+            <LiveDataGraph 
+              maxVelocity={maxVelocity || 0} 
+              currentVelocity={currentVelocity || 0}
               />
-            }
-            fixAxis="x"
-            domain={{
-              x: [0, 3],
-              y: [-20, 100],
-            }}>
-            {/* Max Velocity Data */}
-            <VictoryBar
-              name="maxVelocity"
-              data={[{ x: 1, y: parseFloat(maxVelocity) }]}
-              style={{
-                data: {
-                  fill: 'tomato',
-                  width: 30,
-                },
-              }}
-            />
-
-            {/* Current Velocity Data */}
-            <VictoryBar
-              name="currentVelocity"
-              data={[{ x: 2, y: parseFloat(currentVelocity) }]}
-              style={{
-                data: {
-                  fill: 'blue',
-                  width: 30,
-                },
-              }}
-            />
-          </VictoryChart>
-        </View>
-
-        {/* Display Rep Count as Text */}
+          )
+        }  
+      </View>
+      <View>
+        {/* Display Rep Count as Text*/} 
         <Text style={styles.repCountText}>
-          Rep Count: {repCount}
+            Rep Count: {repCount}
         </Text>
-
-        {/* Display Peak Velocity as Text */}
+        
+        {/* Display Peak Velocity as Text*/} 
         <Text style={styles.peakVelocityText}>
           Peak Velocity: {peakVelocity}
         </Text>
-
-        {/* Legend */}
-        <VictoryLegend
-          x={20}
-          y={20}
-          title="Workout Stats"
-          titleOrientation='top'
-          orientation='horizontal'
-          data={[
-            {
-              name: 'Max Velocity',
-              symbol: {
-                fill: 'tomato',
-                type: 'square',
-              },
-            },
-            {
-              name: 'Current Velocity',
-              symbol: {
-                fill: 'blue',
-                type: 'square',
-              },
-            },
-          ]}
-        />
-      </SafeAreaView>
-    </>
+      </View> 
+      
+    </View>
   );
 }
 
@@ -241,10 +206,6 @@ const styles = StyleSheet.create({
     flex: 0.5,
     justifyContent: 'space-evenly',
     marginTop: 25,
-  },
-  chartContainer: {
-    alignItems: 'center',
-    marginTop: 20, // Add marginTop to create space above the chart
   },
   repCountText: {
     fontSize: 18,

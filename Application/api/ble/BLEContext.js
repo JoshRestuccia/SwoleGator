@@ -171,26 +171,26 @@ export const BLEProvider = ({children}) => {
     };
 
     const handleUpdateValue = (data) => {
-        setBleData(data.value);
+        if(isReadingData){
+            setBleData(data.value);
+        }
     };
     
     const startReadingData = () => {
-        if(!isReadingData){
-            setIsReadingData(true);
-            const intervalId = setInterval(() => {
-                BleManager.read(connectedDevice.id, serviceUUID, characteristicUUID)
-                .then((data) => {
-                    //console.log(`$$$Received Data: `, data);
-                    setBleData(data);
-                })
-                .catch((err) => {
-                    console.error(err);
-                    setIsReadingData(false);
-                    clearInterval(intervalId);
-                });
-            }, 500);
-            setReadInterval(intervalId);
-        }
+        setIsReadingData(true);
+        const intervalId = setInterval(() => {
+            BleManager.read(connectedDevice.id, serviceUUID, characteristicUUID)
+            .then((data) => {
+                //console.log(`$$$Received Data: `, data);
+                setBleData(data);
+            })
+            .catch((err) => {
+                console.error(err);
+                setIsReadingData(false);
+                clearInterval(intervalId);
+            });
+        }, 500);
+        setReadInterval(intervalId);
     };
 
     const stopReadingData = () => {

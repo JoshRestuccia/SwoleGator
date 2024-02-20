@@ -11,7 +11,6 @@ export const FirestoreProvider = ({children}) => {
     const [friends, setFriends] = useState([]);
     const [isDataLoading, setIsDataLoading] = useState(false);
     const [isFriendsLoading, setIsFriendsLoading] = useState(false);
-    const [currentWorkoutType, setCurrentWorkoutType] = useState('');
 
     // FORMATTING FUNCTIONS    
     const formattedFriend = (initialFormat, friendUID, friendData) => {
@@ -426,21 +425,6 @@ export const FirestoreProvider = ({children}) => {
         }
     }, [currentUser]);
 
-    useEffect(() => {
-        const fetchWorkoutData = async () => {
-            try{
-                if(currentWorkoutType){
-                    await getNumberWorkoutsOfType(currentWorkoutType);
-                }
-            }catch(err){
-                throw err;
-            }
-        };
-        return async() => {
-            await fetchWorkoutData();
-        }
-    }, [currentWorkoutType])
-
     // MAIN EXPORTED FUNCTIONS
     const signUp = async (email, first, last, username, password) => {
         try{
@@ -543,18 +527,16 @@ export const FirestoreProvider = ({children}) => {
 
     const updateTotalWorkouts = async() => {
         if(currentUser){
-            const userRef = firestore().collection('users').doc(currentUser.uid);
             try{
-                await firestore().runTransaction(async(transaction) => {
-                    const userDoc = await transaction.get(userRef);
-                    if(!userDoc.exists){
-                        throw 'User document does not exist';
-                    }
-
-                    const total = userDoc.data().totalWorkouts || 0;
-                    transaction.update(userRef, {totalWorkouts: total+1});
+                let totalWorkouts = 0;
+                const userRef = firestore().collection('users').doc(currentUser.uid);
+                const workoutTypesQuerySnap = await userRef.collection('workouts').get();
+                workoutTypesQuerySnap.forEach( async (workoutTypeDoc) => {
+                    const typeTotal = workoutTypeDoc.get('total');
+                    totalWorkouts += typeTotal;
                 });
-                console.log('Total workouts updated successfully!');
+                await userRef.update({'totalWorkouts': totalWorkouts});
+                console.log('Updated total workouts successfully!');
             }catch(err){
                 console.error(`Error updating totalWorkouts for user ${currentUser.email}`, err);
             }
@@ -565,22 +547,19 @@ export const FirestoreProvider = ({children}) => {
         if(currentUser){
             try{
                 const workoutTypeRef = firestore().collection('users').doc(currentUser.uid)
-                .collection('workouts').doc(type);  
-
-                await firestore().runTransaction(async(transaction) => {
-                    const workoutTypeDoc = await transaction.get(workoutTypeRef);
-                    if(!workoutTypeDoc.exists){
-                        transaction.set(workoutTypeRef, {total: 0});
-                    }
-                    const total = workoutTypeDoc.data().total || 0;
-                    transaction.update(workoutTypeRef, {total: total+1});
+                .collection('workouts').doc(type);
+                const workoutTypeSessionDocs = await workoutTypeRef.collection('sessions').get();
+                let total = 0;
+                workoutTypeSessionDocs.forEach(() => {
+                    total++;
                 });
-                console.log(`Total Workouts of type ${type} updated successfully!`);
+                await workoutTypeRef.update({'total': total});
+                console.log(`Total Workouts of type ${type} updated successfully to ${total}!`);
             }catch(err){
                 console.error(`Error updating totalWorkoutsOfType(${type}) for user ${currentUser.email}`, err);
             }
         }
-    }
+    };
 
     const addFriend = async (friendEmail) => {
         try{
@@ -647,9 +626,7 @@ export const FirestoreProvider = ({children}) => {
         friends,
         isDataLoading,
         isFriendsLoading,
-        currentWorkoutType,
         setIsDataLoading,
-        setCurrentWorkoutType,
         getNumberWorkoutsOfType,
         getTotalNumOfWorkouts,
         getAllWorkoutData,

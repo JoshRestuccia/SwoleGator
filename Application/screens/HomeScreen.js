@@ -45,14 +45,14 @@ const HomeScreen = ({navigation}) =>{
     return(
         <View>
             <View style={styles.title}>
-              <Text style={styles.titleText}>{`Welcome to SwoleGator, ${userData?.first}!`} </Text>
+              <Text style={styles.titleText}>{(isLoading) ? `Loading...` : `Welcome to SwoleGator, ${userData?.first}!`} </Text>
             </View>
             <View style={styles.container}>
               <TouchableOpacity onPress={() => navigation.navigate('User Stack', {screen: 'Pair Device'})} style={styles.button}>
                 <Text style={styles.textStyle}> Pair Device</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => navigation.navigate('User Stack', {screen: 'Exercise Selection'})} style={styles.button}>
-                <Text style={styles.textStyle}>Start Lift </Text>
+              <TouchableOpacity onPress={() => navigation.navigate('User Stack', {screen: 'Graphing Screen'})} style={styles.button}>
+                <Text style={styles.textStyle}> Start Lift </Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => navigation.navigate('User Stack', {screen: 'SwoleGator Data'})} style={styles.button}>
                 <Text style={styles.textStyle}> SwoleGator Data</Text>
