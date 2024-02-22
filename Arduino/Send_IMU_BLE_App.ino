@@ -5,13 +5,20 @@
 #include <Adafruit_Sensor.h>
 #include <Wire.h>
 #include <floatToString.h>
-#include <elapsedMillis.h>
+//#include <elapsedMillis.h>
 
 // See the following for generating UUIDs:
 // https://www.uuidgenerator.net/
 Adafruit_MPU6050 mpu;
 #define SERVICE_UUID        "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
 #define CHARACTERISTIC_UUID "00001800-0000-1000-8000-00805f9b34fb"
+struct Button {
+  const uint8_t PIN;
+  bool pressed;
+};
+
+Button calb = {23, false};
+
 const int WINDOW_SIZE = 100;
 // Filter Variables
 int ind = 0;
@@ -27,7 +34,7 @@ int averagez = 0;
 
 //Velocity variables
 float prevvx = 0;
-elapsedMillis timeElapsed;
+//elapsedMillis timeElapsed;
 unsigned long starttime = 0;
 unsigned long elapsedtime = 0;
 float prev;
@@ -41,6 +48,7 @@ float reps = 0;
 float t;
 float vv;
 int state = 0;
+int orn;
 
 static BLECharacteristic *pCharacteristicx;
 //static BLECharacteristic *pCharacteristicy;
@@ -83,14 +91,13 @@ int orientation(float accx, float accy, float accz){
     return 5;
   }
 }
-void calibrate(){
+void calibrate(int ori){
   sensors_event_t a, g, temp;
   mpu.getEvent(&a, &g, &temp);
   float x_a = a.acceleration.x;
   float z_a = a.acceleration.z;
   float y_a = a.acceleration.y;
-  int ori = orientation(x_a, y_a, z_a);
-  if (ori == 0){ //-x
+  if ((ori == 0)) { //-x, -y
     for (int n = 0; n < 10; n++){
       // Moving average filter
       float x_a = a.acceleration.x;
@@ -122,6 +129,40 @@ void calibrate(){
       currv[k] = 0;
     }
     prevvx = 0;
+  }
+  else if (ori == 2) { // -y
+    for (int n = 0; n < 10; n++){
+      // Moving average filter
+      float y_a = a.acceleration.y;
+      totalx = totalx - READX[ind];
+      READX[ind] = y_a;
+      totalx = totalx + READX[ind];
+      ind = ind + 1;
+      if (ind >= WINDOW_SIZE){
+        ind = 0;
+      }
+      averagex = totalx / WINDOW_SIZE;
+      currv[n] = (prevvx + (averagex)*0.001); // rate of change 
+      prevvx = currv[n];
+    }
+    vv = ((currv[9] - currv[0]) * 1000) + 81.0; // velocity from rate of change
+    Serial.print("v: ");
+    Serial.println(vv);
+    if (vv > maxx){ // if current velocity is greater than the max, set max to that velocity
+      maxx = vv;
+      Serial.print("max: ");
+      Serial.println(maxx);
+    }
+    if (vv < minn){ // if less than minimum, set as min
+      minn = vv;
+      Serial.print("min: ");
+      Serial.println(minn);
+    }
+    for (int k = 0; k < 10; k++){ // reset rate of change array to account for accumulating errors
+      currv[k] = 0;
+    }
+    prevvx = 0;
+
   }
   else if (ori == 1){ // +x
     for (int n = 0; n < 10; n++){
@@ -156,7 +197,7 @@ void calibrate(){
     }
     prevvx = 0;
   }
-  else if ((ori == 2) || (ori == 3)){ //+y, -y
+  else if (ori == 3) { // +y
     for (int n = 0; n < 10; n++){
       // Moving average filter
       float y_a = a.acceleration.y;
@@ -171,7 +212,7 @@ void calibrate(){
       currv[n] = (prevvx + (averagex)*0.001); // rate of change 
       prevvx = currv[n];
     }
-    vv = ((currv[9] - currv[0]) * 1000); // velocity from rate of change
+    vv = ((currv[9] - currv[0]) * 1000) - 81.0; // velocity from rate of change
     Serial.print("v: ");
     Serial.println(vv);
     if (vv > maxx){ // if current velocity is greater than the max, set max to that velocity
@@ -189,7 +230,7 @@ void calibrate(){
     }
     prevvx = 0;
   }
-  else { // +z, -z
+  else if (ori == 4) { // -z
     for (int n = 0; n < 10; n++){
       // Moving average filter
       float z_a = a.acceleration.z;
@@ -204,7 +245,7 @@ void calibrate(){
       currv[n] = (prevvx + (averagex)*0.001); // rate of change 
       prevvx = currv[n];
     }
-    vv = ((currv[9] - currv[0]) * 1000); // velocity from rate of change
+    vv = ((currv[9] - currv[0]) * 1000) + 72.0; // velocity from rate of change
     Serial.print("v: ");
     Serial.println(vv);
     if (vv > maxx){ // if current velocity is greater than the max, set max to that velocity
@@ -222,6 +263,64 @@ void calibrate(){
     }
     prevvx = 0;
   }
+  else { // +z
+    for (int n = 0; n < 10; n++){
+      // Moving average filter
+      float z_a = a.acceleration.z;
+      totalx = totalx - READX[ind];
+      READX[ind] = z_a;
+      totalx = totalx + READX[ind];
+      ind = ind + 1;
+      if (ind >= WINDOW_SIZE){
+        ind = 0;
+      }
+      averagex = totalx / WINDOW_SIZE;
+      currv[n] = (prevvx + (averagex)*0.001); // rate of change 
+      prevvx = currv[n];
+    }
+    vv = ((currv[9] - currv[0]) * 1000) - 90.0; // velocity from rate of change
+    Serial.print("v: ");
+    Serial.println(vv);
+    if (vv > maxx){ // if current velocity is greater than the max, set max to that velocity
+      maxx = vv;
+      Serial.print("max: ");
+      Serial.println(maxx);
+    }
+    if (vv < minn){ // if less than minimum, set as min
+      minn = vv;
+      Serial.print("min: ");
+      Serial.println(minn);
+    }
+    for (int k = 0; k < 10; k++){ // reset rate of change array to account for accumulating errors
+      currv[k] = 0;
+    }
+    prevvx = 0;
+  }
+}
+
+int cal(){
+  sensors_event_t a, g, temp;
+  mpu.getEvent(&a, &g, &temp);
+  float x_a = a.acceleration.x;
+  float z_a = a.acceleration.z;
+  float y_a = a.acceleration.y;
+  bool st = false;
+  Serial.println("Detecting Orientation in 5 seconds");
+  delay(5000);
+  int orient = orientation(x_a, y_a, z_a);
+  Serial.println("Starting calibration in 5 seconds...");
+  delay(5000);
+  while (st == false){
+    elapsedtime = millis() - starttime;
+    if (elapsedtime < 30000) {
+      calibrate(orient);
+    }
+    else {
+      st = true;
+    }
+  }
+  t = (maxx + minn) / 2.0;
+  return orient;
 }
 
 void setup() {
@@ -272,7 +371,7 @@ void setup() {
   pAdvertising->setMinPreferred(0x12);
   BLEDevice::startAdvertising();
   Serial.println("Characteristic defined!");
-  starttime = millis();
+  pinMode(calb.PIN, INPUT_PULLUP);
   delay(100);
 }
 
@@ -289,32 +388,123 @@ void loop() {
   char y[15];
   char z[15];
   char del[15];
-  elapsedtime = millis() - starttime;
-  if (elapsedtime < 60000) {
-    calibrate();
+  if (digitalRead(calb.PIN) == LOW){
+    calb.pressed = true;
   }
-
-
+  if (calb.pressed){ // calibrate when button is pressed
+    // restart threshold variables and rep counter
+    maxx = 0;
+    minn = 0;
+    reps = 0;
+    starttime = millis();
+    orn = cal();
+    calb.pressed = false;
+  }
   //Stores 10 velocity values in array
   else {
-    t = (maxx + minn) / 2.0;
-    for (int n = 0; n < 10; n++){
-      // Apply moving average filter
-      float x_a = a.acceleration.x;
-      totalx = totalx - READX[ind];
-      READX[ind] = x_a;
-      totalx = totalx + READX[ind];
-      ind = ind + 1;
-      if (ind >= WINDOW_SIZE){
-        ind = 0;
+    if ((orn == 0)) { //-x, -y
+      for (int n = 0; n < 10; n++){
+        // Moving average filter
+        float x_a = a.acceleration.x;
+        totalx = totalx - READX[ind];
+        READX[ind] = x_a;
+        totalx = totalx + READX[ind];
+        ind = ind + 1;
+        if (ind >= WINDOW_SIZE){
+          ind = 0;
+        }
+        averagex = totalx / WINDOW_SIZE;
+        currv[n] = (prevvx + (averagex)*0.001); // rate of change 
+        prevvx = currv[n];
       }
-      averagex = totalx / WINDOW_SIZE; //Filtered acceleration (x)
-      currv[n] = (prevvx + (averagex)*0.001);
-      prevvx = currv[n];
+      vv = ((currv[9] - currv[0]) * 1000) + 81.0; // velocity from rate of change
     }
-    vv = ((currv[9] - currv[0]) * 1000) + 81.0; // -x //Calculates velocity and accounts for accumulating errors
-    //vv = (currv[9] - currv[0]) * 1000; //-y, +y, -z, +z
-    //vv = ((currv[9] - currv[0]) * 1000) - 81.0; // +x
+    else if (orn == 2) { // -y
+      for (int n = 0; n < 10; n++){
+        // Moving average filter
+        float y_a = a.acceleration.y;
+        totalx = totalx - READX[ind];
+        READX[ind] = y_a;
+        totalx = totalx + READX[ind];
+        ind = ind + 1;
+        if (ind >= WINDOW_SIZE){
+          ind = 0;
+        }
+        averagex = totalx / WINDOW_SIZE;
+        currv[n] = (prevvx + (averagex)*0.001); // rate of change 
+        prevvx = currv[n];
+      }
+      vv = ((currv[9] - currv[0]) * 1000) + 81.0; // velocity from rate of change
+    }
+    else if (orn == 1){ // +x
+      for (int n = 0; n < 10; n++){
+        // Moving average filter
+        float x_a = a.acceleration.x;
+        totalx = totalx - READX[ind];
+        READX[ind] = x_a;
+        totalx = totalx + READX[ind];
+        ind = ind + 1;
+        if (ind >= WINDOW_SIZE){
+          ind = 0;
+        }
+        averagex = totalx / WINDOW_SIZE;
+        currv[n] = (prevvx + (averagex)*0.001); // rate of change 
+        prevvx = currv[n];
+      }
+      vv = ((currv[9] - currv[0]) * 1000) - 81.0; // velocity from rate of change
+    }
+    else if (orn == 3) { // +y
+      for (int n = 0; n < 10; n++){
+        // Moving average filter
+        float y_a = a.acceleration.y;
+        totalx = totalx - READX[ind];
+        READX[ind] = y_a;
+        totalx = totalx + READX[ind];
+        ind = ind + 1;
+        if (ind >= WINDOW_SIZE){
+          ind = 0;
+        }
+        averagex = totalx / WINDOW_SIZE;
+        currv[n] = (prevvx + (averagex)*0.001); // rate of change 
+        prevvx = currv[n];
+      }
+      vv = ((currv[9] - currv[0]) * 1000) - 81.0; // velocity from rate of change
+    }
+    else if (orn == 4) { // -z
+      for (int n = 0; n < 10; n++){
+        // Moving average filter
+        float z_a = a.acceleration.z;
+        totalx = totalx - READX[ind];
+        READX[ind] = z_a;
+        totalx = totalx + READX[ind];
+        ind = ind + 1;
+        if (ind >= WINDOW_SIZE){
+          ind = 0;
+        }
+        averagex = totalx / WINDOW_SIZE;
+        currv[n] = (prevvx + (averagex)*0.001); // rate of change 
+        prevvx = currv[n];
+      }
+      vv = ((currv[9] - currv[0]) * 1000) + 72.0; // velocity from rate of change
+    }
+    else { // +z
+      for (int n = 0; n < 10; n++){
+        // Moving average filter
+        float z_a = a.acceleration.z;
+        totalx = totalx - READX[ind];
+        READX[ind] = z_a;
+        totalx = totalx + READX[ind];
+        ind = ind + 1;
+        if (ind >= WINDOW_SIZE){
+          ind = 0;
+        }
+        averagex = totalx / WINDOW_SIZE;
+        currv[n] = (prevvx + (averagex)*0.001); // rate of change 
+        prevvx = currv[n];
+      }
+      vv = ((currv[9] - currv[0]) * 1000) - 90.0; // velocity from rate of change
+    }
+
     if (state == 0 && vv > t){ // if current velocity goes above threshold, increase rep
       state = 1;
       reps = reps + 1;
