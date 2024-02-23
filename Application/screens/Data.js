@@ -135,6 +135,10 @@ const Data = () => {
                     (<Text>Loading workout data...</Text>)
                 }
             </View>
+            {/* This may be a good place to add recommendations */}
+            <View style={styles.recommendations}>
+                <Text style={styles.sectionHeader}> Recommendations </Text>
+            </View>
         </ScrollView>
     </SafeAreaView>
     )
@@ -144,7 +148,7 @@ export default Data;
 
 const styles = StyleSheet.create({
     mainContainer: {
-        flex: 1,
+        flex: 1.5,
         justifyContent: 'flex-end'
     },
     scrollContainer:{
@@ -160,7 +164,6 @@ const styles = StyleSheet.create({
     },
     overall:{
         flex: 0.5,
-        paddingBottom: 50
     },
     sectionHeader:{
         textAlign: 'center',
@@ -170,4 +173,13 @@ const styles = StyleSheet.create({
     picker: {
         backgroundColor: 'lightblue',
     },
+    recommendations: {
+        flex: 0.5,
+        paddingBottom: 50
+    },
+    recommendationText: {
+        fontSize:15,
+        fontFamily:'ariel',
+        fontStyle:'italic'
+    }
 })
