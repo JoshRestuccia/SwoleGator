@@ -155,10 +155,11 @@ function GraphingScreen() {
             ) 
             : 
             (
-              <LiveDataGraph 
+              /*<LiveDataGraph 
                 maxVelocity={maxVelocity || 0} 
                 currentVelocity={currentVelocity || 0}
-                />
+                />*/
+                <Text> You Got This! </Text>
             )
           }  
         </View>
