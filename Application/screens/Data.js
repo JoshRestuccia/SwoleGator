@@ -19,6 +19,7 @@ const Data = () => {
     const [recentData, setRecentData] = useState([]);
     const [recentName, setRecentName] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [scrolling, setScrolling] = useState(false);
 
     useEffect(() => {
         const fetchData = async() => {
@@ -89,8 +90,20 @@ const Data = () => {
         setIsLoading(false);
     }, [recentData]);
 
+
+    // Scroll helper functions (preventing clicking while scrolling)
+    const handleScroll = () => {
+        setScrolling(true);
+    };
+    const handleTouchStart = (event) => {
+        if(scrolling){
+            event.stopPropagation();
+        }
+    };
+    // End scroll helpers
+
     return(
-    <SafeAreaView style={styles.mainContainer}>
+    <SafeAreaView style={styles.mainContainer} onTouchStart={handleTouchStart}>
         <Picker
             selectedValue={typeSelection}
             onValueChange={(itemValue) => setTypeSelection(itemValue)}
@@ -100,7 +113,7 @@ const Data = () => {
                 <Picker.Item key={workoutType} label={workoutType} value={workoutType}/>
             ))}
         </Picker>
-        <ScrollView style={styles.scrollContainer}>
+        <ScrollView style={styles.scrollContainer} onScroll={handleScroll}>
             <Text style={styles.header}> {`${userData?.username}'s Workout Data`} </Text>
             <View style={styles.recent}>
                 <Text style={styles.sectionHeader}>

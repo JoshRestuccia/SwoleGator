@@ -37,11 +37,11 @@ const RecentDataGraph = ({raw_data}) => {
                             Math.max(...victoryData.maxVs.map(obj => obj.data))
                         :   81;
             const min = victoryData.avgVs.length > 0 ?
-                            Math.min(...victoryData.avgVs.map((obj) => obj.data))
-                        :   0;
-            const threshold = 0.2*min;            
+                            Math.min(...victoryData.avgVs.map(obj => obj.data))
+                        :   -20;
+            const threshold = 0.2*Math.abs(min);            
             const vel_domain = [min-threshold, max+threshold];
-
+ 
             // Rep Domain calculations
             const maxRep = victoryData.maxVs.length > 0 ?
                                 Math.max(...victoryData.maxVs.map(obj => obj.rep))
@@ -80,7 +80,7 @@ const RecentDataGraph = ({raw_data}) => {
         <VictoryChart 
             style={styles.chart}
             theme={VictoryTheme.material}
-            domain={victoryDomain}  
+            domain={victoryDomain}
             containerComponent={
                 <VictoryVoronoiContainer
                     labels={({datum}) => `REP: ${Math.round(datum.rep, 2)}, VELO: ${Math.round(datum.data, 2)}`}

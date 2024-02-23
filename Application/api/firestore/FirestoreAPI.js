@@ -367,7 +367,7 @@ export const FirestoreProvider = ({children}) => {
                             console.log("Pushing workoutTypeData for", workoutType, ":", workoutTypeData);
                             console.log(Array.from(Object.values(sessionData)));
                             const victoryData = generateVictoryDataObject(sessionData);
-                            addWorkoutCalculationsToFirestore(victoryData, workoutType, sessionName);
+                            addWorkoutCalculationsToFirestore(victoryData, workoutType, sessionName); // Ideally, this should probably be in a better spot but as of now its gotta go here
                             workoutTypeData.push({name: sessionName, date: sessionDate, data: Array.from(Object.values(sessionData))});
                         });
                     }catch(err){
