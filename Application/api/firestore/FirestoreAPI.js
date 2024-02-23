@@ -499,7 +499,7 @@ export const FirestoreProvider = ({children}) => {
         }      
     };
 
-    const saveWorkoutData = async (workoutName, data, type) => {
+    const saveWorkoutData = async (workoutName, data, type, wgt) => {
         try{
             setIsDataLoading(true);
             await firestore().collection('users').doc(currentUser.uid)
@@ -515,7 +515,7 @@ export const FirestoreProvider = ({children}) => {
             await firestore().collection('users').doc(currentUser.uid)
             .collection('workouts').doc(type)
             .collection('sessions').doc(workoutName)
-            .set({date: timestamp}); // must set a field value in order for the collection to be referencable
+            .set({date: timestamp, weight: wgt}); // must set a field value in order for the collection to be referencable
 
             await updateTotalWorkoutsOfType(type);
             await updateTotalWorkouts();
