@@ -49,6 +49,7 @@ float t;
 float vv;
 int state = 0;
 int orn;
+int flag = 0;
 
 static BLECharacteristic *pCharacteristicx;
 //static BLECharacteristic *pCharacteristicy;
@@ -387,7 +388,9 @@ void loop() {
   char x[50];
   char y[15];
   char z[15];
+  char f[15];
   char del[15];
+
   if (digitalRead(calb.PIN) == LOW){
     calb.pressed = true;
   }
@@ -397,11 +400,28 @@ void loop() {
     minn = 0;
     reps = 0;
     starttime = millis();
+    flag = 1;
+    strcpy(x, floatToString(maxx, S, sizeof(S), 1));
+    strcpy(y, floatToString(reps, S, sizeof(S), 1));
+    strcpy(z, floatToString(vv, S, sizeof(S), 1));
+    strcpy(f, floatToString(flag, S, sizeof(S), 1));
+
+
+    strcpy(del, ",");
+    strcat(x,del);
+    strcat(x,y);
+    strcat(x,del);
+    strcat(x,z);
+    strcat(x,del);
+    strcat(x,f);
+    pCharacteristicx->setValue(x);
+    Serial.println(x);
     orn = cal();
     calb.pressed = false;
   }
   //Stores 10 velocity values in array
   else {
+    flag = 0;
     if ((orn == 0)) { //-x, -y
       for (int n = 0; n < 10; n++){
         // Moving average filter
@@ -521,24 +541,18 @@ void loop() {
     strcpy(x, floatToString(maxx, S, sizeof(S), 1));
     strcpy(y, floatToString(reps, S, sizeof(S), 1));
     strcpy(z, floatToString(vv, S, sizeof(S), 1));
+    strcpy(f, floatToString(flag, S, sizeof(S), 1));
+
 
     strcpy(del, ",");
     strcat(x,del);
     strcat(x,y);
     strcat(x,del);
     strcat(x,z);
-    
-    pCharacteristicx->setValue(x); // send over BLE (max v, reps, current v)
-    
-    Serial.print(x);
-    Serial.print(" ");
-    Serial.print(xx_a);
-    Serial.print(" ");
-    Serial.print(y_a);
-    Serial.print(" ");
-    Serial.print(z_a);
-    Serial.print(" ");
-    Serial.println(t);
+    strcat(x,del);
+    strcat(x,f);
+    pCharacteristicx->setValue(x);
+    Serial.println(x);
   }
   
   delay(25);
