@@ -31,14 +31,14 @@ function UserStackGroup() {
         options={{title: "Pair Device"}}
       />
       <Stack.Screen
-        name="Graphing Screen"
+        name="Live Workout"
         component={GraphingScreen}
-        options={{title: "Graphing Screen"}}
+        options={{title: "Live Workout"}}
       />
       <Stack.Screen
-        name="SwoleGator Data"
+        name="Completed Workouts"
         component={Data}
-        options={{title: "SwoleGator Data"}}
+        options={{title: "Completed Workouts"}}
       />
       <Stack.Screen
         name="Profile"

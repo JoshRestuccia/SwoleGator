@@ -144,13 +144,17 @@ function GraphingScreen() {
             >
               <Text> Begin Workout </Text>
             </TouchableOpacity>
-          ) 
-          : 
+          )
+          :
           (
-            <LiveDataGraph 
-              maxVelocity={maxVelocity || 0} 
-              currentVelocity={currentVelocity || 0}
-              />
+           // <LiveDataGraph
+             // maxVelocity={maxVelocity || 0}
+              //currentVelocity={currentVelocity || 0}
+             // />
+
+           <Text style={styles.peakVelocityText}>
+                     You've got this!
+                   </Text>
           )
         }  
       </View>
