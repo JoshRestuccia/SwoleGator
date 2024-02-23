@@ -33,6 +33,7 @@ function GraphingScreen() {
   const [repCount, setRepCount] = useState('0');
   const [currentVelocity, setCurrentVelocity] = useState('0');
   const [peakVelocity, setPeakVelocity] = useState('0');
+  const [isCalibrating, setIsCalibrating] = useState(false);
 
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -77,10 +78,11 @@ function GraphingScreen() {
   useEffect(() => {
     // format and move data to workoutData[]
     if(isReadingData && bleData){
-      const {maxV, rep, currentV} = handleDataFormat(bleData);
+      const {maxV, rep, currentV, flag} = handleDataFormat(bleData);
       setMaxVelocity(maxV);
       setRepCount(rep);
       setCurrentVelocity(currentV);
+      setIsCalibrating((parseInt(flag) === 0) ? false : true);
       // Update peakVelocity only if the new currentV is greater
       setPeakVelocity((prevPeakVelocity) => Math.max(prevPeakVelocity, currentV));
       setWorkoutData([...workoutData, {maxV, rep, currentV}]);
