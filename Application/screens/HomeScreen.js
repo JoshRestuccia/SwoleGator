@@ -51,11 +51,11 @@ const HomeScreen = ({navigation}) =>{
               <TouchableOpacity onPress={() => navigation.navigate('User Stack', {screen: 'Pair Device'})} style={styles.button}>
                 <Text style={styles.textStyle}> Pair Device</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => navigation.navigate('User Stack', {screen: 'Graphing Screen'})} style={styles.button}>
-                <Text style={styles.textStyle}> Start Lift </Text>
+              <TouchableOpacity onPress={() => navigation.navigate('User Stack', {screen: 'Live Workout'})} style={styles.button}>
+                <Text style={styles.textStyle}> Live Workout </Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => navigation.navigate('User Stack', {screen: 'SwoleGator Data'})} style={styles.button}>
-                <Text style={styles.textStyle}> SwoleGator Data</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('User Stack', {screen: 'Completed Workouts'})} style={styles.button}>
+                <Text style={styles.textStyle}> Completed Workouts </Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => navigation.navigate('User Stack', {screen: 'Profile'})} style={styles.button}>
                 <Text style={styles.textStyle}> Profile </Text>
