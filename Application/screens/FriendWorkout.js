@@ -3,39 +3,43 @@ import { StyleSheet, SafeAreaView, View, Text, ScrollView } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { useFirestore } from '../api/firestore/FirestoreAPI';
 import RecentDataGraph from '../victory/RecentData';
-import OverallDataGraph from '../victory/OverallData';
 
 const FriendWorkout = ({ route }) => {
   const { friend } = route.params;
-  const { getAllWorkoutData, getMostRecentSession, getFriendData, getUserData, getFriendWorkoutData } = useFirestore();
-  const [allWorkoutData, setWorkoutData] = useState({});
-  const [workoutDataOfType, setWorkoutDataOfType] = useState([]);
-  const [typeSelection, setTypeSelection] = useState(null);
-  const [recentData, setRecentData] = useState([]);
-  const [recentName, setRecentName] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { currentUser, getPublicWorkoutsOfUser } = useFirestore();
+
   const [scrolling, setScrolling] = useState(false);
-  const [friendData, setUserData] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [publicWorkouts, setPublicWorkouts] = useState(null);
+  const [selectedWorkout, setSelectedWorkout] = useState(null);
 
 useEffect(() => {
   const fetchData = async () => {
     try {
-      const friendData = await getFriendData(friend.uid);
      // console.log(friend.username);  // Log friend's username
      // setUserData(friendData);
-      console.log(friend.uid);
-      console.log(friendData);  // Log friendData's username
-      const allWorkoutData = await getFriendWorkoutData(friend.uid);
-      console.log(allWorkoutData);
-      setWorkoutData(allWorkoutData);
+      console.log(friend);
+      const allPublicWorkouts = await getPublicWorkoutsOfUser(friend.uid);
+      console.log(allPublicWorkouts);
+      setPublicWorkouts(allPublicWorkouts);
+      if (Object.keys(allPublicWorkouts).length > 0) {
+        setSelectedWorkout(Object.keys(allPublicWorkouts)[0]);
+      }
       setIsLoading(false);
     } catch (error) {
       console.error('Error fetching workout data:', error);
     }
   };
+  if(currentUser){
+    setIsLoading(true);
+    fetchData();
+  }
+}, [currentUser]);
 
-  fetchData();
-}, [friend.uid]);
+  useEffect(() => {
+    console.log('Public Workouts: ', publicWorkouts);
+    console.log('Selected Workout: ', selectedWorkout);
+  }, [publicWorkouts, selectedWorkout]);
 
     const handleScroll = () => {
         setScrolling(true);
@@ -47,66 +51,40 @@ useEffect(() => {
     };
 
 
-  useEffect(() => {
-    if (typeSelection) {
-      setWorkoutDataOfType(allWorkoutData[typeSelection] || []);
-    }
-  }, [typeSelection, allWorkoutData]); // Update when typeSelection or allWorkoutData changes
-
-  useEffect(() => {
-    const getNameAndSetData = async () => {
-      try {
-        const mostRecentName = await getMostRecentSession(typeSelection);
-        if (workoutDataOfType.length > 0 && mostRecentName) {
-          const session = Object.values(workoutDataOfType).find(session => session.name === mostRecentName);
-          if (session) {
-            setRecentName(session.name);
-            setRecentData(session.data);
-          }
-        } else {
-          console.log('No workout data of the selected type', typeSelection);
-        }
-      } catch (err) {
-        console.error('Error getting the most recent session name from Firestore');
-      }
-    };
-
-    if (typeSelection) {
-      getNameAndSetData();
-    }
-  }, [typeSelection, workoutDataOfType]); // Update when typeSelection or workoutDataOfType changes
-
-
   return (
     <SafeAreaView style={styles.mainContainer} onTouchStart={handleTouchStart}>
-      <Picker
-        selectedValue={typeSelection}
-        onValueChange={(itemValue) => setTypeSelection(itemValue)}
-        style={styles.picker}
-      >
-        {Object.keys(allWorkoutData).map((workoutType) => (
-          <Picker.Item key={workoutType} label={workoutType} value={workoutType} />
-        ))}
-      </Picker>
-      <ScrollView style={styles.scrollContainer} onScroll={handleScroll}>
-        <Text style={styles.header}>{`${friend.username}'s Workout Data`}</Text>
-        <View style={styles.recent}>
-          <Text style={styles.sectionHeader}>{recentName && `(${recentName})`}</Text>
-          {!isLoading && recentData.length > 0 ? (
-            <RecentDataGraph raw_data={recentData} />
-          ) : (
-            <Text>Loading workout data...</Text>
-          )}
+      {publicWorkouts ? 
+        (<View style={styles.workoutContainer}>
+          <Picker
+            selectedValue={selectedWorkout}
+            onValueChange={(itemValue) => setSelectedWorkout(itemValue)}
+            style={styles.picker}
+          >
+            {Object.keys(publicWorkouts).map((workoutName) => (
+              <Picker.Item key={workoutName} label={workoutName} value={workoutName} />
+            ))}
+          </Picker>
+          <Text style={styles.header}>{`${friend.username}'s Workout Data`}</Text>
+          <ScrollView style={styles.scrollContainer} onScroll={handleScroll}>
+            <View style={styles.recent}>
+              <Text style={styles.sectionHeader}>{selectedWorkout && `(${selectedWorkout})`}</Text>
+              {!isLoading ? (
+                <RecentDataGraph raw_data={publicWorkouts[selectedWorkout]} />
+              ) : (
+                <Text>Loading workout data...</Text>
+              )}
+            </View>
+          </ScrollView>
         </View>
-        <View style={styles.overall}>
-          <Text style={styles.sectionHeader}>Overall Trends</Text>
-          {!isLoading && typeSelection ? (
-            <OverallDataGraph type={typeSelection} />
-          ) : (
-            <Text>Loading workout data...</Text>
-          )}
-        </View>
-      </ScrollView>
+        )
+      :
+        (
+          <View style={styles.noWorkouts}>
+            <Text style={styles.header}>{`${friend.username}'s Workout Data`}</Text>
+            <Text style={styles.noWorkoutText}>{`${friend.username} has not shared any workouts.`}</Text>
+          </View>
+        )
+      }
     </SafeAreaView>
   );
 };
@@ -114,6 +92,22 @@ useEffect(() => {
 
 
 const styles = StyleSheet.create({
+  workoutContainer: {
+    flex: 1,
+    flexDirection: 'column',
+    justifyContent: 'flex-start'
+  },
+  noWorkouts: {
+    flex: 1,
+    justifyContent: 'flex-start',
+  },
+  noWorkoutText: {
+    textAlign: 'center',
+    fontSize: 24,
+    fontFamily: 'helvetica',
+    color: 'gray',
+    padding: 20
+  },
   mainContainer: {
     flex: 1,
     justifyContent: 'flex-end',
@@ -125,6 +119,9 @@ const styles = StyleSheet.create({
   header: {
     fontSize: 30,
     textAlign: 'center',
+    color: 'teal',
+    fontWeight: 'bold',
+    padding: 40
   },
   recent: {
     flex: 0.5,

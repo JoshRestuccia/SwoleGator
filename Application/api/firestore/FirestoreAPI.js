@@ -423,6 +423,24 @@ export const FirestoreProvider = ({children}) => {
             }
         };
 
+    const getPublicWorkoutsOfUser = async (userUID) => {
+        try{
+            const publicWorkouts = {};
+            const userPublicWorkoutsSnap = await firestore().collection('users').doc(userUID).collection('public').orderBy('shared_on').get();
+            console.log(`Found ${userPublicWorkoutsSnap.docs.length} public workouts`);
+            if(userPublicWorkoutsSnap.docs.length === 0){ return {}; }
+            userPublicWorkoutsSnap.forEach((workout)=>{
+                if(!publicWorkouts[workout.id]){
+                    console.log(`publicWorkouts[${workout.id}] = ${workout.data()['data']}`);
+                    publicWorkouts[workout.id] = workout.data()['data'];
+                }
+            });        
+            console.log('Public Workouts: ', publicWorkouts);
+            return publicWorkouts;
+        }catch(err){
+            throw err;
+        }
+    };
 
     const getMostRecentSession = async (type) => {
         try{
@@ -565,6 +583,17 @@ export const FirestoreProvider = ({children}) => {
         }
     };
 
+    const makeWorkoutPublic = async (recentVictoryData, workoutName, type) => {
+        try{
+            //console.log('DATA: ', recentVictoryData);
+            await firestore().collection('users').doc(currentUser.uid)
+                .collection('public').doc(workoutName).set({data: recentVictoryData, shared_on: firestore.Timestamp.now(), name: workoutName, type: type});
+            console.log(`Made Workout ${workoutName} public!`);
+        }catch(err){
+            throw err;
+        }
+    };
+
     const updateTotalWorkouts = async() => {
         if(currentUser){
             try{
@@ -626,14 +655,14 @@ export const FirestoreProvider = ({children}) => {
             const friendUID = friendSnap.docs[0].id;
             // add friend to users/<userUID>/friends
             await firestore().collection('users').doc(currentUser.uid)
-            .collection('friends').add(formattedFriend(true, friendUID, friendData));
+            .collection('friends').doc(friendUID).set(formattedFriend(true, friendUID, friendData));
             console.log(`Added Friend: ${friendData.email}`);
         }catch(error){
             throw error;
         }
     };
 
-    const getFriendData = async(friendUID) => {
+    const getFriendData = async (friendUID) => {
         try{
             console.log('Friend UID:', friendUID);
             const friendDoc = await firestore().collection('users')
@@ -654,7 +683,6 @@ export const FirestoreProvider = ({children}) => {
         }
     };
 
-
     const signOut = async() => {
         try{
             const email = auth().currentUser.email;
@@ -672,6 +700,7 @@ export const FirestoreProvider = ({children}) => {
         isDataLoading,
         isFriendsLoading,
         setIsDataLoading,
+        getPublicWorkoutsOfUser,
         getNumberWorkoutsOfType,
         getTotalNumOfWorkouts,
         getAllWorkoutData,
@@ -681,6 +710,7 @@ export const FirestoreProvider = ({children}) => {
         signUp,
         signIn,
         saveWorkoutData,
+        makeWorkoutPublic,
         getUserData,
         addFriend,
         getFriendData,

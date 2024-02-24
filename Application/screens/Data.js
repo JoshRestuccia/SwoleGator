@@ -10,7 +10,8 @@ const Data = () => {
         currentUser,
         getUserData,
         getAllWorkoutData,
-        getMostRecentSession
+        getMostRecentSession,
+        makeWorkoutPublic
     } = useFirestore();
     const [userData, setUserData] = useState(null);
     const [allWorkoutData, setAllWorkoutData] = useState({});
@@ -90,6 +91,13 @@ const Data = () => {
         setIsLoading(false);
     }, [recentData]);
 
+    const share = async () => {
+        try{
+            await makeWorkoutPublic(recentData, recentName, typeSelection);
+        }catch(err){
+            console.error(err);
+        }
+    };
 
     // Scroll helper functions (preventing clicking while scrolling)
     const handleScroll = () => {
@@ -120,7 +128,17 @@ const Data = () => {
                     {recentName && `(${recentName})`}
                 </Text>
                 {(!isLoading && recentData.length > 0) ? 
-                    (<RecentDataGraph raw_data={recentData}/>)
+                    (
+                        <View>
+                            <RecentDataGraph raw_data={recentData}/>
+                            <View style={styles.shareContainer}>
+                                <Text style={styles.littleText}> Like this workout? Share with your friends! </Text>
+                                <TouchableOpacity style={styles.shareButton} onPress={share}>
+                                    <Text> Make this workout Public! </Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    )
                 :
                     (<Text>Loading workout data...</Text>)
                 }

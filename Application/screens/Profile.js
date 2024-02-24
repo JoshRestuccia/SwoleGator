@@ -73,8 +73,7 @@ export default function Profile({navigation}) {
       }, [friendEmail]);
     
       return(
-        <View>
-          <View style={popup.modelContainer}>
+        <View style={popup.modalContainer}>
             <View style={popup.modalContent}>
               <Text style={popup.headerText}> Join Your Friends! </Text>
               <Text style={popup.subheaderText}> Enter your friends email below </Text>
@@ -92,7 +91,6 @@ export default function Profile({navigation}) {
                 <Text style={popup.buttonText}> Make Friends! </Text>
               </TouchableOpacity>
             </View>
-          </View>
         </View>
       );
     };
@@ -117,7 +115,7 @@ const renderItem = ({ item }) => {
   if (item) {
     console.log('Friend being rendered: ', item.email);
     return (
-      <TouchableOpacity onPress={() => navigation.navigate('FriendWorkout', { friend: { uid: item.uid, username: item.username } })}>
+      <TouchableOpacity onPress={() => navigation.navigate('User Stack', { screen:'FriendWorkout', params: { friend: { uid: item.uid, username: item.username } }})}>
         <View style={styles.friendBadge}>
           <Text style={styles.friendText}>{item.username}</Text>
           <Text style={styles.friendText}>{item.friendedDate}</Text>
@@ -185,8 +183,8 @@ const renderItem = ({ item }) => {
                   <Text style={styles.noFriendsText}>No friends to show</Text>
                 </View>
             }
-          <TouchableOpacity style={styles.addFriends}onPress={openFriendPrompt}>
-            <Text style={styles.buttonText}>Add Friends</Text>
+          <TouchableOpacity style={styles.addFriends} onPress={openFriendPrompt}>
+            <Text style={styles.buttonText}>{` + Add Friends `}</Text>
           </TouchableOpacity>
         </View>
         {/* Settings Screen Modal */}
@@ -202,6 +200,7 @@ const renderItem = ({ item }) => {
           visible={friendPromptVisible}
           transparent={true}
           onRequestClose={closeFriendPrompt}
+          
         >
           <FriendPrompt/>
         </Modal>
@@ -309,8 +308,6 @@ const popup = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
-    width:'80%',
-    height: '40%'
   },
   modalContent: {
     backgroundColor: '#fff', // White background
@@ -320,10 +317,12 @@ const popup = StyleSheet.create({
   },
   headerText: {
     fontSize: 20,
+    textAlign: 'center',
     fontWeight: 'bold',
     marginBottom: 10,
   },
   subheaderText: {
+    textAlign: 'center',
     fontSize: 16,
     marginBottom: 15,
   },

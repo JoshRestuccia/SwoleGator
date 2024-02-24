@@ -26,6 +26,7 @@ const RecentDataGraph = ({raw_data}) => {
         if(raw_data){
             //console.log('RAW_DATA: \n', raw_data);
             const victDataObj = generateVictoryDataObject(raw_data);
+            console.log(victDataObj);
             setVictoryData(victDataObj);
         }   
     },[raw_data]);
@@ -75,6 +76,10 @@ const RecentDataGraph = ({raw_data}) => {
             getStrainPoints();
         }
     }, [victoryData]);
+
+    useEffect(() => {
+        console.log('Victory Domain: ', victoryDomain);
+    }, [victoryDomain])
     
     return(
         <VictoryChart 
