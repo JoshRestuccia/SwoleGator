@@ -113,17 +113,21 @@ export default function Profile({navigation}) {
       setFriendPromptVisible(false);
     }
     
-    const renderItem = ({item}) => {
-      if(item){
-      console.log('Friend being rendered: ', item.email);
-        return(
-          <View style={styles.friendBadge}>
-            <Text style={styles.friendText}>{item.username}</Text>
-            <Text style={styles.friendText}>{item.friendedDate}</Text>
-          </View> 
-        );
-      }
-    };
+const renderItem = ({ item }) => {
+  if (item) {
+    console.log('Friend being rendered: ', item.email);
+    return (
+      <TouchableOpacity onPress={() => navigation.navigate('FriendWorkout', { friend: { uid: item.uid, username: item.username } })}>
+        <View style={styles.friendBadge}>
+          <Text style={styles.friendText}>{item.username}</Text>
+          <Text style={styles.friendText}>{item.friendedDate}</Text>
+        </View>
+      </TouchableOpacity>
+    );
+  } else {
+    return null;
+  }
+};
 
     useEffect(() => {
       const fetchData = async() => {
