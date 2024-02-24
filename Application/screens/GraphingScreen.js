@@ -166,13 +166,17 @@ function GraphingScreen() {
           }  
         </View>
         {/* Display Active Variables (Workout Parameters & Reps & Velocity)*/}
+
+
         <View style={styles.parametersAndSaveButton}>
           <View style={styles.parameterDisplay}>
-            <Text style={styles.textStyle}> {`Current Excercise: ${currentWorkoutType}`} </Text>
+            <Text style={styles.textStyle}> {`Current Exercise: ${currentWorkoutType}`} </Text>
             <Text style={styles.textStyle}> {`Current Weight: ${currentWorkoutWeight || "- - -"} `} </Text>
             <Text style={styles.textStyle}> {`Rep Count: ${repCount}`} </Text>
             <Text style={styles.textStyle}> {`Peak Velocity: ${peakVelocity}`} </Text>
           </View>
+
+
           <View style={styles.buttonContainer}>
             <TouchableOpacity style={styles.saveButton}
               onPress={handleSaveWorkout}>
@@ -181,6 +185,18 @@ function GraphingScreen() {
               </Text>
             </TouchableOpacity>
           </View>
+
+           <View style={styles.buttonContainer}>
+                              <TouchableOpacity style={styles.saveButton}
+                                onPress={cleanUp}>
+                                <Text style={styles.saveButtonText}>
+                                  {isDataLoading ? `Loading...` : `Restart Workout Data`}
+                                </Text>
+                              </TouchableOpacity>
+                            </View>
+
+
+
         </View>
       </View>      
     </View>
@@ -260,15 +276,15 @@ const styles = StyleSheet.create({
   },
   // Parameter Text
   textStyle: {
-    fontSize: 15,
+    fontSize: 12,
   },
   // Save Button
   saveButton: {
     justifyContent: 'center',
     backgroundColor: 'lightblue',
-    borderRadius: 30,
-    padding: 20,
-    marginHorizontal: 30
+    borderRadius: 10,
+    padding: 10,
+    marginHorizontal: 0
   },
   // Save Button Text
   saveButtonText: {
