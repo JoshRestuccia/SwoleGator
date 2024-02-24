@@ -9,7 +9,7 @@ import {
 import { Picker } from '@react-native-picker/picker';
 import { useFirestore } from '../api/firestore/FirestoreAPI';
 import { useBLE } from '../api/ble/BLEContext';
-import LiveDataGraph from '../victory/LiveData';
+import MotivationQuotes from '../data/motivation.js';
 import containerStyles from '../styles/container-view-styles';
 
 function GraphingScreen() {
@@ -149,11 +149,9 @@ function GraphingScreen() {
         <View style={styles.graphicContainer}> 
           {!workoutStarted ? 
             (
-              <TouchableOpacity style={styles.saveButton}
-                onPress={handleBeginWorkout}
-              >
-                <Text style={styles.saveButtonText}> Begin Workout </Text>
-              </TouchableOpacity>
+              <View style={styles.notStartedContainer}>
+                <Text style={styles.notStartedText}> Workout has not started </Text>
+              </View>
             ) 
             : 
             (
@@ -161,23 +159,49 @@ function GraphingScreen() {
                 maxVelocity={maxVelocity || 0} 
                 currentVelocity={currentVelocity || 0}
                 />*/
-                <Text> You Got This! </Text>
+                <MotivationQuotes/>
             )
           }  
         </View>
+        {/* Start and Reset Buttons */}
+        <View style={styles.startAndResetContainer}>
+          <View style={styles.startWorkoutButtonContainer}>
+            <TouchableOpacity style={styles.startWorkoutButton}
+              onPress={handleBeginWorkout}
+            >
+              <Text style={styles.saveButtonText}> Begin Workout </Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.resetButtonContainer}>
+            <TouchableOpacity style={styles.resetButton}
+              onPress={cleanUp}>
+              <Text style={styles.saveButtonText}>
+                {isDataLoading ? `Loading...` : `Reset / Clear Workout Data`}
+              </Text>
+            </TouchableOpacity>  
+          </View>
+        </View>
         {/* Display Active Variables (Workout Parameters & Reps & Velocity)*/}
-
-
         <View style={styles.parametersAndSaveButton}>
           <View style={styles.parameterDisplay}>
-            <Text style={styles.textStyle}> {`Current Exercise: ${currentWorkoutType}`} </Text>
-            <Text style={styles.textStyle}> {`Current Weight: ${currentWorkoutWeight || "- - -"} `} </Text>
-            <Text style={styles.textStyle}> {`Rep Count: ${repCount}`} </Text>
-            <Text style={styles.textStyle}> {`Peak Velocity: ${peakVelocity}`} </Text>
+            <View style={styles.singleParameter}>
+              <Text style={styles.textStyleA}> {`Current Exercise: `} </Text>
+              <Text style={styles.textStyleB}>{`${currentWorkoutType}`}</Text>
+            </View>
+            <View style={styles.singleParameter}>
+              <Text style={styles.textStyleA}> {`Current Weight: `} </Text>
+              <Text style={styles.textStyleB}> {`${currentWorkoutWeight || "- - -"}`} </Text>
+            </View>
+            <View style={styles.singleParameter}>
+              <Text style={styles.textStyleA}> {`Rep Count: `} </Text>
+              <Text style={styles.textStyleB}> {`${repCount}`} </Text>
+            </View>
+            <View style={styles.singleParameter}>
+              <Text style={styles.textStyleA}> {`Peak Velocity: `} </Text>
+              <Text style={styles.textStyleB}> {`${peakVelocity}`} </Text>
+            </View>            
           </View>
-
-
-          <View style={styles.buttonContainer}>
+          <View style={styles.saveButtonContainer}>
             <TouchableOpacity style={styles.saveButton}
               onPress={handleSaveWorkout}>
               <Text style={styles.saveButtonText}>
@@ -185,18 +209,6 @@ function GraphingScreen() {
               </Text>
             </TouchableOpacity>
           </View>
-
-           <View style={styles.buttonContainer}>
-                              <TouchableOpacity style={styles.saveButton}
-                                onPress={cleanUp}>
-                                <Text style={styles.saveButtonText}>
-                                  {isDataLoading ? `Loading...` : `Restart Workout Data`}
-                                </Text>
-                              </TouchableOpacity>
-                            </View>
-
-
-
         </View>
       </View>      
     </View>
@@ -242,53 +254,115 @@ const styles = StyleSheet.create({
 
   // Rest of the Screen
   restOfScreenContainer: {
-    flex: 0.9
+    flex: 1,
+    flexDirection: 'column'
   },
   // Graphic / Motivation
   graphicContainer: {
     flex: 0.8,
     alignContent: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
   },
-
-  // Parameters and Save Button 
-  parametersAndSaveButton: {
+  notStartedContainer: {
+    flex: 1,
+    justifyContent: 'space-around'
+  },
+    notStartedText: {
+      fontSize: 20,
+      fontStyle: 'normal',
+      fontFamily: 'helvetica',
+      fontWeight: 'bold',
+      textAlign: 'center'
+    },
+  // Start and Reset Buttons
+  startAndResetContainer: {
     flexDirection: 'row',
     flex: 0.2,
-    alignSelf: 'flex-end',
-    justifyContent: 'space-around',
-    borderColor: 'black',
-    borderWidth: 5
+    //borderColor: 'black',
+    //borderWidth: 5
   },
+    // Start Workout Button
+    startWorkoutButtonContainer: {
+      flex: 0.4,
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'space-evenly',
+      //borderColor: 'purple',
+      //borderWidth: 3
+    },
+    startWorkoutButton: {
+      justifyContent: 'center',
+      backgroundColor: 'lightblue',
+      borderRadius: 10,
+      padding: 10,
+      margin: 10
+    },
+    // Reset Button
+    resetButtonContainer:{
+      flex: 0.6,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'flex-end',
+      marginRight: 10
+      //borderColor: 'green',
+      //borderWidth: 3
+    },
+    resetButton: {
+      justifyContent: 'center',
+      backgroundColor: 'lightblue',
+      borderRadius: 10,
+      padding: 10,
+    },
+
+// Parameters and Save Button 
+parametersAndSaveButton: {
+  flexDirection: 'row',
+  flex: 0.25,
+  justifyContent: 'flex-start',
+  //borderColor: 'black',
+  //borderWidth: 5
+},
   // Parameters
   parameterDisplay: {
+    flexDirection: 'column',
     flex: 0.5,
-    borderColor: 'blue',
+    //borderColor: 'blue',
     borderWidth: 3
   },  
-  // Button Container
-  buttonContainer: {
-    flex: 0.5,
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-    borderColor: 'red',
-    borderWidth: 3
+  singleParameter: {
+    flexDirection: 'row',
+    flex: 0.25,
+    alignContent: 'center',
+    justifyContent: 'space-between'
   },
-  // Parameter Text
-  textStyle: {
-    fontSize: 12,
-  },
+    // Parameter Text
+    textStyleA: {
+      fontSize: 12,
+      fontFamily: 'ariel',
+      fontWeight: 'bold',
+    },  
+    textStyleB: {
+      fontSize: 12,
+      marginRight: 10
+    },
   // Save Button
-  saveButton: {
+  saveButtonContainer: {
+    flex: 0.5,
+    alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'lightblue',
-    borderRadius: 10,
-    padding: 10,
-    marginHorizontal: 0
-  },
-  // Save Button Text
-  saveButtonText: {
-    fontSize: 15,
-    textAlign: 'center',
-  },
+    //borderColor: 'red',
+    borderWidth: 3
+  },  
+    saveButton: {
+      justifyContent: 'center',
+      backgroundColor: 'lightblue',
+      borderRadius: 10,
+      padding: 10,
+      marginHorizontal: 0
+    },
+    // Save Button Text
+    saveButtonText: {
+      fontSize: 15,
+      textAlign: 'center',
+    },
 });

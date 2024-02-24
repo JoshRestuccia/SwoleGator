@@ -161,7 +161,7 @@ const renderItem = ({ item }) => {
           ( <View  style={styles.userInfo}>
               {/*<Image source={{ uri: userData.imageUrl }} style={styles.profileImage} />*/}
               <Text style={styles.userName}>{`${userData?.username}`}</Text>
-              <Text>{`Age: ${userData?.age}`}</Text>
+              {/*<Text>{`Age: ${userData?.age}`}</Text>*/}
               <Text>{`Workouts Completed: ${total}`}</Text>
               <Text>{`Squats Sessions: ${squats}`}</Text>
               <Text>{`Deadlift Sessions: ${deadlifts}`}</Text>
