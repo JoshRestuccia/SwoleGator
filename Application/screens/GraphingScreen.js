@@ -27,11 +27,13 @@ function GraphingScreen() {
 
   const [workoutStarted, setWorkoutStarted] = useState(false);
   const [currentWorkoutType, setCurrentWorkoutType] = useState('Squat');
+  const [currentWorkoutWeight, setCurrentWorkoutWeight] = useState('100');
   
   const [maxVelocity, setMaxVelocity] = useState('0');
   const [repCount, setRepCount] = useState('0');
   const [currentVelocity, setCurrentVelocity] = useState('0');
   const [peakVelocity, setPeakVelocity] = useState('0');
+  const [isCalibrating, setIsCalibrating] = useState(false);
 
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -50,7 +52,7 @@ function GraphingScreen() {
     stopReadingData();
     setWorkoutStarted(false);
     setIsLoading(true);
-    await saveWorkoutData(workoutName, workoutData, currentWorkoutType);
+    await saveWorkoutData(workoutName, workoutData, currentWorkoutType, currentWorkoutWeight);
     cleanUp();
     setIsLoading(false);
   };
@@ -76,10 +78,11 @@ function GraphingScreen() {
   useEffect(() => {
     // format and move data to workoutData[]
     if(isReadingData && bleData){
-      const {maxV, rep, currentV} = handleDataFormat(bleData);
+      const {maxV, rep, currentV, flag} = handleDataFormat(bleData);
       setMaxVelocity(maxV);
       setRepCount(rep);
       setCurrentVelocity(currentV);
+      setIsCalibrating((parseInt(flag) === 0) ? false : true);
       // Update peakVelocity only if the new currentV is greater
       setPeakVelocity((prevPeakVelocity) => Math.max(prevPeakVelocity, currentV));
       setWorkoutData([...workoutData, {maxV, rep, currentV}]);
@@ -111,7 +114,9 @@ function GraphingScreen() {
 
   return (
     <View style={containerStyles.container}>
-      <Picker
+
+      {/* Picker for selecting Workout Type */}
+      <Picker style={styles.workoutSelector}
         selectedValue={currentWorkoutType}
         onValueChange={(value) => setCurrentWorkoutType(value)}
       >
@@ -120,56 +125,64 @@ function GraphingScreen() {
         <Picker.Item label="Bench Press" value="Bench Press" />
         <Picker.Item label="Barbell Curl" value="Barbell Curl" />
       </Picker>
-      <Text style={styles.textStyle}> Current Excercise: {currentWorkoutType}</Text>
-      <View style={styles.nameChangeContainer}>
+
+      {/* Workout Parameter Selections */}
+      <View style={styles.workoutParameterContainer}>
         <TextInput
-          style={styles.textInput}
+            style={styles.textInputWeight}
+            placeholder='Weight'
+            onChangeText={(text) => setCurrentWorkoutWeight(text)}
+            value={currentWorkoutWeight}
+        />
+        <TextInput
+          style={styles.textInputName}
           placeholder={isLoading ? (`Loading...`) : (`${currentWorkoutType} Workout #${total + 1}`)}
           onChangeText={(text) => setWorkoutName(text)}
           value={workoutName}
         />
-        <TouchableOpacity
-          style={styles.nameSelector}
-          onPress={handleSaveWorkout}>
-          <Text style={styles.saveButtonText}>
-            {isDataLoading ? `Loading...` : `Save Workout Data`}
-          </Text>
-        </TouchableOpacity>
       </View>
-      <View> 
-        {!workoutStarted ? 
-          (
-            <TouchableOpacity
-              onPress={handleBeginWorkout}
-            >
-              <Text> Begin Workout </Text>
-            </TouchableOpacity>
-          )
-          :
-          (
-           // <LiveDataGraph
-             // maxVelocity={maxVelocity || 0}
-              //currentVelocity={currentVelocity || 0}
-             // />
 
-           <Text style={styles.peakVelocityText}>
-                     You've got this!
-                   </Text>
-          )
-        }  
-      </View>
-      <View>
-        {/* Display Rep Count as Text*/} 
-        <Text style={styles.repCountText}>
-            Rep Count: {repCount}
-        </Text>
+      {/* Workout Parameter List && Save Button */}
+      <View style={styles.restOfScreenContainer}>
         
-        {/* Display Peak Velocity as Text*/} 
-        <Text style={styles.peakVelocityText}>
-          Peak Velocity: {peakVelocity}
-        </Text>
-      </View> 
-      
+        {/* Graphic / Motivational Text */}
+        <View style={styles.graphicContainer}> 
+          {!workoutStarted ? 
+            (
+              <TouchableOpacity style={styles.saveButton}
+                onPress={handleBeginWorkout}
+              >
+                <Text style={styles.saveButtonText}> Begin Workout </Text>
+              </TouchableOpacity>
+            ) 
+            : 
+            (
+              /*<LiveDataGraph 
+                maxVelocity={maxVelocity || 0} 
+                currentVelocity={currentVelocity || 0}
+                />*/
+                <Text> You Got This! </Text>
+            )
+          }  
+        </View>
+        {/* Display Active Variables (Workout Parameters & Reps & Velocity)*/}
+        <View style={styles.parametersAndSaveButton}>
+          <View style={styles.parameterDisplay}>
+            <Text style={styles.textStyle}> {`Current Excercise: ${currentWorkoutType}`} </Text>
+            <Text style={styles.textStyle}> {`Current Weight: ${currentWorkoutWeight || "- - -"} `} </Text>
+            <Text style={styles.textStyle}> {`Rep Count: ${repCount}`} </Text>
+            <Text style={styles.textStyle}> {`Peak Velocity: ${peakVelocity}`} </Text>
+          </View>
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity style={styles.saveButton}
+              onPress={handleSaveWorkout}>
+              <Text style={styles.saveButtonText}>
+                {isDataLoading ? `Loading...` : `Save Workout Data`}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>      
     </View>
   );
 }
@@ -177,50 +190,89 @@ function GraphingScreen() {
 export default GraphingScreen;
 
 const styles = StyleSheet.create({
-  textInput: {
+  container: {
+    flexDirection: 'column',
+    flex: 1
+  },
+  // Picker for selecting Workout Type
+  workoutSelector: {
+    backgroundColor: '#a3c1ad',
+  },
+  // Workout Parameter Selections 
+  workoutParameterContainer: {
+    padding: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    flex: 0.1,
+  },
+  textInputWeight: {
     borderBottomColor: 'grey',
     borderBottomWidth: 2,
     fontSize: 18,
     width: 225,
     height: 50,
     marginBottom: 10, // Add marginBottom to create space below the TextInput
-  },
-  textStyle: {
+    flex: 0.15,
+  },  
+  textInputName: {
+    borderBottomColor: 'grey',
+    borderBottomWidth: 2,
     fontSize: 18,
-    alignItems: 'flex-start',
-    justifyContent: 'flex-start',
-  },
-  container: {
-    alignItems: 'center',
-  },
-  nameSelector: {
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: 225,
     height: 50,
-    width: 100,
-    backgroundColor: 'lightblue',
-    borderRadius: 10,
+    marginBottom: 10, // Add marginBottom to create space below the TextInput
+    flex: 0.65,
   },
+
+  // Rest of the Screen
+  restOfScreenContainer: {
+    flex: 0.9
+  },
+  // Graphic / Motivation
+  graphicContainer: {
+    flex: 0.8,
+    alignContent: 'center',
+    justifyContent: 'center',
+  },
+
+  // Parameters and Save Button 
+  parametersAndSaveButton: {
+    flexDirection: 'row',
+    flex: 0.2,
+    alignSelf: 'flex-end',
+    justifyContent: 'space-around',
+    borderColor: 'black',
+    borderWidth: 5
+  },
+  // Parameters
+  parameterDisplay: {
+    flex: 0.5,
+    borderColor: 'blue',
+    borderWidth: 3
+  },  
+  // Button Container
+  buttonContainer: {
+    flex: 0.5,
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    borderColor: 'red',
+    borderWidth: 3
+  },
+  // Parameter Text
+  textStyle: {
+    fontSize: 15,
+  },
+  // Save Button
+  saveButton: {
+    justifyContent: 'center',
+    backgroundColor: 'lightblue',
+    borderRadius: 30,
+    padding: 20,
+    marginHorizontal: 30
+  },
+  // Save Button Text
   saveButtonText: {
     fontSize: 15,
     textAlign: 'center',
-  },
-  nameChangeContainer: {
-    flexDirection: 'row',
-    flex: 0.5,
-    justifyContent: 'space-evenly',
-    marginTop: 25,
-  },
-  repCountText: {
-    fontSize: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 10,
-  },
-  peakVelocityText: {
-    fontSize: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 10,
   },
 });
