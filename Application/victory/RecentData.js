@@ -1,5 +1,5 @@
 import React, {useState, useEffect}from "react";
-import { StyleSheet } from "react-native";
+import { StyleSheet, View, Text } from "react-native";
 import { 
     VictoryLine,
     VictoryVoronoiContainer,
@@ -82,41 +82,51 @@ const RecentDataGraph = ({raw_data}) => {
     }, [victoryDomain])
     
     return(
-        <VictoryChart 
-            style={styles.chart}
-            theme={VictoryTheme.material}
-            domain={victoryDomain}
-            containerComponent={
-                <VictoryVoronoiContainer
-                    labels={({datum}) => `REP: ${Math.round(datum.rep, 2)}, VELO: ${Math.round(datum.data, 2)}`}
-                />
-            }      
-        >
-            {
-                victoryData.maxVs.length > 0 &&
-                    (<VictoryLine data={victoryData.maxVs} x='rep' y='data' 
-                        style={styles.maxLine}
-                    />)
-            }
-            {
-                victoryData.avgVs.length > 0 && 
-                    (<VictoryLine data={victoryData.avgVs} x='rep' y='data'
-                        interpolation={'linear'}
-                        style={{
-                            data:{
-                                stroke: 'darkblue',
-                                strokeWidth: 4
-                            }
-                        }}
-                    />)
-            }
-            {
-                victoryData.avgVs.length > 0 &&
-                    (<VictoryScatter data={strainPoints} x='rep' y='data'
-                        style={styles.strainPoints}
-                    />)
-            }
-        </VictoryChart>
+        <View>
+        {(!victoryData || !victoryDomain) ? (
+            <View style={{flex: 1, alignContent: 'space-around', justifyContent: 'space-around'}}>
+                <Text style={{textAlign: 'center', fontSize: 18, fontFamily: 'Helvetica', padding: 20, color: 'teal'}}>
+                    {`Calculating Victory Data and Domain...`}
+                </Text>
+            </View>
+        ) : (
+            <VictoryChart 
+                style={styles.chart}
+                theme={VictoryTheme.material}
+                domain={victoryDomain}
+                containerComponent={
+                    <VictoryVoronoiContainer
+                        labels={({datum}) => `REP: ${Math.round(datum.rep, 2)}, VELO: ${Math.round(datum.data, 2)}`}
+                    />
+                }      
+            >
+                {
+                    victoryData.maxVs.length > 0 &&
+                        (<VictoryLine data={victoryData.maxVs} x='rep' y='data' 
+                            style={styles.maxLine}
+                        />)
+                }
+                {
+                    victoryData.avgVs.length > 0 && 
+                        (<VictoryLine data={victoryData.avgVs} x='rep' y='data'
+                            interpolation={'linear'}
+                            style={{
+                                data:{
+                                    stroke: 'darkblue',
+                                    strokeWidth: 4
+                                }
+                            }}
+                        />)
+                }
+                {
+                    victoryData.avgVs.length > 0 &&
+                        (<VictoryScatter data={strainPoints} x='rep' y='data'
+                            style={styles.strainPoints}
+                        />)
+                }
+            </VictoryChart>
+        )}
+        </View>
     );
 };
 

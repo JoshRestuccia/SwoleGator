@@ -55,6 +55,9 @@ useEffect(() => {
     <SafeAreaView style={styles.mainContainer} onTouchStart={handleTouchStart}>
       {publicWorkouts ? 
         (<View style={styles.workoutContainer}>
+          <View style={styles.headerContainer}>
+            <Text style={styles.header}>{`${friend.username}'s Workout Data`}</Text>          
+          </View>
           <Picker
             selectedValue={selectedWorkout}
             onValueChange={(itemValue) => setSelectedWorkout(itemValue)}
@@ -64,7 +67,6 @@ useEffect(() => {
               <Picker.Item key={workoutName} label={workoutName} value={workoutName} />
             ))}
           </Picker>
-          <Text style={styles.header}>{`${friend.username}'s Workout Data`}</Text>
           <ScrollView style={styles.scrollContainer} onScroll={handleScroll}>
             <View style={styles.recent}>
               <Text style={styles.sectionHeader}>{selectedWorkout && `(${selectedWorkout})`}</Text>
@@ -97,6 +99,14 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     justifyContent: 'flex-start'
   },
+  headerContainer:{
+    flex: 0.5,
+    alignContent: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'teal',
+    borderBottomColor: 'white',
+    borderBottomWidth: 2
+  },
   noWorkouts: {
     flex: 1,
     justifyContent: 'flex-start',
@@ -115,13 +125,15 @@ const styles = StyleSheet.create({
   scrollContainer: {
     backgroundColor: 'lightgray',
     paddingTop: 25,
+    borderTopColor: 'white',
+    borderTopWidth: 2
   },
   header: {
     fontSize: 30,
     textAlign: 'center',
-    color: 'teal',
+    color: 'white',
     fontWeight: 'bold',
-    padding: 40
+    padding: 20
   },
   recent: {
     flex: 0.5,
@@ -136,7 +148,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   picker: {
-    backgroundColor: 'lightblue',
+    backgroundColor: 'teal',
+    color: 'white',
   },
 });
 

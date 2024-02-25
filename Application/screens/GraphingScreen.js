@@ -17,7 +17,8 @@ function GraphingScreen() {
     bleData,
     isReadingData,
     startReadingData,
-    stopReadingData
+    stopReadingData,
+    calibrating
   } = useBLE();
   const { 
     isDataLoading,
@@ -33,7 +34,6 @@ function GraphingScreen() {
   const [repCount, setRepCount] = useState('0');
   const [currentVelocity, setCurrentVelocity] = useState('0');
   const [peakVelocity, setPeakVelocity] = useState('0');
-  const [isCalibrating, setIsCalibrating] = useState(false);
 
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -57,13 +57,13 @@ function GraphingScreen() {
     setIsLoading(false);
   };
 
- const handleDataFormat = (data) => {
-   const textData = String.fromCharCode.apply(null, new Uint8Array(data));
-   const [maxV, rep, currentV] = textData.split(',').map(parseFloat);
-   console.log([maxV.toString(), rep.toString(), currentV.toString()]);
-   
-   return { maxV, rep, currentV };
- };
+  const handleDataFormat = (data) => {
+    const textData = String.fromCharCode.apply(null, new Uint8Array(data));
+    const [maxV, rep, currentV] = textData.split(',').map(parseFloat);
+    console.log([maxV.toString(), rep.toString(), currentV.toString()]);
+    
+    return { maxV, rep, currentV };
+  };
 
   useEffect(() => {
     if(workoutStarted){
@@ -77,18 +77,17 @@ function GraphingScreen() {
   // When bleData is updated
   useEffect(() => {
     // format and move data to workoutData[]
-    if(isReadingData && bleData){
+    if(isReadingData && bleData && !calibrating){
       const {maxV, rep, currentV, flag} = handleDataFormat(bleData);
       setMaxVelocity(maxV);
       setRepCount(rep);
       setCurrentVelocity(currentV);
-      setIsCalibrating((parseInt(flag) === 0) ? false : true);
       // Update peakVelocity only if the new currentV is greater
       setPeakVelocity((prevPeakVelocity) => Math.max(prevPeakVelocity, currentV));
       setWorkoutData([...workoutData, {maxV, rep, currentV}]);
       console.log(workoutData);
     }
-  },[isReadingData, bleData])
+  },[isReadingData, bleData, calibrating])
  
   useEffect(() => {
     const onMount = async () => {
@@ -102,7 +101,7 @@ function GraphingScreen() {
 
   useEffect(() => {
     if(!isLoading){
-      let defaultName = `${currentWorkoutType} Workout #${total + 1}`;
+      let defaultName = `${currentWorkoutType} Workout #${(total || 0) + 1}`;
       setWorkoutName(defaultName);
     }
   }, [isLoading, total]);
