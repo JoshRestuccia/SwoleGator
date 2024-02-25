@@ -12,6 +12,10 @@ import { useBLE } from '../api/ble/BLEContext';
 import MotivationQuotes from '../data/motivation.js';
 import containerStyles from '../styles/container-view-styles';
 
+const MemoizedMotivationQuotes = React.memo(MotivationQuotes);
+
+// ToDo: Add a Modal that appears when Calibration is occurring.
+
 function GraphingScreen() {
   const {
     bleData,
@@ -25,6 +29,7 @@ function GraphingScreen() {
     saveWorkoutData,  
     getNumberWorkoutsOfType,
   } = useFirestore();
+
 
   const [workoutStarted, setWorkoutStarted] = useState(false);
   const [currentWorkoutType, setCurrentWorkoutType] = useState('Squat');
@@ -158,7 +163,7 @@ function GraphingScreen() {
                 maxVelocity={maxVelocity || 0} 
                 currentVelocity={currentVelocity || 0}
                 />*/
-                <MotivationQuotes/>
+                <MemoizedMotivationQuotes/>
             )
           }  
         </View>
