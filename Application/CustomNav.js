@@ -4,7 +4,6 @@ import {createStackNavigator } from '@react-navigation/stack'
 import Login from './screens/Login'
 import SignUp from './screens/SignUp'
 import HomeScreen from './screens/HomeScreen'
-import Test from './screens/Test'
 import PairingScreen from './screens/PairingScreen'
 import ExerciseSelection from './screens/ExerciseSelection';
 import GraphingScreen from './screens/GraphingScreen';
