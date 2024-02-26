@@ -1,70 +1,88 @@
 import React, {useState, useEffect} from 'react';
-import { Text, View, TouchableOpacity, StyleSheet } from 'react-native';
+import { Text, View, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
 
 import { useFirestore } from '../api/firestore/FirestoreAPI';
-const ExerciseSelection = ({navigation}) =>
-{ return(
-    <View>
-        <View style={styles.title}>
-          <Text style={styles.titleText}>{`Select exercise below to start lift`} </Text>
-        </View>
-        <View style={styles.container}>
-          <TouchableOpacity onPress={() => navigation.navigate('User Stack', {screen: 'Graphing Screen'})} style={styles.button}>
-            <Text style={styles.textStyle}> Squat</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate('User Stack', {screen: 'Graphing Screen'})} style={styles.button}>
-            <Text style={styles.textStyle}>Deadlift </Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate('User Stack', {screen: 'Graphing Screen'})} style={styles.button}>
-            <Text style={styles.textStyle}> Barbell Curl</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate('User Stack', {screen: 'Graphing Screen'})} style={styles.button}>
-            <Text style={styles.textStyle}> Bench Press </Text>
-          </TouchableOpacity>
-        </View>
-    </View>
-);
-};
 
+const ButtonItem = ({ title, onPress }) => (
+  <TouchableOpacity onPress={onPress} style={styles.button}>
+    <Text style={styles.textStyle}>{title}</Text>
+  </TouchableOpacity>
+);
+const ExerciseSelection = ({navigation}) =>{
+  const data = [
+    { id: '1', title: 'Squat' },
+    { id: '2', title: 'Deadlift' },
+    { id: '3', title: 'Barbell Curl' },
+    { id: '4', title: 'Bench Press' },
+  ];
+  const renderItem = ({ item }) => (
+    <ButtonItem
+      title={item.title}
+      onPress={() => navigation.navigate('Graphing Screen')}
+    />
+  );
+  return (
+    <View style={styles.container}>
+      <View style={styles.title}>
+        <Text style={styles.titleText}>Select Exercise</Text>
+      </View>
+      <FlatList
+        data={data}
+        numColumns={2}
+        renderItem={renderItem}
+        keyExtractor={item => item.id}
+      />
+    </View>
+  );
+};
+const boxShadow = {
+  shadowColor: 'lightgrey',
+  shadowOffset: {
+    width: 2,
+    height: 0,
+  },
+  shadowOpacity: 0.25,
+  shadowRadius: 3.84,
+  elevation: 4,
+};
 const styles = StyleSheet.create({
-container:{
-  justifyItems: 'center',
-  height:'auto',
-  flexDirection:'column',
+container: {
+    flex: 1,
+    backgroundColor: '#272727',
+    alignItems: 'center',
+    justifyContent: 'center',
 },
-  textInput:{
-    borderBottomColor:'grey',
-    borderBottomWidth: 1,
-    fontSize:18,
-    marginLeft: 35,
-    marginRight: 35,
-    marginTop: 20,
-},
-button:{
-  alignItems: 'center',
-  backgroundColor: 'lightblue',
-  padding:10,
-  marginLeft:35,
-  marginRight: 35,
-  marginTop: 10,
-  marginBottom: 10,
-  borderRadius: 30,
-},
-textStyle:{
-  fontSize: 18,
+button: {
+  backgroundColor: 'black',
+  width: 170, 
+  height: 150, 
   alignItems: 'center',
   justifyContent: 'center',
+  borderRadius: 30,
+  margin: 10,
+  ...boxShadow,
+},
+textStyle:{
+  color: 'lightgrey',
+  textTransform: 'uppercase',
+  fontFamily: 'Oswald-Regular',
+  fontSize: 24,
+  alignItems: 'center',
+  justifyContent: 'center',
+  margin:10,
 },
 title:{
   alignItems: 'center',
   justifyContent: 'center',
-  marginTop: 35,
+  marginTop: 25,
   height:180
 },
 titleText:{
   textAlign:'center',
   fontSize: 30,
-  width:250
+  textTransform: 'uppercase',
+  fontFamily: 'Oswald-Regular',
+  color: 'white',
 }
 })
 export default ExerciseSelection;

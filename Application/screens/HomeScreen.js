@@ -7,25 +7,10 @@ const HomeScreen = ({navigation}) =>{
     const {
       currentUser,
       getUserData,
-      signOut
     } = useFirestore();
     
     const [userData, setUserData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
-
-    const pressLogOut = async() => {
-      console.log('Signout button pressed.');
-      try{
-        await signOut();
-        // Reset Navigation Stack
-        navigation.reset({
-          index: 0,
-          routes: [{name: 'Guest Stack', params:{screen: 'Login'}}]
-        });
-      }catch(error){
-        console.error('Error signing out...');
-      }
-    };
 
     useEffect(() => {
       const fetchData = async() => {
@@ -43,36 +28,49 @@ const HomeScreen = ({navigation}) =>{
     }, [currentUser]);
 
     return(
-        <View>
+        <View style={styles.screenSetup}>
             <View style={styles.title}>
-              <Text style={styles.titleText}>{`Welcome to SwoleGator, ${userData?.first}!`} </Text>
+              <Text style={styles.welcome}>{`WELCOME BACK, ${userData?.first}`} </Text>
             </View>
             <View style={styles.container}>
-              <TouchableOpacity onPress={() => navigation.navigate('User Stack', {screen: 'Pair Device'})} style={styles.button}>
-                <Text style={styles.textStyle}> Pair Device</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => navigation.navigate('User Stack', {screen: 'Exercise Selection'})} style={styles.button}>
-                <Text style={styles.textStyle}>Start Lift </Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => navigation.navigate('User Stack', {screen: 'SwoleGator Data'})} style={styles.button}>
-                <Text style={styles.textStyle}> SwoleGator Data</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => navigation.navigate('User Stack', {screen: 'Profile'})} style={styles.button}>
-                <Text style={styles.textStyle}> Profile </Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={pressLogOut} style={styles.button}>
-                <Text style={styles.textStyle}> Log Out</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('PairDevice')} style={styles.button}>
+                <Text style={styles.textStyle}>Connect</Text>
               </TouchableOpacity>
             </View>
         </View>
     );
 };
-
+const boxShadow = {
+  shadowColor: 'lightgrey',
+  shadowOffset: {
+    width: 0,
+    height: 0,
+  },
+  shadowOpacity: 0.25,
+  shadowRadius: 1.84,
+  elevation: 4,
+};
 const styles = StyleSheet.create({
+    screenSetup:{
+      flex: 1,
+      backgroundColor: '#272727'
+    },
     container:{
       justifyItems: 'center',
       height:'auto',
       flexDirection:'column',
+    },
+    swoleGator: {
+      fontFamily: 'Anta-Regular',
+      color: 'white',
+      fontSize: 60,
+      marginTop: 50,
+    },
+    welcome :{
+      fontFamily: 'Oswald-Regular',
+      textTransform: 'uppercase',
+      color: 'white',
+      fontSize: 30,
     },
       textInput:{
         borderBottomColor:'grey',
@@ -84,15 +82,20 @@ const styles = StyleSheet.create({
     },
     button:{
       alignItems: 'center',
-      backgroundColor: 'lightblue',
-      padding:10,
-      marginLeft:35,
-      marginRight: 35,
-      marginTop: 10,
-      marginBottom: 10,
+      backgroundColor: 'black',
       borderRadius: 30,
+      padding:5,
+      marginLeft:100,
+      marginRight: 100,
+      marginTop: 175,
+      marginBottom: 10,
+      height: 45,
+      ...boxShadow,
     },
     textStyle:{
+      color: 'white',
+      textTransform: 'uppercase',
+      fontFamily: 'Oswald-Regular',
       fontSize: 18,
       alignItems: 'center',
       justifyContent: 'center',
