@@ -1,6 +1,10 @@
 # SwoleGator
 CEN3907C Design Project - SwoleGator 
 
+## Project Build Documents
+* [Alpha Build](./alpha_README.md)
+* [Beta Build](./beta_README.md)
+
 ## Download & Run Program
 
 - Steps (Hardware):
