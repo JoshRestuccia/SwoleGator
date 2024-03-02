@@ -36,9 +36,6 @@ gradle.properties
 !debug.keystore
 !app-release.aab
 
-#
-android/gradle.properties
-
 # node.js
 #
 node_modules/
