@@ -28,7 +28,7 @@ build/
 .idea
 .gradle
 local.properties
-gradle.properties
+key.properties
 *.iml
 *.hprof
 .cxx/
