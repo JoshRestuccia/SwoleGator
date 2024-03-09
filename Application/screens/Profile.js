@@ -157,7 +157,7 @@ const renderItem = ({ item }) => {
             </View>)
         :
           ( <View  style={styles.userInfo}>
-              {/*<Image source={{ uri: userData.imageUrl }} style={styles.profileImage} />*/}
+              <Image source={{ uri: userData.profile_pic }} style={styles.profileImage} />
               <Text style={styles.userName}>{`${userData?.username}`}</Text>
               {/*<Text>{`Age: ${userData?.age}`}</Text>*/}
               <Text>{`Workouts Completed: ${total}`}</Text>
@@ -215,8 +215,10 @@ const styles = StyleSheet.create({
       alignItems: 'center',
     },
     profileImage: {
-      width: 150,
-      height: 150,
+      width: 100,
+      height: 100,
+      borderColor: 'black',
+      borderWidth: 5,
       borderRadius: 75,
       marginBottom: 20,
     },

@@ -1,11 +1,11 @@
 import React, {useState, useEffect, createContext, useContext} from 'react';
 import firestore, { firebase } from '@react-native-firebase/firestore';
+import storage from '@react-native-firebase/storage';
 import auth from '@react-native-firebase/auth';
 
 const FirestoreContext = createContext();
 
 export const FirestoreProvider = ({children}) => {
-  
     const [currentUser, setCurrentUser] = useState(null);
     const [currentEmail, setCurrentEmail] = useState(''); 
     const [friends, setFriends] = useState([]);
@@ -693,6 +693,33 @@ export const FirestoreProvider = ({children}) => {
         }
     };
 
+    // Profile Photo Functions
+    const getDefaultProfileImages = async () => {
+        try{
+            const list = await storage().ref('default-profile-pics').listAll();
+            const default_pics = [];
+            await Promise.all(list.items.map(async (item) => {
+                    const path = item.fullPath;
+                    const ref = storage().ref(path);
+                    const url = await ref.getDownloadURL();
+                    default_pics.push({name: path, url: url});
+                })
+            );
+            return default_pics;
+        }catch(err){
+            console.error(err);
+        }
+    };
+
+    const setProfilePicture = (picture_uri) => {
+        if(currentUser){
+            firestore().collection('users').doc(currentUser.uid).update({
+                profile_pic: picture_uri
+            });
+        }
+    };
+
+
     // CONTEXT VALUE (WHICH FUNCTIONS TO EXPORT)
     const contextValue = {
         currentUser,
@@ -718,6 +745,8 @@ export const FirestoreProvider = ({children}) => {
         signOut,
         generateVictoryDataObject,
         generateVictoryDataByTimescale,
+        setProfilePicture,
+        getDefaultProfileImages
     }
 
     return(
