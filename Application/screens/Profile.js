@@ -2,12 +2,14 @@ import React, {useState, useEffect} from 'react';
 import {StyleSheet, Modal, View, Image, Text, FlatList, TouchableHighlight, TouchableOpacity, TextInput} from 'react-native';
 import { useFirestore } from '../api/firestore/FirestoreAPI';
 import SettingsScreen from './Settings';
+import StatLine from '../components/StatLine';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Profile({navigation}) {
     const [isSettingsVisible, setSettingsVisible] = useState(false);
     const [friendPromptVisible, setFriendPromptVisible] = useState(false);
     const [userData, setUserData] = useState(null);
+    const [friends, setFriends] = useState([]);
     const [isDataLoading, setIsDataLoading] = useState(true);
 
     const [squats, setSquats] = useState(0);
@@ -17,13 +19,13 @@ export default function Profile({navigation}) {
     const [total, setTotal] = useState(0);
 
     const {
-      friends,
       currentUser,
       getUserData,
       addFriend,
       isFriendsLoading,
       getNumberWorkoutsOfType,
-      getTotalNumOfWorkouts
+      getTotalNumOfWorkouts,
+      friendsFromDatabase
     } = useFirestore();
 
     useEffect(() => {
@@ -113,12 +115,16 @@ export default function Profile({navigation}) {
     
 const renderItem = ({ item }) => {
   if (item) {
-    console.log('Friend being rendered: ', item.email);
     return (
       <TouchableOpacity onPress={() => navigation.navigate('User Stack', { screen:'FriendWorkout', params: { friend: { uid: item.uid, username: item.username } }})}>
         <View style={styles.friendBadge}>
-          <Text style={styles.friendText}>{item.username}</Text>
-          <Text style={styles.friendText}>{item.friendedDate}</Text>
+          <View style={styles.friendImage}>
+            <Image style={styles.smallProfileImage} source={{uri: item.profile_pic}} />
+          </View>
+          <View style={styles.friendBadgeBody}>
+            <Text style={styles.friendName}>{item.username}</Text>
+            <Text style={styles.friendText}>{`Friends Since: ${item.friendsSince}`}</Text>
+          </View>
         </View>
       </TouchableOpacity>
     );
@@ -133,6 +139,8 @@ const renderItem = ({ item }) => {
           if(currentUser){
             const userDataFirestore = await getUserData();
             setUserData(userDataFirestore);
+            const temp_friends = await friendsFromDatabase();
+            setFriends(temp_friends);
 
             console.log('Friends:', friends);
           }
@@ -141,51 +149,59 @@ const renderItem = ({ item }) => {
         }
       };
       fetchData();
-    }, [currentUser, friends]);
+    }, [currentUser]);
 
     return(
     <SafeAreaView style={styles.container}>
         {/* Settings Button */}        
         <TouchableOpacity style={styles.settingsButton} onPress={openSettings}>
-          <Text style={styles.buttonText}> Settings </Text>
+          <Text style={{fontSize: 15}}> Settings </Text>
         </TouchableOpacity>          
         {/* User profile data */}
-        {isDataLoading ? 
-          ( <View style={styles.userInfo}>
-              <Text style={styles.userName}>{`${userData?.username}`}</Text>
-              <Text> Loading Data... </Text>
-            </View>)
-        :
-          ( <View  style={styles.userInfo}>
-              <Image source={{ uri: userData.profile_pic }} style={styles.profileImage} />
-              <Text style={styles.userName}>{`${userData?.username}`}</Text>
-              {/*<Text>{`Age: ${userData?.age}`}</Text>*/}
-              <Text>{`Workouts Completed: ${total}`}</Text>
-              <Text>{`Squats Sessions: ${squats}`}</Text>
-              <Text>{`Deadlift Sessions: ${deadlifts}`}</Text>
-              <Text>{`Bench Press Sessions: ${presses}`}</Text>
-              <Text>{`Barbell Curl Sessions: ${curls}`}</Text>
-            </View>)
-        }
-        {/* Friends Data */}
-        <View style={styles.friendsInfo}>
-          <Text style={styles.friendsHeader}> Friends </Text>
-            {isFriendsLoading ? 
-              <Text>Loading friends...</Text> 
-              : friends && (friends.length !== 0) ? 
-                <FlatList
-                  data={friends}
-                  keyExtractor={(item) => item.uid}
-                  renderItem={renderItem}
-                  contentContainerStyle={{rowGap: 12}}
-                />
-              : <View>
-                  <Text style={styles.noFriendsText}>No friends to show</Text>
-                </View>
+        <View style={styles.userInfoContainer}>
+            {isDataLoading ? 
+              ( <View style={styles.userInfo}>
+                  <Text style={styles.userName}>{`${userData?.username}`}</Text>
+                  <Text> Loading Data... </Text>
+                </View>)
+            :
+              ( <View  style={styles.userInfo}>
+                  <View style={styles.userInfoHeader}>
+                    <Image source={{ uri: userData.profile_pic }} style={styles.profileImage} />
+                    <View style={styles.userInfoHeaderRight} >
+                      <Text style={styles.userName}>{`${userData?.username}`}</Text>
+                      <Text style={styles.total}>{`Total: ${total}`}</Text>
+                    </View>
+                  </View>
+                  {/*<Text>{`Age: ${userData?.age}`}</Text>*/}
+                  <StatLine header={`Squat Sessions`} body={squats}/>
+                  <StatLine header={`Deadlift Sessions`} body={deadlifts}/>
+                  <StatLine header={`Bench Press Sessions`} body={presses}/>
+                  <StatLine header={`Barbell Curl Sessions`} body={curls}/>
+                </View>)
             }
-          <TouchableOpacity style={styles.addFriends} onPress={openFriendPrompt}>
-            <Text style={styles.buttonText}>{` + Add Friends `}</Text>
-          </TouchableOpacity>
+        </View>
+        {/* Friends Data */}
+        <View style={styles.friendInfoContainer}>
+            <View style={styles.friendsHeader}>
+              <Text style={styles.friendsHeaderText}>{`Friends (${friends? friends.length : 0})`}</Text>
+              <TouchableOpacity style={styles.addFriends} onPress={openFriendPrompt}>
+                <Text style={styles.buttonText}>{` + `}</Text>
+              </TouchableOpacity>
+            </View>
+          {isFriendsLoading ? 
+            <Text>Loading friends...</Text> 
+            : friends && (friends.length !== 0) ? 
+              <FlatList
+                data={friends}
+                keyExtractor={(item) => item.uid}
+                renderItem={renderItem}
+                contentContainerStyle={{rowGap: 12}}
+              />
+            : <View>
+                <Text style={styles.noFriendsText}>No friends to show</Text>
+              </View>
+          }
         </View>
         {/* Settings Screen Modal */}
         <Modal
@@ -211,37 +227,81 @@ const renderItem = ({ item }) => {
 
 const styles = StyleSheet.create({
     container: {
-      flex: 1,
-      alignItems: 'center',
+      display: 'flex',
+      height: '100%',
+      width: '100%',
+      flexDirection: 'column',
+      alignContent: 'center',
+      backgroundColor: 'gray'
     },
-    profileImage: {
-      width: 100,
-      height: 100,
-      borderColor: 'black',
-      borderWidth: 5,
-      borderRadius: 75,
-      marginBottom: 20,
+    userInfoContainer:{
+      flex: 0.7,
+      width: '100%',
+      display: 'flex',
+      flexDirection: 'row',
     },
     userInfo: {
-      flex:2,
-      flexDirection: 'column',
+      width: '100%',
       alignItems: 'center',
+    },
+    userInfoHeader: {
+      display: 'flex',
+      flexDirection: 'row',
+      width: '80%',
+      backgroundColor: 'gray',
+      justifyContent: 'space-evenly'
+    },
+    profileImage: {
+      flex: 0.4,
+      alignContent: 'center',
+      alignSelf: 'flex-start',
+      width: 120,
+      height: 120,
+      backgroundColor: 'gray',
+      borderColor: 'black',
+      borderWidth: 5,
+      borderRadius: 25,
+      margin: 20,
+    },
+    smallProfileImage: {
+      alignContent: 'center',
+      alignSelf: 'flex-start',
+      width: 50,
+      height: 50,
+      backgroundColor: 'gray',
+      borderColor: 'black',
+      borderWidth: 2,
+      borderRadius: 10,
+      margin: 5,
+    },
+    userInfoHeaderRight: {
+      flex: 0.5,
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'space-evenly',
+      backgroundColor: 'green'
     },
     userName: {
+      alignSelf: 'center',
       fontSize: 30,
       fontWeight: 'bold',
-      marginBottom: 10,
+      textAlign: 'center',
     },
-    addFriends:{
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: 16,
-      backgroundColor: '#0a398a',
-      margin: 10,
-      borderRadius: 12,
-      width: 200,
-      height: 50,
-      alignSelf: 'center'
+    total: {
+      alignSelf: 'center',
+      fontSize: 20,
+      fontWeight: 'bold',
+      textAlign: 'center',
+    },
+    friendInfoContainer:{
+      flex: 0.6,
+      width: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      backgroundColor: 'lightblue',
+      borderTopLeftRadius: 25,
+      borderTopRightRadius: 25,
+      padding: 20
     },
     settingsButton: {
       backgroundColor: '#3498db', // Blue color (adjust as needed)
@@ -251,37 +311,59 @@ const styles = StyleSheet.create({
       alignSelf:'flex-end',
       marginRight: 15
     },
+    friendsHeader: {
+      display: 'flex',
+      flexDirection: 'row',
+      width: '100%',
+      alignSelf: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 20,
+      borderRadius: 25
+    },
+    friendsHeaderText: {
+      flex: 0.6,
+      fontSize: 30,
+      fontWeight: 'bold',
+      margin: 10,
+      textAlign: 'left',
+    },
+    addFriends:{
+      flex: 0.2,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: '#0a398a',
+      borderRadius: 25,
+      width: 200,
+      height: 50,
+      alignSelf: 'center'
+    },
     buttonText: {
       color: '#fff', // White color for text
       textAlign: 'center',
       fontWeight: 'bold',
-    },
-    friendsInfo: {
-      flex: 2,
-      width:'100%',
-      backgroundColor: 'lightblue',
-      borderRadius: 12,
-      justifyContent: 'flex-start',
-    },
-    friendsHeader:{
-      fontSize: 40,
-      fontWeight: 'bold',
-      marginBottom: 10,
-      alignSelf: 'center'
+      fontSize: 30,
+      margin: 0
     },
     friendBadge: {
-      width: '75%',
-      padding: 20,
-      borderRadius: 8,
-      shadowColor: '#000',
-      shadowOffset: { width: 3, height: 3 },
-      shadowOpacity: 0.3,
-      shadowRadius: 8,
+      display: 'flex',
+      flexDirection: 'row',
+      width: '80%',
+      padding: 10,
+      borderRadius: 25,
       backgroundColor: 'white', // Add a contrasting background color
-      alignSelf: 'center'
+      alignSelf: 'center',
+      justifyContent: 'space-evenly'
+    },
+    friendImage:{
+      flex: 0.2
+    },
+    friendBadgeBody:{
+      flex: 0.8,
+      paddingLeft: 20
     },
     friendName:{
-      fontSize: 15,
+      textAlign: 'left',
+      fontSize: 25,
       fontWeight: 'bold',
       color: 'gray'
     },

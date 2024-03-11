@@ -8,12 +8,16 @@ const PhotoSelector = ({onClose}) => {
         getDefaultProfileImages,
         setProfilePicture
     } = useFirestore();
-    const [defaultImages, setDefaultImages] = useState([{}]);
+    const [defaultImages, setDefaultImages] = useState([]);
     const [imageSelection, setImageSelection] = useState({name:"", url:""});
 
     const handleImageSelection = (img) => {
         console.log(`Selecting Image ${img.name}`);
        setImageSelection(img);
+    };
+
+    const handleSelectOwn = () => {
+        console.log('Selecting own image...');
     };
 
     useEffect(() => {
@@ -40,6 +44,9 @@ const PhotoSelector = ({onClose}) => {
         <View style={{backgroundColor: 'white'}}>
             <Button title={`Cancel`} onPress={onClose}>
                 <Text>{`Cancel`}</Text>
+            </Button>
+            <Button title={'Select Own'} onPress={handleSelectOwn}>
+                <Text>{`Select Your Own Image`}</Text>
             </Button>
             <ScrollView 
                 contentInsetAdjustmentBehavior="automatic"

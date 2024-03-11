@@ -8,7 +8,6 @@ const FirestoreContext = createContext();
 export const FirestoreProvider = ({children}) => {
     const [currentUser, setCurrentUser] = useState(null);
     const [currentEmail, setCurrentEmail] = useState(''); 
-    const [friends, setFriends] = useState([]);
     const [isDataLoading, setIsDataLoading] = useState(false);
     const [isFriendsLoading, setIsFriendsLoading] = useState(false);
 
@@ -19,16 +18,20 @@ export const FirestoreProvider = ({children}) => {
                 uid: friendUID,
                 username: friendData.username || 'No Username',
                 email: friendData.email,
-                profileImage: friendData.profileImage || 'default-profile-image-url',
+                profile_pic: 'https://firebasestorage.googleapis.com/v0/b/swolegator-9539f.appspot.com/o/default-profile-pics%2Ficons8-dumbell-100-4.png?alt=media&token=332db3c3-4d6c-40ee-aa42-855afa689608',
                 friendsSince: firestore.FieldValue.serverTimestamp()
             });
-        } 
+        }
+        const date = friendData.friendsSince.toDate();
+        const mm = date.getMonth();
+        const dd = date.getDate();
+        const yyyy = date.getFullYear();
         return({
             uid: friendUID,
             username: friendData.username || 'No Username',
             email: friendData.email,
-            profileImage: friendData.profileImage || 'default-profile-image-url',
-            friendsSince: friendData.friendedDate
+            profile_pic: friendData.profile_pic || 'https://firebasestorage.googleapis.com/v0/b/swolegator-9539f.appspot.com/o/default-profile-pics%2Ficons8-dumbell-100-4.png?alt=media&token=332db3c3-4d6c-40ee-aa42-855afa689608',
+            friendsSince: `${mm}/${dd}/${yyyy}`
         });
     };
     
@@ -40,6 +43,7 @@ export const FirestoreProvider = ({children}) => {
                 last: last,
                 username: username,
                 totalWorkouts: 0,
+                profile_pic: "https://firebasestorage.googleapis.com/v0/b/swolegator-9539f.appspot.com/o/default-profile-pics%2Ficons8-dumbell-100-4.png?alt=media&token=332db3c3-4d6c-40ee-aa42-855afa689608"
             });
     };
 
@@ -464,11 +468,6 @@ export const FirestoreProvider = ({children}) => {
         if(authUser){
             setCurrentUser(authUser);
             setCurrentEmail(authUser.email);
-            console.log('About to fetch friends...');
-            const tempFriends = await friendsFromDatabase();
-            //console.log('TempFriends:',tempFriends);
-            setFriends(tempFriends);  
-            await getTotalNumOfWorkouts();
         }
     };
 
@@ -662,6 +661,18 @@ export const FirestoreProvider = ({children}) => {
         }
     };
 
+    const getFriendProfilePicture = async (friendUID) => {
+        try{
+            const friendDoc = await firestore().collection('users')
+                .doc(friendUID).get();
+            if(friendDoc.exists){
+                return friendDoc.get('profile_pic');
+            }
+        }catch(err){
+            console.error(err);
+        }
+    };
+
     const getFriendData = async (friendUID) => {
         try{
             console.log('Friend UID:', friendUID);
@@ -673,6 +684,12 @@ export const FirestoreProvider = ({children}) => {
                 console.log('found');
                 const friendData = friendDoc.data();
                 const formattedFriendData = formattedFriend(false, friendUID, friendData);
+                // Check for profile picture updates and update
+                const friendProfilePic = await getFriendProfilePicture(friendUID);
+                console.log(`Friend's profile Image URL: ${friendProfilePic}`);
+                if(formattedFriendData.profile_pic != friendProfilePic){
+                    formattedFriendData.profile_pic = friendProfilePic;
+                }
                 return formattedFriendData;
             }else{
                 return null;
@@ -723,16 +740,15 @@ export const FirestoreProvider = ({children}) => {
     // CONTEXT VALUE (WHICH FUNCTIONS TO EXPORT)
     const contextValue = {
         currentUser,
-        friends,
         isDataLoading,
         isFriendsLoading,
+        friendsFromDatabase,
         setIsDataLoading,
         getPublicWorkoutsOfUser,
         getNumberWorkoutsOfType,
         getTotalNumOfWorkouts,
         getAllWorkoutData,
         getMostRecentSession,
-        setFriends,
         friendsFromDatabase,
         signUp,
         signIn,
