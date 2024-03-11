@@ -36,13 +36,7 @@ const SettingsScreen = ({onClose}) => {
             <TouchableOpacity onPress={handleIcon8Navigation}>
                 <Text>SwoleGator-Defaults icons by Icon8</Text>
             </TouchableOpacity>
-            <Modal
-                visible={photoSelectorVisibility}
-                transparent={false}
-                onRequestClose={closePhotoSelect}   
-            >
-                <PhotoSelector onClose={closePhotoSelect}/>
-            </Modal>
+            <PhotoSelector isVisible={photoSelectorVisibility} onClose={closePhotoSelect}/>
         </View>
     );
 };

@@ -307,7 +307,12 @@ export const FirestoreProvider = ({children}) => {
                 console.log('Number of Friends: ', friendsSnapshot.docs.length);
                 for(const friendDoc of friendsSnapshot.docs){
                     const formatted = formattedFriend(false, friendDoc.id, friendDoc.data());
-                    console.log('Formatted Friend:', formatted);
+                    // Check for profile picture updates and update
+                    const friendProfilePic = await getFriendProfilePicture(friendDoc.id);
+                    console.log(`Friend's profile Image URL: ${friendProfilePic}`);
+                    if(formatted.profile_pic != friendProfilePic){
+                        formatted['profile_pic'] = friendProfilePic;
+                    }
                     updatedFriendsList.push(formatted);
                 }
                 setIsFriendsLoading(false);
@@ -684,12 +689,6 @@ export const FirestoreProvider = ({children}) => {
                 console.log('found');
                 const friendData = friendDoc.data();
                 const formattedFriendData = formattedFriend(false, friendUID, friendData);
-                // Check for profile picture updates and update
-                const friendProfilePic = await getFriendProfilePicture(friendUID);
-                console.log(`Friend's profile Image URL: ${friendProfilePic}`);
-                if(formattedFriendData.profile_pic != friendProfilePic){
-                    formattedFriendData.profile_pic = friendProfilePic;
-                }
                 return formattedFriendData;
             }else{
                 return null;
@@ -736,6 +735,28 @@ export const FirestoreProvider = ({children}) => {
         }
     };
 
+    const uploadPhotoToStorage = async (filename, blob) => {
+        try{
+            const profile_pics_ref = storage().ref('profile-pics');
+            console.log(blob);
+            await profile_pics_ref.child(`${currentUser.uid}/${filename}`).put(blob); 
+            //await storage().(`profile-pics/${currentUser.uid}/${filename}`).put(blob);
+        }catch(err){
+            throw err;
+        }
+    };
+
+    const getImageURL = async (filename) => {
+        try{
+            console.log('Filename: ', filename);
+            const profile_pics_ref = storage().ref('profile-pics');
+            const img = profile_pics_ref.child(`${currentUser.uid}/${filename}`);
+            const url = await img.getDownloadURL();
+            return url;
+        }catch(err){
+            throw err;
+        }
+    };
 
     // CONTEXT VALUE (WHICH FUNCTIONS TO EXPORT)
     const contextValue = {
@@ -762,7 +783,9 @@ export const FirestoreProvider = ({children}) => {
         generateVictoryDataObject,
         generateVictoryDataByTimescale,
         setProfilePicture,
-        getDefaultProfileImages
+        getDefaultProfileImages,
+        uploadPhotoToStorage,
+        getImageURL
     }
 
     return(

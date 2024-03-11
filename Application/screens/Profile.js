@@ -141,8 +141,6 @@ const renderItem = ({ item }) => {
             setUserData(userDataFirestore);
             const temp_friends = await friendsFromDatabase();
             setFriends(temp_friends);
-
-            console.log('Friends:', friends);
           }
         }catch(err){
           console.error(err);
@@ -247,12 +245,11 @@ const styles = StyleSheet.create({
     userInfoHeader: {
       display: 'flex',
       flexDirection: 'row',
-      width: '80%',
+      width: '90%',
       backgroundColor: 'gray',
       justifyContent: 'space-evenly'
     },
     profileImage: {
-      flex: 0.4,
       alignContent: 'center',
       alignSelf: 'flex-start',
       width: 120,
@@ -279,7 +276,6 @@ const styles = StyleSheet.create({
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'space-evenly',
-      backgroundColor: 'green'
     },
     userName: {
       alignSelf: 'center',
