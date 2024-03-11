@@ -371,13 +371,14 @@ export const FirestoreProvider = ({children}) => {
                         console.log('Getting session data for: ', session.id);
                         const sessionName = session.id;
                         const sessionDate = session.get('date');
+                        const isPublic = session.get('isPublic');
                         await session.ref.collection('data').get().then((sessionDataDoc) => {
                             const sessionData = sessionDataDoc.docs.map((datapoint) => datapoint.data());
                             console.log("Pushing workoutTypeData for", workoutType, ":", workoutTypeData);
                             console.log(Array.from(Object.values(sessionData)));
                             const victoryData = generateVictoryDataObject(sessionData);
                             addWorkoutCalculationsToFirestore(victoryData, workoutType, sessionName); // Ideally, this should probably be in a better spot but as of now its gotta go here
-                            workoutTypeData.push({name: sessionName, date: sessionDate, data: Array.from(Object.values(sessionData))});
+                            workoutTypeData.push({name: sessionName, date: sessionDate, data: Array.from(Object.values(sessionData)), public: isPublic});
                         });
                     }catch(err){
                         console.error(err);
@@ -587,12 +588,31 @@ export const FirestoreProvider = ({children}) => {
         }
     };
 
-    const makeWorkoutPublic = async (recentVictoryData, workoutName, type) => {
+    const makeWorkoutPublic = async (recentVictoryData, workoutDate, workoutName, type) => {
         try{
+            // add a public flag on document
+            await firestore().collection('users').doc(currentUser.uid)
+                    .collection('workouts').doc(type)
+                    .collection('sessions').doc(workoutName)
+                    .set({isPublic: true});
             //console.log('DATA: ', recentVictoryData);
             await firestore().collection('users').doc(currentUser.uid)
-                .collection('public').doc(workoutName).set({data: recentVictoryData, shared_on: firestore.Timestamp.now(), name: workoutName, type: type});
+                .collection('public').doc(workoutName).set({data: recentVictoryData, date: workoutDate, shared_on: firestore.Timestamp.now(), name: workoutName, type: type});
             console.log(`Made Workout ${workoutName} public!`);
+        }catch(err){
+            throw err;
+        }
+    };
+
+    const makeWorkoutPrivate = async (workoutName) => {
+        try{
+            // falsify public flag
+            await firestore().collection('users').doc(currentUser.uid)
+                    .collection('workouts').doc(type)
+                    .collection('sessions').doc(workoutName)
+                    .set({isPublic: false});
+            await firestore().collection('users').doc(currentUser.uid)
+            .collection('public').doc(workoutName).delete();
         }catch(err){
             throw err;
         }
@@ -778,6 +798,7 @@ export const FirestoreProvider = ({children}) => {
         signIn,
         saveWorkoutData,
         makeWorkoutPublic,
+        makeWorkoutPrivate,
         getUserData,
         addFriend,
         getFriendData,

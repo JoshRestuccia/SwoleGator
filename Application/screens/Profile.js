@@ -169,6 +169,9 @@ const renderItem = ({ item }) => {
                     <View style={styles.userInfoHeaderRight} >
                       <Text style={styles.userName}>{`${userData?.username}`}</Text>
                       <Text style={styles.total}>{`Total: ${total}`}</Text>
+                      <TouchableOpacity style={styles.smallButton} onPress={() => navigation.navigate('User Stack', {screen: 'ManageWorkouts'})}>
+                          <Text style={styles.smallButtonText}>{`Manage Workouts`}</Text>
+                      </TouchableOpacity>
                     </View>
                   </View>
                   {/*<Text>{`Age: ${userData?.age}`}</Text>*/}
@@ -272,7 +275,8 @@ const styles = StyleSheet.create({
       margin: 5,
     },
     userInfoHeaderRight: {
-      flex: 0.5,
+      width: '100%',
+      flex: 0.7,
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'space-evenly',
@@ -288,6 +292,18 @@ const styles = StyleSheet.create({
       fontSize: 20,
       fontWeight: 'bold',
       textAlign: 'center',
+    },
+    smallButton: {
+      width: '100%',
+      flex: 0.3,
+      backgroundColor: 'lightblue',
+      borderRadius: 25,
+      padding: 10
+    },
+    smallButtonText: {
+      textAlign: 'center',
+      textAlignVertical: 'center',
+      fontSize: 15,
     },
     friendInfoContainer:{
       flex: 0.6,

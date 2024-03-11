@@ -10,6 +10,7 @@ import HomeScreen from './screens/HomeScreen';
 import GraphingScreen from './screens/GraphingScreen';
 import Profile from './screens/Profile';
 import FriendWorkout from './screens/FriendWorkout';
+import ManageWorkouts from './screens/ManageWorkouts';
 
 import auth from '@react-native-firebase/auth';
 import { BLEProvider } from './api/ble/BLEContext';
@@ -51,6 +52,11 @@ function UserStackGroup() {
               component={FriendWorkout}
               options={{title: "Friend Workouts"}}
             />
+      <Stack.Screen
+          name="ManageWorkouts"
+          component={ManageWorkouts}
+          options={{title: 'My Workouts'}}
+          />
     </Stack.Navigator>
     </BLEProvider>
   );
