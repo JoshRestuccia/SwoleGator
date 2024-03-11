@@ -738,9 +738,12 @@ export const FirestoreProvider = ({children}) => {
     const uploadPhotoToStorage = async (filename, blob) => {
         try{
             const profile_pics_ref = storage().ref('profile-pics');
-            console.log(blob);
+            // delete previous photos
+            const users_pics = profile_pics_ref.child(`${currentUser.uid}`);
+            const images = await users_pics.listAll();
+            images.items.forEach((item) => item.delete());
+            // store new photo            
             await profile_pics_ref.child(`${currentUser.uid}/${filename}`).put(blob); 
-            //await storage().(`profile-pics/${currentUser.uid}/${filename}`).put(blob);
         }catch(err){
             throw err;
         }

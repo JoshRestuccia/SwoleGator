@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { StyleSheet, Modal, View, TouchableOpacity, Text } from "react-native";
 import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 import { useFirestore } from "../api/firestore/FirestoreAPI";
-import { firebase } from "@react-native-firebase/firestore";
 
 const ImageSelectionModal = ({isVisible, onClose, setImageSelection}) => {
     const {uploadPhotoToStorage, getImageURL} = useFirestore();
@@ -40,8 +39,8 @@ const ImageSelectionModal = ({isVisible, onClose, setImageSelection}) => {
                 const response = await fetch(src);
                 const blob = await response.blob();
                 const filename = src.substring(src.lastIndexOf('/')+1);
-                await uploadPhotoToStorage(filename, blob);
                 // save image to firestore storage
+                await uploadPhotoToStorage(filename, blob);
                 const storage_url = await getImageURL(filename);
                 const img = {name: filename, url: storage_url};
                 console.log(img);
