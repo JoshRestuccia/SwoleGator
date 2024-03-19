@@ -594,7 +594,7 @@ export const FirestoreProvider = ({children}) => {
             await firestore().collection('users').doc(currentUser.uid)
                     .collection('workouts').doc(type)
                     .collection('sessions').doc(workoutName)
-                    .set({isPublic: true});
+                    .set({ isPublic: true}, {merge: true});
             //console.log('DATA: ', recentVictoryData);
             await firestore().collection('users').doc(currentUser.uid)
                 .collection('public').doc(workoutName).set({data: recentVictoryData, date: workoutDate, shared_on: firestore.Timestamp.now(), name: workoutName, type: type});
@@ -604,13 +604,13 @@ export const FirestoreProvider = ({children}) => {
         }
     };
 
-    const makeWorkoutPrivate = async (workoutName) => {
+    const makeWorkoutPrivate = async (workoutName, type) => {
         try{
             // falsify public flag
             await firestore().collection('users').doc(currentUser.uid)
                     .collection('workouts').doc(type)
                     .collection('sessions').doc(workoutName)
-                    .set({isPublic: false});
+                    .set({isPublic: false}, {merge: true});
             await firestore().collection('users').doc(currentUser.uid)
             .collection('public').doc(workoutName).delete();
         }catch(err){

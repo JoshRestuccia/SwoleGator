@@ -13,31 +13,41 @@ const ManageWorkouts = () => {
 
     const [publicWs, setPublicWs] = useState([]);
     const [privateWs, setPrivateWs] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [key, setKey] = useState(true);
 
     useEffect(() => {
         const fetchWorkouts = async () => {
-            // fetch all workouts
-            const workouts = await getAllWorkoutData();
-            // fetch all public workouts
-            let publicWorkouts = [];
-            let privateWorkouts = [];
-            Object.entries(workouts).forEach((workoutType) => {
-                const type = workoutType[0];
-                for(const workout of workoutType[1]){
-                    if(workout.public === true){
-                        publicWorkouts.push({...workout, type: type});
-                    }else{
-                        privateWorkouts.push({...workout, type: type});
+            try{
+                setIsLoading(true);
+                // fetch all workouts
+                const workouts = await getAllWorkoutData();
+                // fetch all public workouts
+                Object.entries(workouts).forEach((workoutType) => {
+                    const type = workoutType[0];
+                    for(const workout of workoutType[1]){
+                        if(workout.public === true){
+                            setPublicWs([...publicWs, {...workout, type: type}]);
+                        }else{
+                            setPrivateWs([...privateWs, {...workout, type: type}]);
+                        }
                     }
-                }
-            });
-            console.log('Private: ', privateWorkouts);
-            setPrivateWs(privateWorkouts);
-            console.log('Public: ', publicWorkouts);
-            setPublicWs(publicWorkouts);
+                });
+                setIsLoading(false);
+            }catch(err){
+                console.error(err);
+                setIsLoading(false);
+            }
         };
         fetchWorkouts();
-    }, [currentUser])
+    }, [currentUser]);
+
+    useEffect(() => {
+        console.log('Public/Private workouts updated!');
+        console.log('Public: ', publicWs);
+        console.log('Private: ', privateWs);
+        //handle notifications here
+    },[privateWs, publicWs]);
 
     const renderItem = (workout) => {
         const convertDate = workout.date?.toDate();
@@ -49,10 +59,23 @@ const ManageWorkouts = () => {
         }
         const handlePress = async () => {
             console.log('Item pressed.');
-            if(workout.public === true){
-                await makeWorkoutPrivate(workout.name);
-            }else{
-                await makeWorkoutPublic(workout.data, workout.date, workout.name, workout.type);
+            try{
+                if(workout.public === true){
+                    await makeWorkoutPrivate(workout.name, workout.type);
+                    // Remove workout from public
+                    setPublicWs(publicWs.filter(item => item !== workout));
+                    // Add workout to private
+                    setPrivateWs(prevPrivateWs => [...prevPrivateWs, workout]);
+                }else{
+                    await makeWorkoutPublic(workout.data, workout.date, workout.name, workout.type);
+                    // Remove workout from private
+                    setPrivateWs(privateWs.filter(item => item != workout));
+                    // Add workout to public
+                    setPublicWs(prevPublicWs => [...prevPublicWs, workout]);
+                }
+                setKey(!key);
+            }catch(err){
+                console.error(err);
             }
         };
         return(
@@ -64,35 +87,49 @@ const ManageWorkouts = () => {
     };
 
     return(
-        <View style={styles.main}>
+        <View key={key} style={styles.main}>
             <View style={styles.section}>
                 <Text style={styles.sectionHeader}>{`Public`}</Text>
-                {publicWs.length > 0 ? 
-                    <FlatList
-                        data={publicWs}
-                        contentContainerStyle={{rowGap: 12}}
-                        renderItem={({item}) => renderItem(item)}
-                        keyExtractor={item => item.name}
-                    />
-                :   (
-                        <Text style={styles.loadingText}>Loading... </Text>
+                {!isLoading  ?
+                    (publicWs.length > 0) ?
+                        <WorkoutSection key={key} data={publicWs} renderItem={renderItem}/>
+                    :  
+                        (
+                            <Text style={styles.loadingText}>No Public Workouts</Text>
+                        ) 
+                :  
+                    (
+                        <Text style={styles.loadingText}>Loading...</Text>
                     )
                 }
             </View>
             <View style={styles.section}>
                 <Text style={styles.sectionHeader}>{`Private`}</Text>
-                {privateWs.length > 0 ? 
-                    <FlatList
-                        data={privateWs}
-                        contentContainerStyle={{rowGap: 12}}
-                        renderItem={({item}) => renderItem(item)}
-                        keyExtractor={item => item.name}
-                    />
-                : (
-                    <Text style={styles.loadingText}>Loading...</Text>
-                )}
+                {!isLoading ?
+                    (privateWs.length > 0) ? 
+                        <WorkoutSection key={key} data={privateWs} renderItem={renderItem}/>
+                    : 
+                        (
+                            <Text style={styles.loadingText}>No Private Workouts</Text>
+                        )
+                : 
+                    (
+                        <Text style={styles.loadingText}>Loading...</Text>
+                    )
+                }
             </View>
         </View>
+    );
+};
+
+const WorkoutSection = ({data, renderItem}) => {
+    return(
+        <FlatList
+            data={data}
+            contentContainerStyle={{rowGap: 12}}
+            renderItem={({item}) => renderItem(item)}
+            keyExtractor={(item) => item.name}
+        />
     );
 };
 
