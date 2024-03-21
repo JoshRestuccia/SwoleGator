@@ -161,7 +161,8 @@ export const FirestoreProvider = ({children}) => {
                     startDate.setDate(endDate.getMonth() - 1); // subtract a month
                     break;
                 case 'year':
-                    startDate.setDate(endDate.getFullYear() - 1); // subtract a year
+                    startDate.setFullYear(endDate.getFullYear()-1); // subtract a year
+                    console.log(startDate);
                     break;
                 default:
                     console.warn('Invalid timescale selected. Defaulting to today.');
@@ -290,7 +291,6 @@ export const FirestoreProvider = ({children}) => {
                 console.error(err);
             }
         }
-
     };
 
     const friendsFromDatabase = async() => {

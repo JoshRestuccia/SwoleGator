@@ -48,15 +48,15 @@ function UserStackGroup() {
         options={{title: "Profile"}}
       />
       <Stack.Screen
-              name="FriendWorkout"
-              component={FriendWorkout}
-              options={{title: "Friend Workouts"}}
-            />
+        name="FriendWorkout"
+        component={FriendWorkout}
+        options={{title: "Friend Workouts"}}
+      />
       <Stack.Screen
-          name="ManageWorkouts"
-          component={ManageWorkouts}
-          options={{title: 'My Workouts'}}
-          />
+        name="ManageWorkouts"
+        component={ManageWorkouts}
+        options={{title: 'My Workouts'}}
+      />
     </Stack.Navigator>
     </BLEProvider>
   );
