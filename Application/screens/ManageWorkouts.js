@@ -15,30 +15,33 @@ const ManageWorkouts = () => {
     const [privateWs, setPrivateWs] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [key, setKey] = useState(true);
+    const [updateFlag, setUpdateFlag] = useState(false);
+
+
+    const fetchWorkouts = async () => {
+        try{
+            setIsLoading(true);
+            // fetch all workouts
+            const workouts = await getAllWorkoutData();
+            // fetch all public workouts
+            Object.entries(workouts).forEach((workoutType) => {
+                const type = workoutType[0];
+                for(const workout of workoutType[1]){
+                    if(workout.public === true){
+                        setPublicWs([...publicWs, {...workout, type: type}]);
+                    }else{
+                        setPrivateWs([...privateWs, {...workout, type: type}]);
+                    }
+                }
+            });
+            setIsLoading(false);
+        }catch(err){
+            console.error(err);
+            setIsLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchWorkouts = async () => {
-            try{
-                setIsLoading(true);
-                // fetch all workouts
-                const workouts = await getAllWorkoutData();
-                // fetch all public workouts
-                Object.entries(workouts).forEach((workoutType) => {
-                    const type = workoutType[0];
-                    for(const workout of workoutType[1]){
-                        if(workout.public === true){
-                            setPublicWs([...publicWs, {...workout, type: type}]);
-                        }else{
-                            setPrivateWs([...privateWs, {...workout, type: type}]);
-                        }
-                    }
-                });
-                setIsLoading(false);
-            }catch(err){
-                console.error(err);
-                setIsLoading(false);
-            }
-        };
         fetchWorkouts();
     }, [currentUser]);
 
@@ -48,6 +51,16 @@ const ManageWorkouts = () => {
         console.log('Private: ', privateWs);
         //handle notifications here
     },[privateWs, publicWs]);
+
+
+    useEffect(() => {
+        if(updateFlag === true){
+            setPrivateWs([]);
+            setPublicWs([]);
+            fetchWorkouts();
+            setUpdateFlag(false);
+        }
+    }, [updateFlag])
 
     const renderItem = (workout) => {
         const convertDate = workout.date?.toDate();
@@ -63,17 +76,18 @@ const ManageWorkouts = () => {
                 if(workout.public === true){
                     await makeWorkoutPrivate(workout.name, workout.type);
                     // Remove workout from public
-                    setPublicWs(publicWs.filter(item => item !== workout));
+                    //setPublicWs(publicWs.filter(item => item !== workout));
                     // Add workout to private
-                    setPrivateWs(prevPrivateWs => [...prevPrivateWs, workout]);
+                    //setPrivateWs(prevPrivateWs => [...prevPrivateWs, workout]);
                 }else{
                     await makeWorkoutPublic(workout.data, workout.date, workout.name, workout.type);
                     // Remove workout from private
-                    setPrivateWs(privateWs.filter(item => item != workout));
+                    //setPrivateWs(privateWs.filter(item => item != workout));
                     // Add workout to public
-                    setPublicWs(prevPublicWs => [...prevPublicWs, workout]);
+                    //setPublicWs(prevPublicWs => [...prevPublicWs, workout]);
                 }
                 setKey(!key);
+                setUpdateFlag(true);
             }catch(err){
                 console.error(err);
             }
