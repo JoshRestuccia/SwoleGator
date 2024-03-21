@@ -11,6 +11,8 @@ export default function Profile({navigation}) {
     const [userData, setUserData] = useState(null);
     const [friends, setFriends] = useState([]);
     const [isDataLoading, setIsDataLoading] = useState(true);
+    const [updateKey, setUpdateKey] = useState(true);
+    const [friendUpdateFlag, setFriendUpdateFlag] = useState(false);
 
     const [squats, setSquats] = useState(0);
     const [presses, setPresses] = useState(0);
@@ -60,6 +62,7 @@ export default function Profile({navigation}) {
           try{
             console.log('[Profile:FriendPrompt] Adding friend!');
             await addFriend(friendEmail);
+            setFriendUpdateFlag(true);
             setFriendEmail('');
             closeFriendPrompt();
           }catch(error){
@@ -149,6 +152,18 @@ const renderItem = ({ item }) => {
       fetchData();
     }, [currentUser]);
 
+    useEffect(() => {
+      const fetchFriends = async() => {
+        const tempFriends = await friendsFromDatabase();
+        setFriends(tempFriends);
+        setUpdateKey(!updateKey);
+      }
+      if(friendUpdateFlag === true){
+        fetchFriends();
+        setFriendUpdateFlag(false);
+      }
+    },[friendUpdateFlag]);
+
     return(
     <SafeAreaView style={styles.container}>
         {/* Settings Button */}        
@@ -194,6 +209,7 @@ const renderItem = ({ item }) => {
             <Text>Loading friends...</Text> 
             : friends && (friends.length !== 0) ? 
               <FlatList
+                key={updateKey}
                 data={friends}
                 keyExtractor={(item) => item.uid}
                 renderItem={renderItem}
