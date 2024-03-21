@@ -10,8 +10,47 @@ const OverallDataGraph = ({type}) => {
   const [timeScale, setTimeScale] = useState('week');
   const [trendData, setTrendData] = useState(null);
   const [isLoadingData, setIsLoadingData] = useState(true);
-  const [tickValues, setTickValues] = useState(null);
   const [victoryDomains, setVictoryDomains] = useState({x: [], y: []});
+
+  const calcDomains = (dta) => {
+    console.log('dta == ', dta);
+    // Velocity Domain calculations
+    const max = dta.sessionMaxes.length > 0 ? 
+                    Math.max(...dta.sessionMaxes.map(obj => obj.data))
+                :   50;
+    const min = dta.sessionAverages.length > 0 ?
+                    Math.min(...dta.sessionAverages.map(obj => obj.value))
+                :   -50;
+    const threshold = 0.2*Math.abs(min);            
+    const vel_domain = [min-threshold, max+threshold];
+
+    console.log(`VEL DOMAIN = [${min}, ${max}]`);
+    // Time Domain calculations
+    let startDate = new Date();
+    const endDate = new Date();
+    switch(timeScale){
+        case 'week':
+            startDate.setDate(endDate.getDate() - 7); // 1 week period
+            break;
+        case 'month':
+            startDate.setMonth(endDate.getMonth() - 1); // 1 month period
+            break;
+        case 'year':
+            startDate.setFullYear(endDate.getFullYear() - 1); // 1 year period
+            break;
+        default:
+            startDate = new Date(Math.min(...dta.sessionAverages.map(item => item.date))); // start date based on data
+            break;
+    }
+    const time_domain = [startDate, endDate]; 
+    console.log(`[${time_domain[0].toLocaleDateString()}, ${time_domain[1].toLocaleDateString()}]`);
+    const domains = {
+        x: time_domain,
+        y: vel_domain
+    };
+    console.log('X Domain: ', domains.x, ' :: Y Domain: ', domains.y);
+    return domains;
+  };
 
   useEffect(() => {
     const getData = async () => {
@@ -25,67 +64,13 @@ const OverallDataGraph = ({type}) => {
     },[type, timeScale]);
 
   useEffect(() => {
-    const getTickValuesFromTrendData = () => {
-        const ticks = [];
-        const sessions = trendData.sessionMaxes;
-        for(const session of sessions){
-            const formattedTick = `${session.date.getMonth()+1}/${session.date.getDate()}`;
-            ticks.push(formattedTick);
-        }
-        return ticks;
-    };
     if(trendData){
-        setTickValues(getTickValuesFromTrendData());
-        const domains = calcDomains();
+        const domains = calcDomains(trendData);
         setVictoryDomains(domains);
         setIsLoadingData(false);
         console.log('Trend data: \n', trendData);
     }
   },[trendData]);
-
-  useEffect(() => {
-    console.log(tickValues);
-    console.log(victoryDomains);
-  }, [tickValues])
-
-    const calcDomains = () => {
-        // Velocity Domain calculations
-        const max = trendData.sessionMaxes.length > 1 ? 
-                        Math.max(...trendData.sessionMaxes.map(obj => obj.data))
-                    :   81;
-        const min = trendData.sessionAverages.length > 1 ?
-                        Math.min(...trendData.sessionAverages.map(obj => obj.value))
-                    :   -20;
-        const threshold = 0.2*Math.abs(min);            
-        const vel_domain = [min-threshold, max+threshold];
-
-        console.log(`VEL DOMAIN = [${min}, ${max}]`);
-        // Time Domain calculations
-        let startDate = new Date();
-        const endDate = new Date();
-        switch(timeScale){
-            case 'week':
-                startDate.setDate(endDate.getDate() - 7); // 1 week period
-                break;
-            case 'month':
-                startDate.setMonth(endDate.getMonth() - 1); // 1 month period
-                break;
-            case 'year':
-                startDate.setFullYear(endDate.getFullYear() - 1); // 1 year period
-                break;
-            default:
-                startDate = new Date(Math.min(...trendData.sessionAverages.map(item => item.date))); // start date based on data
-                break;
-        }
-        const time_domain = [startDate, endDate]; 
-        console.log(`[${time_domain[0].toLocaleDateString()}, ${time_domain[1].toLocaleDateString()}]`);
-        const domains = {
-            x: time_domain,
-            y: vel_domain
-        };
-        console.log('X Domain: ', domains.x, ' :: Y Domain: ', domains.y);
-        return domains;
-    };
 
   return (
     <View>
