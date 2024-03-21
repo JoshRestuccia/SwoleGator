@@ -62,7 +62,7 @@ const RecentDataGraph = ({raw_data}) => {
 
         const getStrainPoints = () => {
             const strainPoints = [];
-            const max = Math.max(...victoryData.avgVs.map(obj => obj.data));
+            const max = Math.max(...victoryData.maxVs.map(obj => obj.value));
             const thresh = 0.9*max;
             for(const dp of victoryData.avgVs){
                 if(dp.data >= thresh){

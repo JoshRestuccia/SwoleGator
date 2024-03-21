@@ -65,7 +65,7 @@ export const FirestoreProvider = ({children}) => {
             //console.log(`Starting Avg Calculation for rep data`);
             repData.forEach((rep) => {
                 //console.log('REP: ',rep);
-                sum += parseFloat(rep.currV);
+                sum += Math.abs(parseFloat(rep.currV));
                 cnt += 1;
                 //console.log(`SUM: ${sum} :: CNT: ${cnt}`); 
             });
@@ -113,7 +113,7 @@ export const FirestoreProvider = ({children}) => {
             maxVs: maxVs,
             avgVs: avgVs
         };
-        console.log(victoryDataObject);
+        //console.log(victoryDataObject);
         return victoryDataObject;
     };
 
@@ -368,14 +368,14 @@ export const FirestoreProvider = ({children}) => {
                 //console.log("Fetching sessionsSnap for", workoutType, ":", sessionsSnap, '\n Total of ', sessions.length, 'sessions.');
                 await Promise.all(sessionsSnap.docs.map(async (session) => {
                     try{
-                        console.log('Getting session data for: ', session.id);
+                        //console.log('Getting session data for: ', session.id);
                         const sessionName = session.id;
                         const sessionDate = session.get('date');
                         const isPublic = session.get('isPublic');
                         await session.ref.collection('data').get().then((sessionDataDoc) => {
                             const sessionData = sessionDataDoc.docs.map((datapoint) => datapoint.data());
-                            console.log("Pushing workoutTypeData for", workoutType, ":", workoutTypeData);
-                            console.log(Array.from(Object.values(sessionData)));
+                            //console.log("Pushing workoutTypeData for", workoutType, ":", workoutTypeData);
+                            //console.log(Array.from(Object.values(sessionData)));
                             const victoryData = generateVictoryDataObject(sessionData);
                             addWorkoutCalculationsToFirestore(victoryData, workoutType, sessionName); // Ideally, this should probably be in a better spot but as of now its gotta go here
                             workoutTypeData.push({name: sessionName, date: sessionDate, data: Array.from(Object.values(sessionData)), public: isPublic});
@@ -578,7 +578,7 @@ export const FirestoreProvider = ({children}) => {
             await firestore().collection('users').doc(currentUser.uid)
             .collection('workouts').doc(type)
             .collection('sessions').doc(workoutName)
-            .set({date: timestamp, weight: wgt}); // must set a field value in order for the collection to be referencable
+            .set({date: timestamp, weight: wgt, isPublic: false}); // must set a field value in order for the collection to be referencable
 
             await updateTotalWorkoutsOfType(type);
             await updateTotalWorkouts();

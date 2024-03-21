@@ -24,15 +24,19 @@ const ManageWorkouts = () => {
             // fetch all workouts
             const workouts = await getAllWorkoutData();
             // fetch all public workouts
+            let pub = [];
+            let priv = [];
             Object.entries(workouts).forEach((workoutType) => {
                 const type = workoutType[0];
                 for(const workout of workoutType[1]){
                     if(workout.public === true){
-                        setPublicWs([...publicWs, {...workout, type: type}]);
+                        pub.push({...workout, type: type});
                     }else{
-                        setPrivateWs([...privateWs, {...workout, type: type}]);
+                        priv.push({...workout, type: type});
                     }
                 }
+                setPublicWs(pub);
+                setPrivateWs(priv);
             });
             setIsLoading(false);
         }catch(err){
@@ -42,13 +46,15 @@ const ManageWorkouts = () => {
     };
 
     useEffect(() => {
+        setPrivateWs([]);
+        setPublicWs([]);
         fetchWorkouts();
     }, [currentUser]);
 
     useEffect(() => {
-        console.log('Public/Private workouts updated!');
+/*         console.log('Public/Private workouts updated!');
         console.log('Public: ', publicWs);
-        console.log('Private: ', privateWs);
+        console.log('Private: ', privateWs); */
         //handle notifications here
     },[privateWs, publicWs]);
 
