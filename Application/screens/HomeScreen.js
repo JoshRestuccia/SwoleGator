@@ -1,9 +1,46 @@
 import React, {useState, useEffect} from 'react';
 import { Text, View, TouchableOpacity, StyleSheet } from 'react-native';
-
+import { useBLE } from '../api/ble/BLEContext';
 import { useFirestore } from '../api/firestore/FirestoreAPI';
 
 const HomeScreen = ({navigation}) =>{
+  const {
+    isScanning,
+    isConnecting,
+    scannedDevices,
+    connectedDevice,
+    handleRetrieveConnected,
+    handleConnectPeripheral,
+    handleDisconnectPeripheral,
+    startBLEScan,
+    stopBLEScan,
+  } = useBLE();
+
+  //console.debug("peripherals map updated", [...peripherals.entries()]);
+  const handleStartScan = () => {
+    startBLEScan();
+  };
+
+  const handleStopScan = () => {
+    stopBLEScan();
+  };
+
+  const togglePeripheralConnection = async (peripheral) => {
+    if(!peripheral) return;
+    try{
+      if(connectedDevice && (connectedDevice.id === peripheral.id)){
+        await handleDisconnectPeripheral();
+      }else{
+        await handleConnectPeripheral(peripheral);
+      }
+    }catch(err){
+      console.error(err);
+    }
+  };
+
+  const retrieveConnected = async () => {
+      await handleRetrieveConnected();
+  };
     const {
       currentUser,
       getUserData,
@@ -33,8 +70,8 @@ const HomeScreen = ({navigation}) =>{
               <Text style={styles.welcome}>{`WELCOME BACK, ${userData?.first}`} </Text>
             </View>
             <View style={styles.container}>
-              <TouchableOpacity onPress={() => navigation.navigate('PairDevice')} style={styles.button}>
-                <Text style={styles.textStyle}>Connect</Text>
+              <TouchableOpacity onPress={isScanning ? handleStopScan : handleStartScan} style={styles.button}>
+                <Text style={styles.textStyle}>{isScanning ? 'Connecting...' : 'Connect'}</Text>
               </TouchableOpacity>
             </View>
         </View>
