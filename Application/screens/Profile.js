@@ -8,30 +8,60 @@ export default function Profile({navigation}) {
     const [isLoading, setIsLoading] = useState(true);
     const [friendPromptVisible, setFriendPromptVisible] = useState(false);
     const [userData, setUserData] = useState(null);
+    const [isDataLoading, setIsDataLoading] = useState(true);
+
+    const [squats, setSquats] = useState(0);
+    const [presses, setPresses] = useState(0);
+    const [curls, setCurls] = useState(0);
+    const [deadlifts, setDeadlifts] = useState(0);
+    const [total, setTotal] = useState(0);
 
     const {
       friends,
       currentUser,
       getUserData,
-      addFriend
+      addFriend,
+      isFriendsLoading,
+      getNumberWorkoutsOfType,
+      getTotalNumOfWorkouts
     } = useFirestore();
 
+    useEffect(() => {
+      const updateWorkoutData = async () => { 
+        try{
+          let n = await getNumberWorkoutsOfType('Squat');
+          setSquats(n || 0);
+          n = await getNumberWorkoutsOfType('Bench Press');
+          setPresses(n || 0);
+          n = await getNumberWorkoutsOfType('Barbell Curl');
+          setCurls(n || 0);
+          n = await getNumberWorkoutsOfType('Deadlift');
+          setDeadlifts(n || 0);  
+          n = await getTotalNumOfWorkouts();
+          setTotal(n || 0);
+        }catch(err){
+          throw err;
+        }
+      };
+      return(async () => {
+        setIsDataLoading(true);
+        await updateWorkoutData();
+        setIsDataLoading(false);
+      });
+    }, [userData])
+
     const FriendPrompt = () => {
-      const [isLoading, setIsLoading] = useState(false);
       const [friendEmail, setFriendEmail] = useState('');
       
       const handleSubmitFriendEmail = async() => {
         if(friendEmail){
           try{
-            setIsLoading(true);
             console.log('[Profile:FriendPrompt] Adding friend!');
             await addFriend(friendEmail);
             setFriendEmail('');
-            setIsLoading(false);
             closeFriendPrompt();
           }catch(error){
             console.error(error);
-            setIsLoading(false);
           }
         } else { 
           console.warn('Cannot add friend. Email is empty');
@@ -43,8 +73,7 @@ export default function Profile({navigation}) {
       }, [friendEmail]);
     
       return(
-        <View>
-          <View style={popup.modelContainer}>
+        <View style={popup.modalContainer}>
             <View style={popup.modalContent}>
               <Text style={popup.headerText}> Join Your Friends! </Text>
               <Text style={popup.subheaderText}> Enter your friends email below </Text>
@@ -62,7 +91,6 @@ export default function Profile({navigation}) {
                 <Text style={popup.buttonText}> Make Friends! </Text>
               </TouchableOpacity>
             </View>
-          </View>
         </View>
       );
     };
@@ -74,17 +102,21 @@ export default function Profile({navigation}) {
       setFriendPromptVisible(false);
     }
     
-    const renderItem = ({item}) => {
-      if(item){
-      console.log('Friend being rendered: ', item.email);
-        return(
-          <View style={styles.friendBadge}>
-            <Text style={styles.friendText}>{item.username}</Text>
-            <Text style={styles.friendText}>{item.friendedDate}</Text>
-          </View> 
-        );
-      }
-    };
+const renderItem = ({ item }) => {
+  if (item) {
+    console.log('Friend being rendered: ', item.email);
+    return (
+      <TouchableOpacity onPress={() => navigation.navigate('User Stack', { screen:'FriendWorkout', params: { friend: { uid: item.uid, username: item.username } }})}>
+        <View style={styles.friendBadge}>
+          <Text style={styles.friendText}>{item.username}</Text>
+          <Text style={styles.friendText}>{item.friendedDate}</Text>
+        </View>
+      </TouchableOpacity>
+    );
+  } else {
+    return null;
+  }
+};
 
     useEffect(() => {
       const fetchData = async() => {
@@ -92,7 +124,6 @@ export default function Profile({navigation}) {
           if(currentUser){
             const userDataFirestore = await getUserData();
             setUserData(userDataFirestore);
-            setIsLoading(false);
 
             console.log('Friends:', friends);
           }
@@ -101,7 +132,7 @@ export default function Profile({navigation}) {
         }
       };
       fetchData();
-    }, [currentUser]);
+    }, [currentUser, friends]);
 
     return(
     <SafeAreaView style={styles.container}>
@@ -110,16 +141,27 @@ export default function Profile({navigation}) {
           <Text style={styles.buttonText}> Settings </Text>
         </TouchableOpacity>          
         {/* User profile data */}
-        <View style={styles.userInfo}>
-            {/*<Image source={{ uri: userData.imageUrl }} style={styles.profileImage} />*/}
-            <Text style={styles.userName}>{`${userData?.username}`}</Text>
-            <Text style={styles.buttonText}>{`Age: ${userData?.age}`}</Text>
-            <Text style={styles.buttonText}>{`Workouts Completed: ${userData?.workoutsCompleted}`}</Text>
-        </View>
+        {isDataLoading ? 
+          ( <View style={styles.userInfo}>
+              <Text style={styles.userName}>{`${userData?.username}`}</Text>
+              <Text> Loading Data... </Text>
+            </View>)
+        :
+          ( <View  style={styles.userInfo}>
+              {/*<Image source={{ uri: userData.imageUrl }} style={styles.profileImage} />*/}
+              <Text style={styles.userName}>{`${userData?.username}`}</Text>
+              {/*<Text>{`Age: ${userData?.age}`}</Text>*/}
+              <Text>{`Workouts Completed: ${total}`}</Text>
+              <Text>{`Squats Sessions: ${squats}`}</Text>
+              <Text>{`Deadlift Sessions: ${deadlifts}`}</Text>
+              <Text>{`Bench Press Sessions: ${presses}`}</Text>
+              <Text>{`Barbell Curl Sessions: ${curls}`}</Text>
+            </View>)
+        }
         {/* Friends Data */}
         <View style={styles.friendsInfo}>
           <Text style={styles.friendsHeader}> Friends </Text>
-            {isLoading ? 
+            {isFriendsLoading ? 
               <Text>Loading friends...</Text> 
               : friends && (friends.length !== 0) ? 
                 <FlatList
@@ -132,8 +174,8 @@ export default function Profile({navigation}) {
                   <Text style={styles.noFriendsText}>No friends to show</Text>
                 </View>
             }
-          <TouchableOpacity style={styles.addFriends}onPress={openFriendPrompt}>
-            <Text style={styles.buttonText}>Add Friends</Text>
+          <TouchableOpacity style={styles.addFriends} onPress={openFriendPrompt}>
+            <Text style={styles.buttonText}>{` + Add Friends `}</Text>
           </TouchableOpacity>
         </View>
         {/* Friend Prompt Modal */}
@@ -141,6 +183,7 @@ export default function Profile({navigation}) {
           visible={friendPromptVisible}
           transparent={true}
           onRequestClose={closeFriendPrompt}
+          
         >
           <FriendPrompt/>
         </Modal>
@@ -257,8 +300,6 @@ const popup = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
-    width:'80%',
-    height: '40%'
   },
   modalContent: {
     backgroundColor: '#fff', // White background
@@ -268,10 +309,12 @@ const popup = StyleSheet.create({
   },
   headerText: {
     fontSize: 20,
+    textAlign: 'center',
     fontWeight: 'bold',
     marginBottom: 10,
   },
   subheaderText: {
+    textAlign: 'center',
     fontSize: 16,
     marginBottom: 15,
   },

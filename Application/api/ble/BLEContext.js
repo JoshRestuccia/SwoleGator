@@ -22,7 +22,31 @@ export const BLEProvider = ({children}) => {
     const [isReadingData, setIsReadingData] = useState(false);
     const [readInterval, setReadInterval] = useState(null);
     const [bleData, setBleData] = useState(null);
+    const [calibrating, setCalibrating] = useState(false);
 
+    useEffect(() => {
+        const handleDataFormat = (data) => {
+            const textData = String.fromCharCode.apply(null, new Uint8Array(data));
+            const [maxV, rep, currentV, flag] = textData.split(',').map(parseFloat);            
+            return { maxV, rep, currentV, flag };
+        };
+        if(bleData){
+            const {maxV, rep, currentV, flag} = handleDataFormat(bleData);
+            if(flag === 0){
+                setCalibrating(false);
+            }else{
+                setCalibrating(true);
+            }
+        }
+    }, [bleData]);
+
+    useEffect(() => {
+        if(calibrating){
+            console.log('Calibration Started.');
+        }else{
+            console.log('Calibration Stopped.');
+        }
+    }, [calibrating]);
 
     const startBLEScan = async () => {
         if(!isScanning){
@@ -171,11 +195,14 @@ export const BLEProvider = ({children}) => {
     };
 
     const handleUpdateValue = (data) => {
-        setBleData(data.value);
+        if(isReadingData){
+            setBleData(data.value);
+        }
     };
     
     const startReadingData = () => {
-        if(!isReadingData){
+        // Only start reading data if device is not in calibration mode
+        if(!calibrating){
             setIsReadingData(true);
             const intervalId = setInterval(() => {
                 BleManager.read(connectedDevice.id, serviceUUID, characteristicUUID)
@@ -219,6 +246,7 @@ export const BLEProvider = ({children}) => {
             isReadingData,
             scannedDevices,
             connectedDevice,
+            calibrating,
             handleConnectPeripheral,
             handleDisconnectPeripheral,
             startBLEScan,

@@ -28,11 +28,13 @@ build/
 .idea
 .gradle
 local.properties
+key.properties
 *.iml
 *.hprof
 .cxx/
 *.keystore
 !debug.keystore
+!app-release.aab
 
 # node.js
 #
@@ -68,11 +70,3 @@ yarn-error.log
 
 # Debugging Artifacts
 /.logs/
-
-# Python Venv
-/api/flask-env/*
-!/api/flask-env/api.py
-!/api/flask-env/BLE.py
-!/api/flask-env/.flaskenv
-!/api/requirements.txt
-!/api/flask-env/README_FLASK.md

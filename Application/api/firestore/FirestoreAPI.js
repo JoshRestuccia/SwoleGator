@@ -1,5 +1,5 @@
 import React, {useState, useEffect, createContext, useContext} from 'react';
-import firestore from '@react-native-firebase/firestore';
+import firestore, { firebase } from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 
 const FirestoreContext = createContext();
@@ -9,8 +9,8 @@ export const FirestoreProvider = ({children}) => {
     const [currentUser, setCurrentUser] = useState(null);
     const [currentEmail, setCurrentEmail] = useState(''); 
     const [friends, setFriends] = useState([]);
-    const [numWorkouts, setNumWorkouts] = useState(0);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isDataLoading, setIsDataLoading] = useState(false);
+    const [isFriendsLoading, setIsFriendsLoading] = useState(false);
 
     // FORMATTING FUNCTIONS    
     const formattedFriend = (initialFormat, friendUID, friendData) => {
@@ -39,12 +39,260 @@ export const FirestoreProvider = ({children}) => {
                 first: first,
                 last: last,
                 username: username,
+                totalWorkouts: 0,
             });
+    };
+
+    const generateVictoryDataObject = (data) => {
+
+        const max = (repData) => {
+            let maxV = 0;
+            repData.forEach((rep) => {
+                if(rep.maxV > maxV){
+                    maxV = rep.maxV;
+                }
+            });
+            return maxV;
+        };
+        
+        const calculateAverageVeloForRep = (repData) => {
+            let sum = 0.0;
+            let cnt = 0.0;
+            //console.log(`Starting Avg Calculation for rep data`);
+            repData.forEach((rep) => {
+                //console.log('REP: ',rep);
+                sum += parseFloat(rep.currV);
+                cnt += 1;
+                //console.log(`SUM: ${sum} :: CNT: ${cnt}`); 
+            });
+            const avg = sum/cnt;
+            //console.log(`AVG(${avg}) = SUM(${sum}) / CNT(${cnt})`);
+            return avg;
+        };
+
+        const repData = {};
+        data.forEach(({currentV, maxV, rep}) => {
+            if(!repData[rep]){
+                repData[rep] = [];
+            }
+            repData[rep].push({maxV: maxV, currV: currentV, rep: rep});
+        });
+        
+        //Get all average Velocities
+        const avgVelos = {};
+        Object.keys(repData).forEach((rep) => {
+            if(!avgVelos[rep]){
+                const repAvg = calculateAverageVeloForRep(repData[rep]);
+                //console.log(`\nRep #${rep} Avg: `, parseFloat(repAvg));
+                avgVelos[rep] = repAvg;
+            }
+        });
+        
+        // Get all max Velocities
+        const maxVelos = {};
+        Object.keys(repData).forEach((rep) => {
+            if(!maxVelos[rep]){
+                const repMax = max(repData[rep]);
+                maxVelos[rep] = repMax;
+            }
+        });
+
+        const avgVs = Object.keys(avgVelos).map(rep => ({
+            rep: parseInt(rep),
+            data: parseFloat(avgVelos[rep])
+        }));
+        const maxVs = Object.keys(repData).map(rep => ({
+            rep: parseInt(rep),
+            data: parseFloat(maxVelos[rep])
+        }));
+        const victoryDataObject = {
+            maxVs: maxVs,
+            avgVs: avgVs
+        };
+        console.log(victoryDataObject);
+        return victoryDataObject;
+    };
+
+    const checkCalculationsSaved = async (workoutType, sessionName) => {
+        try{
+            const sessionRef = firestore().collection('users').doc(currentUser.uid)
+                                    .collection('workouts').doc(workoutType)
+                                    .collection('sessions').doc(sessionName);
+            const querySnap = await sessionRef.collection('calc').get();
+            return !querySnap.empty;
+        }catch(err){
+            console.error('Error checking if calc has been created');
+            return false;
+        }
+    };
+
+    const addWorkoutCalculationsToFirestore = async (victDataObj, workoutType, sessionName) => {
+        if(currentUser){
+            try{
+                const calcExists = await checkCalculationsSaved(workoutType, sessionName);
+                if(!calcExists){
+                    await firestore().collection('users').doc(currentUser.uid)
+                            .collection('workouts').doc(workoutType)
+                            .collection('sessions').doc(sessionName)
+                            .collection('calc').add(victDataObj);
+                    console.log('Calculations saved to Firestore');
+                }else{
+                    console.log('Calculations are already present! No need to add again.');
+                }
+            }catch(err){
+                console.error('Error adding victory data to Firestore:', err);
+            }
+        }
+    };
+
+    const generateVictoryDataByTimescale = async (timescale, workoutType) => {
+        const calcDataRange = (timescale) => {
+            const endDate = new Date(); // today
+            let startDate = new Date();
+            switch(timescale){
+                case 'week':
+                    startDate.setDate(endDate.getDate() - 7); // subtract a week
+                    break;
+                case 'month':
+                    startDate.setDate(endDate.getMonth() - 1); // subtract a month
+                    break;
+                case 'year':
+                    startDate.setDate(endDate.getFullYear() - 1); // subtract a year
+                    break;
+                default:
+                    console.warn('Invalid timescale selected. Defaulting to today.');
+                    startDate = endDate;
+                    break;
+            };
+            return [startDate, endDate];
+        };
+
+        const fetchSessionsWithinDateRange = async (startDate, endDate) => {
+            try{
+                const sessionRef = firestore().collection('users').doc(currentUser.uid)
+                                    .collection('workouts').doc(workoutType)
+                                    .collection('sessions');
+                const querySnap = await sessionRef.where('date', '>=', firestore.Timestamp.fromDate(startDate))
+                                                    .where('date', '<=', firestore.Timestamp.fromDate(endDate)).get();
+
+                const sessions = querySnap.docs.map((session) => ({
+                    name: session.id,
+                    date: session.get('date'),
+                    data: session.data()
+                }));
+
+                return sessions;
+            }catch(err){
+                console.error(`Error fetching sessions within range (${startDate},${endDate})`);
+            }
+        };
+
+        const aggregateSessionData = async (sessions) => {
+            const allSessions = {};
+            
+            for(const session of sessions){
+                const sessionRef = firestore().collection('users').doc(currentUser.uid)
+                                                .collection('workouts').doc(workoutType)
+                                                .collection('sessions').doc(session.name);
+                const calcRef = sessionRef.collection('calc');
+                const calcSnap = await calcRef.get();
+                const data = calcSnap.docs[0].data();
+                console.log('calcSnapData: \n', data);                
+                allSessions[session.date]= data;
+            }
+            console.log(allSessions);
+            return allSessions;
+        };
+
+        const cleanData = (dirtyData) => {
+            const calcAverage = (data) => {
+                let sum = 0;
+                let cnt = 0;
+                for(const dp of data){
+                    sum += dp.data;
+                    cnt++;
+                }
+                return (sum/cnt);
+            };
+            const max = (data) => {
+                let maxV = 0;
+                for(const dp of data){
+                    if(dp.data > maxV){
+                        maxV = dp.data;
+                    }
+                }
+                return maxV;
+            };
+            const fixDateFormat = (dateString) => {
+                if(!dateString){
+                    console.error('Invalid timestamp format: Date String undefined.');
+                    return null;
+                }
+                //console.log('Date String:: ', dateString);
+                const matches = dateString.match(/(\d+)/g);
+
+                if(matches){
+                    //console.log(`Seconds: ${matches[0]} :: Nanoseconds: ${matches[1]}`);
+                    const seconds = parseInt(matches[0]);
+                    const nanoseconds = parseInt(matches[1]);
+                    const milliseconds = seconds*1000 + nanoseconds/1e6;
+                    const date = new Date(milliseconds);
+                    return date;
+                }else{
+                    console.error('Invalid timestamp format');
+                }
+            };
+
+            const sessionMaxes = {};
+            const sessionAvgs = {};
+
+            for(const session of Object.entries(dirtyData)){
+                // Get sessionAvg from avg of rep avgs
+                const sessionAvg = calcAverage(session[1].avgVs);
+                // Get sessionMax from max of rep maxes
+                const sessionMax = max(session[1].maxVs);
+                // Save the data to be shown in victory
+                sessionAvgs[session[0]] = sessionAvg;
+                sessionMaxes[session[0]] = sessionMax;
+            }
+            //console.log(Object.entries(sessionAvgs)[0]);
+            const sessionAvgVs = Object.keys(sessionAvgs).map(timestamp => ({
+                date: fixDateFormat(timestamp),
+                value: parseFloat(sessionAvgs[timestamp])
+            }));
+            const sessionMaxVs = Object.keys(sessionMaxes).map(timestamp => ({
+                date: fixDateFormat(timestamp),
+                data: parseFloat(sessionMaxes[timestamp])
+            }));
+            const cleanData = {
+                sessionMaxes: sessionMaxVs,
+                sessionAverages: sessionAvgVs
+            };
+            //console.log('Dirty Data:\n', dirtyData);
+            //console.log('Clean Data:\n', cleanData);
+            return cleanData;
+        };
+
+        if(currentUser){
+            try{
+                const dataRange = calcDataRange(timescale);
+                const sessionsWithinRange = await fetchSessionsWithinDateRange(dataRange[0], dataRange[1]);
+                if(sessionsWithinRange.length > 0){
+                    const dataFromSessions = await aggregateSessionData(sessionsWithinRange);
+                    const clean = cleanData(dataFromSessions) || null;
+                    return clean;
+                }
+            }catch(err){
+                console.error(err);
+            }
+        }
+
     };
 
     const friendsFromDatabase = async() => {
         if(currentUser){
             try{
+                setIsFriendsLoading(true);
                 console.log(`Trying to reach ${currentUser.email}'s friends`);
                 const friendsCollection = firestore().collection('users')
                 .doc(currentUser.uid).collection('friends');
@@ -58,6 +306,7 @@ export const FirestoreProvider = ({children}) => {
                     console.log('Formatted Friend:', formatted);
                     updatedFriendsList.push(formatted);
                 }
+                setIsFriendsLoading(false);
                 const friendsList = Array.from(updatedFriendsList);
                 return friendsList;
             }catch(err){
@@ -67,15 +316,146 @@ export const FirestoreProvider = ({children}) => {
         }
     };
 
-    const getNumberOfWorkouts = async () => {
+    const getTotalNumOfWorkouts = async() => {
         try{
             if(currentUser){
-                const workoutDocsRef = firestore().collection('users')
-                .doc(currentUser.uid).collection('workouts');
-                const workoutDocs = await workoutDocsRef.get();
-                return workoutDocs.size;
+                const snap = await firestore().collection('users')
+                .doc(currentUser.uid).get();
+                const data = snap.data();
+                return data.totalWorkouts;
             }
         }catch(err){
+            throw err;
+        }
+    };
+
+    const getNumberWorkoutsOfType = async (type) => {
+        try{
+            if(currentUser){
+                const snap = await firestore().collection('users')
+                .doc(currentUser.uid).collection('workouts')
+                .doc(type).get();
+                if(snap.exists){
+                    const data = snap.data();
+                    return data.total;
+                }
+            }
+        }catch(err){
+            throw err;
+        }
+    };
+
+    const getAllWorkoutData = async () => {
+        try{
+            const userRef = firestore().collection('users').doc(currentUser.uid);
+            const workoutsSnap = await userRef.collection('workouts').get();
+            const workoutDataObj = {};
+            //console.log("Fetching workoutsSnap:", workoutsSnap);
+            await Promise.all(workoutsSnap.docs.map(async (workoutDoc) => {     
+                const workoutType = workoutDoc.id;
+                const workoutRef = workoutDoc.ref;
+                const sessionsSnap = await workoutRef.collection('sessions').get();
+                const workoutTypeData = [];
+                //console.log("Fetching sessionsSnap for", workoutType, ":", sessionsSnap, '\n Total of ', sessions.length, 'sessions.');
+                await Promise.all(sessionsSnap.docs.map(async (session) => {
+                    try{
+                        console.log('Getting session data for: ', session.id);
+                        const sessionName = session.id;
+                        const sessionDate = session.get('date');
+                        await session.ref.collection('data').get().then((sessionDataDoc) => {
+                            const sessionData = sessionDataDoc.docs.map((datapoint) => datapoint.data());
+                            console.log("Pushing workoutTypeData for", workoutType, ":", workoutTypeData);
+                            console.log(Array.from(Object.values(sessionData)));
+                            const victoryData = generateVictoryDataObject(sessionData);
+                            addWorkoutCalculationsToFirestore(victoryData, workoutType, sessionName); // Ideally, this should probably be in a better spot but as of now its gotta go here
+                            workoutTypeData.push({name: sessionName, date: sessionDate, data: Array.from(Object.values(sessionData))});
+                        });
+                    }catch(err){
+                        console.error(err);
+                    }
+                }));
+                workoutDataObj[workoutType] = workoutTypeData;
+            }));
+            //Example of how to get data out of the array
+            //console.log(workoutDataObj['Bench Press'][0].data);
+            return workoutDataObj;
+        }catch(err){
+            console.error(err);
+        }
+    };
+
+        const getFriendWorkoutData = async (friendUID) => {
+            try{
+                const userRef = firestore().collection('users').doc(friendUID);
+                const workoutsSnap = await userRef.collection('workouts').get();
+                const workoutDataObj = {};
+                //console.log("Fetching workoutsSnap:", workoutsSnap);
+                await Promise.all(workoutsSnap.docs.map(async (workoutDoc) => {
+                    const workoutType = workoutDoc.id;
+                    const workoutRef = workoutDoc.ref;
+                    const sessionsSnap = await workoutRef.collection('sessions').get();
+                    const workoutTypeData = [];
+                    //console.log("Fetching sessionsSnap for", workoutType, ":", sessionsSnap, '\n Total of ', sessions.length, 'sessions.');
+                    await Promise.all(sessionsSnap.docs.map(async (session) => {
+                        try{
+                            console.log('Getting session data for: ', session.id);
+                            const sessionName = session.id;
+                            const sessionDate = session.get('date');
+                            await session.ref.collection('data').get().then((sessionDataDoc) => {
+                                const sessionData = sessionDataDoc.docs.map((datapoint) => datapoint.data());
+                                console.log("Pushing workoutTypeData for", workoutType, ":", workoutTypeData);
+                                console.log(Array.from(Object.values(sessionData)));
+                                const victoryData = generateVictoryDataObject(sessionData);
+                                addWorkoutCalculationsToFirestore(victoryData, workoutType, sessionName); // Ideally, this should probably be in a better spot but as of now its gotta go here
+                                workoutTypeData.push({name: sessionName, date: sessionDate, data: Array.from(Object.values(sessionData))});
+                            });
+                        }catch(err){
+                            console.error(err);
+                        }
+                    }));
+                    workoutDataObj[workoutType] = workoutTypeData;
+                }));
+                //Example of how to get data out of the array
+                //console.log(workoutDataObj['Bench Press'][0].data);
+                return workoutDataObj;
+            }catch(err){
+                console.error(err);
+            }
+        };
+
+    const getPublicWorkoutsOfUser = async (userUID) => {
+        try{
+            const publicWorkouts = {};
+            const userPublicWorkoutsSnap = await firestore().collection('users').doc(userUID).collection('public').orderBy('shared_on').get();
+            console.log(`Found ${userPublicWorkoutsSnap.docs.length} public workouts`);
+            if(userPublicWorkoutsSnap.docs.length === 0){ return {}; }
+            userPublicWorkoutsSnap.forEach((workout)=>{
+                if(!publicWorkouts[workout.id]){
+                    console.log(`publicWorkouts[${workout.id}] = ${workout.data()['data']}`);
+                    publicWorkouts[workout.id] = workout.data()['data'];
+                }
+            });        
+            console.log('Public Workouts: ', publicWorkouts);
+            return publicWorkouts;
+        }catch(err){
+            throw err;
+        }
+    };
+
+    const getMostRecentSession = async (type) => {
+        try{
+            const userRef = firestore().collection('users').doc(currentUser.uid);
+            const workoutsRef = userRef.collection('workouts').doc(type);
+            const sessionSnap = await workoutsRef.collection('sessions')
+                .orderBy('date', 'desc').limit(1).get();
+            if(!sessionSnap.empty){
+                const mostRecentName = sessionSnap.docs[0].id;
+                return mostRecentName;
+            }else{
+                return null;
+            }
+        }catch(err){
+            console.error(`There was an error fetching the most receent session.`, err);
             throw err;
         }
     };
@@ -88,8 +468,7 @@ export const FirestoreProvider = ({children}) => {
             const tempFriends = await friendsFromDatabase();
             //console.log('TempFriends:',tempFriends);
             setFriends(tempFriends);  
-            const tempWorkouts = await getNumberOfWorkouts();
-            setNumWorkouts(tempWorkouts); 
+            await getTotalNumOfWorkouts();
         }
     };
 
@@ -178,18 +557,76 @@ export const FirestoreProvider = ({children}) => {
         }      
     };
 
-    const saveWorkoutData = async (workoutName, data) => {
+    const saveWorkoutData = async (workoutName, data, type, wgt) => {
         try{
-            setIsLoading(true);
+            setIsDataLoading(true);
+            await firestore().collection('users').doc(currentUser.uid)
+            .collection('workouts').doc(type).set({total: 0});
             const dataArray = Array.from(data);
             dataArray.forEach(async (dataPoint) => {
                 await firestore().collection('users').doc(currentUser.uid)
-                .collection('workouts').doc(workoutName)
+                .collection('workouts').doc(type)
+                .collection('sessions').doc(workoutName)
                 .collection('data').add(dataPoint);
-            })
-            setIsLoading(false);
+            });
+            const timestamp = firebase.firestore.Timestamp.now();
+            await firestore().collection('users').doc(currentUser.uid)
+            .collection('workouts').doc(type)
+            .collection('sessions').doc(workoutName)
+            .set({date: timestamp, weight: wgt}); // must set a field value in order for the collection to be referencable
+
+            await updateTotalWorkoutsOfType(type);
+            await updateTotalWorkouts();
+            setIsDataLoading(false);
         }catch(err){
             throw err;
+        }
+    };
+
+    const makeWorkoutPublic = async (recentVictoryData, workoutName, type) => {
+        try{
+            //console.log('DATA: ', recentVictoryData);
+            await firestore().collection('users').doc(currentUser.uid)
+                .collection('public').doc(workoutName).set({data: recentVictoryData, shared_on: firestore.Timestamp.now(), name: workoutName, type: type});
+            console.log(`Made Workout ${workoutName} public!`);
+        }catch(err){
+            throw err;
+        }
+    };
+
+    const updateTotalWorkouts = async() => {
+        if(currentUser){
+            try{
+                let totalWorkouts = 0;
+                const userRef = firestore().collection('users').doc(currentUser.uid);
+                const workoutTypesQuerySnap = await userRef.collection('workouts').get();
+                workoutTypesQuerySnap.forEach( async (workoutTypeDoc) => {
+                    const typeTotal = workoutTypeDoc.get('total');
+                    totalWorkouts += typeTotal;
+                });
+                await userRef.update({'totalWorkouts': totalWorkouts});
+                console.log('Updated total workouts successfully!');
+            }catch(err){
+                console.error(`Error updating totalWorkouts for user ${currentUser.email}`, err);
+            }
+        }
+    };
+
+    const updateTotalWorkoutsOfType = async(type) => {
+        if(currentUser){
+            try{
+                const workoutTypeRef = firestore().collection('users').doc(currentUser.uid)
+                .collection('workouts').doc(type);
+                const workoutTypeSessionDocs = await workoutTypeRef.collection('sessions').get();
+                let total = 0;
+                workoutTypeSessionDocs.forEach(() => {
+                    total++;
+                });
+                await workoutTypeRef.update({'total': total});
+                console.log(`Total Workouts of type ${type} updated successfully to ${total}!`);
+            }catch(err){
+                console.error(`Error updating totalWorkoutsOfType(${type}) for user ${currentUser.email}`, err);
+            }
         }
     };
 
@@ -218,18 +655,22 @@ export const FirestoreProvider = ({children}) => {
             const friendUID = friendSnap.docs[0].id;
             // add friend to users/<userUID>/friends
             await firestore().collection('users').doc(currentUser.uid)
-            .collection('friends').add(formattedFriend(true, friendUID, friendData));
+            .collection('friends').doc(friendUID).set(formattedFriend(true, friendUID, friendData));
             console.log(`Added Friend: ${friendData.email}`);
         }catch(error){
             throw error;
         }
     };
 
-    const getFriendData = async(friendUID) => {
+    const getFriendData = async (friendUID) => {
         try{
+            console.log('Friend UID:', friendUID);
             const friendDoc = await firestore().collection('users')
             .doc(friendUID).get();
+            console.log('Retrieved UID from Firestore:', friendDoc.uid);
+            //console.log(firestore().collection.('users'));
             if(friendDoc.exists){
+                console.log('found');
                 const friendData = friendDoc.data();
                 const formattedFriendData = formattedFriend(false, friendUID, friendData);
                 return formattedFriendData;
@@ -256,18 +697,27 @@ export const FirestoreProvider = ({children}) => {
     const contextValue = {
         currentUser,
         friends,
-        numWorkouts,
-        isLoading,
+        isDataLoading,
+        isFriendsLoading,
+        setIsDataLoading,
+        getPublicWorkoutsOfUser,
+        getNumberWorkoutsOfType,
+        getTotalNumOfWorkouts,
+        getAllWorkoutData,
+        getMostRecentSession,
         setFriends,
         friendsFromDatabase,
         signUp,
         signIn,
         saveWorkoutData,
+        makeWorkoutPublic,
         getUserData,
-        getNumberOfWorkouts,
         addFriend,
         getFriendData,
-        signOut
+        getFriendWorkoutData,
+        signOut,
+        generateVictoryDataObject,
+        generateVictoryDataByTimescale,
     }
 
     return(

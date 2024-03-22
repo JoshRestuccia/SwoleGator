@@ -1,11 +1,4 @@
 # SwoleGator Alpha Build
-James Blackmon, 
-Maria Carmona, 
-Joshua Restuccia, 
-Jenna Sheldon, 
-Mary Williams
-
-Repository Link: https://github.com/JoshRestuccia/SwoleGator
 
 ## Project Summary
 At the time of the Alpha Build, the SwoleGator device successfully measures the velocity and repetition count of the motion done by a weightlifter. It communicates this data to the SwoleGator application through Bluetooth to be displayed and stored in the user's profile in the application. The app features functional profile login and logout, the ability to view a user's profile, connect to the SwoleGator device, and view lift data in real-time. The application is also set up to eventually feature a social environment, where users can post their lifts to be viewed and shared by friends or trainers. In addition, while the hardware only measures a single direction of velocity, in the future, it will be calibrated by exercise type to measure the useful velocity of that particular exercise to be a more widely adaptable and useful product. 

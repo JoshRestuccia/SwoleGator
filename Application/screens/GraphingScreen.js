@@ -2,74 +2,88 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  SafeAreaView,
-  StatusBar,
   StyleSheet,
   TextInput,
   TouchableOpacity,
 } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import { useFirestore } from '../api/firestore/FirestoreAPI';
 import { useBLE } from '../api/ble/BLEContext';
-import {
-  VictoryChart,
-  VictoryBar,
-  VictoryLegend,
-  VictoryTooltip,
-  VictoryVoronoiContainer,
-} from 'victory-native';
+import MotivationQuotes from '../data/motivation.js';
 import containerStyles from '../styles/container-view-styles';
+
+const MemoizedMotivationQuotes = React.memo(MotivationQuotes);
+
+// ToDo: Add a Modal that appears when Calibration is occurring.
 
 function GraphingScreen() {
   const {
     bleData,
     isReadingData,
-    connectedDevice,
     startReadingData,
-    stopReadingData
+    stopReadingData,
+    calibrating
   } = useBLE();
-  const { saveWorkoutData, numWorkouts, isLoading } = useFirestore();
+  const { 
+    isDataLoading,
+    saveWorkoutData,  
+    getNumberWorkoutsOfType,
+  } = useFirestore();
+
+
+  const [workoutStarted, setWorkoutStarted] = useState(false);
+  const [currentWorkoutType, setCurrentWorkoutType] = useState('Squat');
+  const [currentWorkoutWeight, setCurrentWorkoutWeight] = useState('100');
   
   const [maxVelocity, setMaxVelocity] = useState('0');
   const [repCount, setRepCount] = useState('0');
   const [currentVelocity, setCurrentVelocity] = useState('0');
   const [peakVelocity, setPeakVelocity] = useState('0');
 
-  const defaultName = `Workout #${numWorkouts + 1}`;
-  const [workoutName, setWorkoutName] = useState(defaultName);
+  const [total, setTotal] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [workoutName, setWorkoutName] = useState('');
   const [workoutData, setWorkoutData] = useState([]);
 
-  const handleSaveWorkout = async () => {
-    await saveWorkoutData(workoutName, workoutData);
-    stopReadingData();
+  const cleanUp = () => {
     setWorkoutData([]); // Clear workout data for next session
+    setRepCount(0);
+    setMaxVelocity(0);
+    setCurrentVelocity(0);
+    setPeakVelocity(0);
   };
 
- const handleDataFormat = (data) => {
-   const textData = String.fromCharCode.apply(null, new Uint8Array(data));
-   const [maxV, rep, currentV] = textData.split(',').map(parseFloat);
-   console.log([maxV.toString(), rep.toString(), currentV.toString()]);
-   
-   return { maxV, rep, currentV };
- };
+  const handleSaveWorkout = async () => {
+    stopReadingData();
+    setWorkoutStarted(false);
+    setIsLoading(true);
+    await saveWorkoutData(workoutName, workoutData, currentWorkoutType, currentWorkoutWeight);
+    cleanUp();
+    setIsLoading(false);
+  };
+
+  const handleDataFormat = (data) => {
+    const textData = String.fromCharCode.apply(null, new Uint8Array(data));
+    const [maxV, rep, currentV] = textData.split(',').map(parseFloat);
+    console.log([maxV.toString(), rep.toString(), currentV.toString()]);
+    
+    return { maxV, rep, currentV };
+  };
 
   useEffect(() => {
-    if(connectedDevice && !isReadingData){
+    if(workoutStarted){
       console.log('Starting to read data...');
       startReadingData();
+    }else{
+      console.log('Workout not yet started.');
     }
-    return(() => {
-      if(connectedDevice && isReadingData){
-        console.log('Stopping data read...');
-        stopReadingData();
-      }
-    });
-  }, [connectedDevice, isReadingData]);
+  }, [workoutStarted]);
 
   // When bleData is updated
   useEffect(() => {
     // format and move data to workoutData[]
-    if(bleData){
-      const {maxV, rep, currentV} = handleDataFormat(bleData);
+    if(isReadingData && bleData && !calibrating){
+      const {maxV, rep, currentV, flag} = handleDataFormat(bleData);
       setMaxVelocity(maxV);
       setRepCount(rep);
       setCurrentVelocity(currentV);
@@ -78,168 +92,281 @@ function GraphingScreen() {
       setWorkoutData([...workoutData, {maxV, rep, currentV}]);
       console.log(workoutData);
     }
-  },[bleData])
+  },[isReadingData, bleData, calibrating])
+ 
+  useEffect(() => {
+    const onMount = async () => {
+      setIsLoading(true);
+      let n = await getNumberWorkoutsOfType(currentWorkoutType); //getAllWorkoutsOfType ==> length
+      setTotal(n);
+      setIsLoading(false);
+    };
+    onMount();
+  }, [currentWorkoutType]);
 
+  useEffect(() => {
+    if(!isLoading){
+      let defaultName = `${currentWorkoutType} Workout #${(total || 0) + 1}`;
+      setWorkoutName(defaultName);
+    }
+  }, [isLoading, total]);
+
+  const handleBeginWorkout = () => {
+    console.log(`Starting workout ${workoutName}`);
+    setWorkoutStarted(true);
+  };
 
   return (
-    <>
-      <StatusBar />
-      <SafeAreaView style={containerStyles.container}>
-        <View style={styles.nameChangeContainer}>
-          <TextInput
-            style={styles.textInput}
-            placeholder={defaultName}
-            onChangeText={(text) => setWorkoutName(text)}
-            value={workoutName}
-          />
-          <TouchableOpacity
-            style={styles.nameSelector}
-            onPress={handleSaveWorkout}>
-            <Text style={styles.saveButtonText}>
-              {isLoading ? `Loading...` : `Save Workout Data`}
-            </Text>
-          </TouchableOpacity>
-        </View>
+    <View style={containerStyles.container}>
 
-        <View style={styles.chartContainer}>
-          {/* Vertical Bar Chart */}
-          <VictoryChart
-            height={200}
-            domainPadding={{ x: 10 }}
-            containerComponent={
-              <VictoryVoronoiContainer
-                voronoiDimension='x'
-                labels={({ datum }) => `y: ${datum.y}`}
-                labelComponent={
-                  <VictoryTooltip
-                    renderInPortal
-                    cornerRadius={0}
-                    flyoutStyle={{ fill: 'white' }}
-                  />
-                }
-              />
-            }
-            fixAxis="x"
-            domain={{
-              x: [0, 3],
-              y: [-20, 100],
-            }}>
-            {/* Max Velocity Data */}
-            <VictoryBar
-              name="maxVelocity"
-              data={[{ x: 1, y: parseFloat(maxVelocity) }]}
-              style={{
-                data: {
-                  fill: 'tomato',
-                  width: 30,
-                },
-              }}
-            />
+      {/* Picker for selecting Workout Type */}
+      <Picker style={styles.workoutSelector}
+        selectedValue={currentWorkoutType}
+        onValueChange={(value) => setCurrentWorkoutType(value)}
+      >
+        <Picker.Item label="Squat" value="Squat" />
+        <Picker.Item label="Deadlift" value="Deadlift" />
+        <Picker.Item label="Bench Press" value="Bench Press" />
+        <Picker.Item label="Barbell Curl" value="Barbell Curl" />
+      </Picker>
 
-            {/* Current Velocity Data */}
-            <VictoryBar
-              name="currentVelocity"
-              data={[{ x: 2, y: parseFloat(currentVelocity) }]}
-              style={{
-                data: {
-                  fill: 'blue',
-                  width: 30,
-                },
-              }}
-            />
-          </VictoryChart>
-        </View>
-
-        {/* Display Rep Count as Text */}
-        <Text style={styles.repCountText}>
-          Rep Count: {repCount}
-        </Text>
-
-        {/* Display Peak Velocity as Text */}
-        <Text style={styles.peakVelocityText}>
-          Peak Velocity: {peakVelocity}
-        </Text>
-
-        {/* Legend */}
-        <VictoryLegend
-          x={20}
-          y={20}
-          title="Workout Stats"
-          titleOrientation='top'
-          orientation='horizontal'
-          data={[
-            {
-              name: 'Max Velocity',
-              symbol: {
-                fill: 'tomato',
-                type: 'square',
-              },
-            },
-            {
-              name: 'Current Velocity',
-              symbol: {
-                fill: 'blue',
-                type: 'square',
-              },
-            },
-          ]}
+      {/* Workout Parameter Selections */}
+      <View style={styles.workoutParameterContainer}>
+        <TextInput
+            style={styles.textInputWeight}
+            placeholder='Weight'
+            onChangeText={(text) => setCurrentWorkoutWeight(text)}
+            value={currentWorkoutWeight}
         />
-      </SafeAreaView>
-    </>
+        <TextInput
+          style={styles.textInputName}
+          placeholder={isLoading ? (`Loading...`) : (`${currentWorkoutType} Workout #${total + 1}`)}
+          onChangeText={(text) => setWorkoutName(text)}
+          value={workoutName}
+        />
+      </View>
+
+      {/* Workout Parameter List && Save Button */}
+      <View style={styles.restOfScreenContainer}>
+        
+        {/* Graphic / Motivational Text */}
+        <View style={styles.graphicContainer}> 
+          {!workoutStarted ? 
+            (
+              <View style={styles.notStartedContainer}>
+                <Text style={styles.notStartedText}> Workout has not started </Text>
+              </View>
+            ) 
+            : 
+            (
+              /*<LiveDataGraph 
+                maxVelocity={maxVelocity || 0} 
+                currentVelocity={currentVelocity || 0}
+                />*/
+                <MemoizedMotivationQuotes/>
+            )
+          }  
+        </View>
+        {/* Start and Reset Buttons */}
+        <View style={styles.startAndResetContainer}>
+          <View style={styles.startWorkoutButtonContainer}>
+            <TouchableOpacity style={styles.startWorkoutButton}
+              onPress={handleBeginWorkout}
+            >
+              <Text style={styles.saveButtonText}> Begin Workout </Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.resetButtonContainer}>
+            <TouchableOpacity style={styles.resetButton}
+              onPress={cleanUp}>
+              <Text style={styles.saveButtonText}>
+                {isDataLoading ? `Loading...` : `Reset / Clear Workout Data`}
+              </Text>
+            </TouchableOpacity>  
+          </View>
+        </View>
+        {/* Display Active Variables (Workout Parameters & Reps & Velocity)*/}
+        <View style={styles.parametersAndSaveButton}>
+          <View style={styles.parameterDisplay}>
+            <View style={styles.singleParameter}>
+              <Text style={styles.textStyleA}> {`Current Exercise: `} </Text>
+              <Text style={styles.textStyleB}>{`${currentWorkoutType}`}</Text>
+            </View>
+            <View style={styles.singleParameter}>
+              <Text style={styles.textStyleA}> {`Current Weight: `} </Text>
+              <Text style={styles.textStyleB}> {`${currentWorkoutWeight || "- - -"}`} </Text>
+            </View>
+            <View style={styles.singleParameter}>
+              <Text style={styles.textStyleA}> {`Rep Count: `} </Text>
+              <Text style={styles.textStyleB}> {`${repCount}`} </Text>
+            </View>
+            <View style={styles.singleParameter}>
+              <Text style={styles.textStyleA}> {`Peak Velocity: `} </Text>
+              <Text style={styles.textStyleB}> {`${peakVelocity}`} </Text>
+            </View>            
+          </View>
+          <View style={styles.saveButtonContainer}>
+            <TouchableOpacity style={styles.saveButton}
+              onPress={handleSaveWorkout}>
+              <Text style={styles.saveButtonText}>
+                {isDataLoading ? `Loading...` : `Save Workout Data`}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>      
+    </View>
   );
 }
 
 export default GraphingScreen;
 
 const styles = StyleSheet.create({
-  textInput: {
+  container: {
+    flexDirection: 'column',
+    flex: 1
+  },
+  // Picker for selecting Workout Type
+  workoutSelector: {
+    backgroundColor: '#a3c1ad',
+  },
+  // Workout Parameter Selections 
+  workoutParameterContainer: {
+    padding: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    flex: 0.1,
+  },
+  textInputWeight: {
     borderBottomColor: 'grey',
     borderBottomWidth: 2,
     fontSize: 18,
     width: 225,
     height: 50,
     marginBottom: 10, // Add marginBottom to create space below the TextInput
-  },
-  textStyle: {
+    flex: 0.15,
+  },  
+  textInputName: {
+    borderBottomColor: 'grey',
+    borderBottomWidth: 2,
     fontSize: 18,
-    alignItems: 'flex-start',
-    justifyContent: 'flex-start',
-  },
-  container: {
-    alignItems: 'center',
-  },
-  nameSelector: {
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: 225,
     height: 50,
-    width: 100,
-    backgroundColor: 'lightblue',
-    borderRadius: 10,
+    marginBottom: 10, // Add marginBottom to create space below the TextInput
+    flex: 0.65,
   },
-  saveButtonText: {
-    fontSize: 15,
-    textAlign: 'center',
+
+  // Rest of the Screen
+  restOfScreenContainer: {
+    flex: 1,
+    flexDirection: 'column'
   },
-  nameChangeContainer: {
+  // Graphic / Motivation
+  graphicContainer: {
+    flex: 0.8,
+    alignContent: 'center',
+    justifyContent: 'space-between',
+  },
+  notStartedContainer: {
+    flex: 1,
+    justifyContent: 'space-around'
+  },
+    notStartedText: {
+      fontSize: 20,
+      fontStyle: 'normal',
+      fontFamily: 'helvetica',
+      fontWeight: 'bold',
+      textAlign: 'center'
+    },
+  // Start and Reset Buttons
+  startAndResetContainer: {
     flexDirection: 'row',
+    flex: 0.2,
+    //borderColor: 'black',
+    //borderWidth: 5
+  },
+    // Start Workout Button
+    startWorkoutButtonContainer: {
+      flex: 0.4,
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'space-evenly',
+      //borderColor: 'purple',
+      //borderWidth: 3
+    },
+    startWorkoutButton: {
+      justifyContent: 'center',
+      backgroundColor: 'lightblue',
+      borderRadius: 10,
+      padding: 10,
+      margin: 10
+    },
+    // Reset Button
+    resetButtonContainer:{
+      flex: 0.6,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'flex-end',
+      marginRight: 10
+      //borderColor: 'green',
+      //borderWidth: 3
+    },
+    resetButton: {
+      justifyContent: 'center',
+      backgroundColor: 'lightblue',
+      borderRadius: 10,
+      padding: 10,
+    },
+
+// Parameters and Save Button 
+parametersAndSaveButton: {
+  flexDirection: 'row',
+  flex: 0.25,
+  justifyContent: 'flex-start',
+  //borderColor: 'black',
+  //borderWidth: 5
+},
+  // Parameters
+  parameterDisplay: {
+    flexDirection: 'column',
     flex: 0.5,
-    justifyContent: 'space-evenly',
-    marginTop: 25,
+    //borderColor: 'blue',
+    borderWidth: 3
+  },  
+  singleParameter: {
+    flexDirection: 'row',
+    flex: 0.25,
+    alignContent: 'center',
+    justifyContent: 'space-between'
   },
-  chartContainer: {
-    alignItems: 'center',
-    marginTop: 20, // Add marginTop to create space above the chart
-  },
-  repCountText: {
-    fontSize: 18,
+    // Parameter Text
+    textStyleA: {
+      fontSize: 12,
+      fontFamily: 'ariel',
+      fontWeight: 'bold',
+    },  
+    textStyleB: {
+      fontSize: 12,
+      marginRight: 10
+    },
+  // Save Button
+  saveButtonContainer: {
+    flex: 0.5,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 10,
-  },
-  peakVelocityText: {
-    fontSize: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 10,
-  },
+    //borderColor: 'red',
+    borderWidth: 3
+  },  
+    saveButton: {
+      justifyContent: 'center',
+      backgroundColor: 'lightblue',
+      borderRadius: 10,
+      padding: 10,
+      marginHorizontal: 0
+    },
+    // Save Button Text
+    saveButtonText: {
+      fontSize: 15,
+      textAlign: 'center',
+    },
 });
