@@ -36,58 +36,123 @@ const Login = ({navigation}) => {
 
   return (
     <View style={styles.container}>
-      <TextInput
-      style={styles.textInput}
-        placeholder='Email'
-        onChangeText={setEmail}
-        value={email}/>
-      <TextInput
-        style={styles.textInput}
-        placeholder='Password'
-        onChangeText={setPassword}
-        secureTextEntry={true}
-        value={password}/>
-          <TouchableOpacity onPress={signInPressed}>
+      <View>
+        <Text style={styles.swoleGator}>swolegator</Text>
+      </View>
+      <View style={styles.textBoxes}>
+        <TextInput
+          style={styles.textInput}
+          placeholder='EMAIL'
+          placeholderTextColor= '#323334'
+          onChangeText={setEmail}
+          value={email}/>
+      </View>
+      <View styles={styles.textBoxes}>
+        <TextInput
+          style={styles.textInput}
+          placeholder='PASSWORD'
+          placeholderTextColor= '#323334'
+          onChangeText={setPassword}
+          secureTextEntry={true}
+          value={password}/>
+      </View>
+      <TouchableOpacity onPress={signInPressed}>
             <View style={styles.button}>
-                <Text style={styles.textStyle}>Login</Text>
+                <Text style={styles.buttonText}>Login</Text>
             </View>
-        </TouchableOpacity>
-        <View style={styles.textStyle}>
-          <Text style={styles.textStyle} onPress={()=>navigation.navigate('Guest Stack', {screen: 'Sign Up'})}>
+      </TouchableOpacity>
+      <View style={styles.textStyle}>
+        <Text style={styles.textStyle} onPress={()=>navigation.navigate('Guest Stack', {screen: 'Sign Up'})}>
             Click here to create an account
-          </Text>
-        </View>
-
+        </Text>
+      </View>
     </View>
   )
 }
 export default Login
 
-const styles = StyleSheet.create({
-    container:{
-      justifyItems: 'center',
-    },
-    textInput:{
-      borderBottomColor:'grey',
-      borderBottomWidth: 1,
-      fontSize:18,
-      marginLeft: 35,
-      marginRight: 35,
-      marginTop: 20,
+const boxShadow = {
+  shadowColor: '#B50000',
+  shadowOffset: {
+    width: 4,
+    height: 4,
   },
-    button:{
-      alignItems: 'center',
-      backgroundColor: 'lightblue',
-      padding:10,
-      marginLeft:35,
-      marginRight: 35,
-      marginTop: 25,
-      marginBottom: 20,
-      borderRadius: 30,
-    },
-    textStyle:{
-      fontSize: 18,
-      alignItems: 'center',
-      justifyContent: 'center',
-    }
+  shadowOpacity: 0.5,
+  shadowRadius: 3.84,
+  elevation: 5,
+};
+const styles = StyleSheet.create({
+container: {
+    flex: 1,
+    backgroundColor: 'black',
+    alignItems: 'center',
+    justifyContent: 'center',
+},
+textInput:{
+  borderBottomColor:'white',
+  borderBottomWidth: 1,
+  fontSize:20,
+  alignItems: 'flex-end',
+  fontFamily: 'Oswald-Regular',
+  color:'white',
+  textTransform: 'uppercase',
+  width: 340,
+  height: 50,
+},
+swoleGator: {
+    fontFamily: 'Anta-Regular',
+    color: 'white',
+    fontSize: 70,
+    marginTop: 40,
+    ...boxShadow,
+  },
+button: {
+  backgroundColor: '#323334',
+  width: 340, 
+  height: 50, 
+  alignItems: 'center',
+  justifyContent: 'center',
+  borderRadius: 50,
+  marginBottom: 120,
+  marginTop: 70,
+  ...boxShadow,
+},
+buttonText:{
+  color: 'white',
+  textTransform: 'uppercase',
+  fontFamily: 'Oswald-Regular',
+  fontSize: 24,
+  alignItems: 'center',
+  justifyContent: 'center',
+},
+textStyle:{
+  color: '#AD0000',
+  textTransform: 'uppercase',
+  fontFamily: 'Oswald-Regular',
+  fontSize: 15,
+  alignItems: 'center',
+  justifyContent: 'center',
+  margin:10,
+},
+title:{
+  alignItems: 'center',
+  justifyContent: 'center',
+  marginTop: 350,
+  marginBottom: 20,
+  height:180
+},
+textBoxes:{
+  alignItems: 'center',
+  justifyContent: 'center',
+  marginTop: 10,
+  marginBottom: 10,
+  height:180
+},
+titleText:{
+  textAlign:'center',
+  fontSize: 30,
+  textTransform: 'uppercase',
+  fontFamily: 'Oswald-Medium',
+  color: 'white',
+}
 })

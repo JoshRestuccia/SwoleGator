@@ -1,0 +1,21 @@
+{
+  "migIndex": 1,
+  "data": [
+    {
+      "path": "assets/fonts/Anta-Regular.ttf",
+      "sha1": "e3e740580b8ba422bd33c18e18a00ac684a1553a"
+    },
+    {
+      "path": "assets/fonts/Oswald-Bold.ttf",
+      "sha1": "6e78c90d65a6133d979daebc1255d2f560a97c79"
+    },
+    {
+      "path": "assets/fonts/Oswald-Medium.ttf",
+      "sha1": "70e75da33d777c839cf59cb042adf7fc5fa0235a"
+    },
+    {
+      "path": "assets/fonts/Oswald-Regular.ttf",
+      "sha1": "06aae8f5a28908ba8eca0d5bdc01cedc2a184a5f"
+    }
+  ]
+}

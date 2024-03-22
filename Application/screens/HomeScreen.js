@@ -1,31 +1,53 @@
 import React, {useState, useEffect} from 'react';
 import { Text, View, TouchableOpacity, StyleSheet } from 'react-native';
-
+import { useBLE } from '../api/ble/BLEContext';
 import { useFirestore } from '../api/firestore/FirestoreAPI';
 
 const HomeScreen = ({navigation}) =>{
+  const {
+    isScanning,
+    isConnecting,
+    scannedDevices,
+    connectedDevice,
+    handleRetrieveConnected,
+    handleConnectPeripheral,
+    handleDisconnectPeripheral,
+    startBLEScan,
+    stopBLEScan,
+  } = useBLE();
+
+  //console.debug("peripherals map updated", [...peripherals.entries()]);
+  const handleStartScan = () => {
+    startBLEScan();
+  };
+
+  const handleStopScan = () => {
+    stopBLEScan();
+  };
+
+  const togglePeripheralConnection = async (peripheral) => {
+    if(!peripheral) return;
+    try{
+      if(connectedDevice && (connectedDevice.id === peripheral.id)){
+        await handleDisconnectPeripheral();
+      }else{
+        await handleConnectPeripheral(peripheral);
+      }
+    }catch(err){
+      console.error(err);
+    }
+  };
+
+  const retrieveConnected = async () => {
+      await handleRetrieveConnected();
+  };
     const {
       currentUser,
       getUserData,
-      signOut
     } = useFirestore();
     
     const [userData, setUserData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
-
-    const pressLogOut = async() => {
-      console.log('Signout button pressed.');
-      try{
-        await signOut();
-        // Reset Navigation Stack
-        navigation.reset({
-          index: 0,
-          routes: [{name: 'Guest Stack', params:{screen: 'Login'}}]
-        });
-      }catch(error){
-        console.error('Error signing out...');
-      }
-    };
 
     useEffect(() => {
       const fetchData = async() => {
@@ -43,36 +65,49 @@ const HomeScreen = ({navigation}) =>{
     }, [currentUser]);
 
     return(
-        <View>
+        <View style={styles.screenSetup}>
             <View style={styles.title}>
-              <Text style={styles.titleText}>{(isLoading) ? `Loading...` : `Welcome to SwoleGator, ${userData?.first}!`} </Text>
+              <Text style={styles.welcome}>{`WELCOME BACK, ${userData?.first}`} </Text>
             </View>
             <View style={styles.container}>
-              <TouchableOpacity onPress={() => navigation.navigate('User Stack', {screen: 'Pair Device'})} style={styles.button}>
-                <Text style={styles.textStyle}> Pair Device</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => navigation.navigate('User Stack', {screen: 'Live Workout'})} style={styles.button}>
-                <Text style={styles.textStyle}> Live Workout </Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => navigation.navigate('User Stack', {screen: 'Completed Workouts'})} style={styles.button}>
-                <Text style={styles.textStyle}> Completed Workouts </Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => navigation.navigate('User Stack', {screen: 'Profile'})} style={styles.button}>
-                <Text style={styles.textStyle}> Profile </Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={pressLogOut} style={styles.button}>
-                <Text style={styles.textStyle}> Log Out</Text>
+              <TouchableOpacity onPress={isScanning ? handleStopScan : handleStartScan} style={styles.button}>
+                <Text style={styles.textStyle}>{isScanning ? 'Connecting...' : 'Connect'}</Text>
               </TouchableOpacity>
             </View>
         </View>
     );
 };
-
+const boxShadow = {
+  shadowColor: 'lightgrey',
+  shadowOffset: {
+    width: 0,
+    height: 0,
+  },
+  shadowOpacity: 0.25,
+  shadowRadius: 1.84,
+  elevation: 4,
+};
 const styles = StyleSheet.create({
+    screenSetup:{
+      flex: 1,
+      backgroundColor: '#272727'
+    },
     container:{
       justifyItems: 'center',
       height:'auto',
       flexDirection:'column',
+    },
+    swoleGator: {
+      fontFamily: 'Anta-Regular',
+      color: 'white',
+      fontSize: 60,
+      marginTop: 50,
+    },
+    welcome :{
+      fontFamily: 'Oswald-Regular',
+      textTransform: 'uppercase',
+      color: 'white',
+      fontSize: 30,
     },
       textInput:{
         borderBottomColor:'grey',
@@ -84,15 +119,20 @@ const styles = StyleSheet.create({
     },
     button:{
       alignItems: 'center',
-      backgroundColor: 'lightblue',
-      padding:10,
-      marginLeft:35,
-      marginRight: 35,
-      marginTop: 10,
-      marginBottom: 10,
+      backgroundColor: 'black',
       borderRadius: 30,
+      padding:5,
+      marginLeft:100,
+      marginRight: 100,
+      marginTop: 175,
+      marginBottom: 10,
+      height: 45,
+      ...boxShadow,
     },
     textStyle:{
+      color: 'white',
+      textTransform: 'uppercase',
+      fontFamily: 'Oswald-Regular',
       fontSize: 18,
       alignItems: 'center',
       justifyContent: 'center',

@@ -1,11 +1,11 @@
 import React, {useState, useEffect} from 'react';
 import {StyleSheet, Modal, View, Image, Text, FlatList, TouchableHighlight, TouchableOpacity, TextInput} from 'react-native';
 import { useFirestore } from '../api/firestore/FirestoreAPI';
-import SettingsScreen from './Settings';
+import SettingsScreen from './UserSettings';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Profile({navigation}) {
-    const [isSettingsVisible, setSettingsVisible] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [friendPromptVisible, setFriendPromptVisible] = useState(false);
     const [userData, setUserData] = useState(null);
     const [isDataLoading, setIsDataLoading] = useState(true);
@@ -94,15 +94,6 @@ export default function Profile({navigation}) {
         </View>
       );
     };
-
-    const openSettings = () => {
-      setSettingsVisible(true);
-    };
-
-    const closeSettings = () => {
-      setSettingsVisible(false);
-    };
-
     const openFriendPrompt = () => {
       setFriendPromptVisible(true);
     };
@@ -146,7 +137,7 @@ const renderItem = ({ item }) => {
     return(
     <SafeAreaView style={styles.container}>
         {/* Settings Button */}        
-        <TouchableOpacity style={styles.settingsButton} onPress={openSettings}>
+        <TouchableOpacity style={styles.settingsButton} onPress={() => navigation.navigate('User Settings')}>
           <Text style={styles.buttonText}> Settings </Text>
         </TouchableOpacity>          
         {/* User profile data */}
@@ -187,14 +178,6 @@ const renderItem = ({ item }) => {
             <Text style={styles.buttonText}>{` + Add Friends `}</Text>
           </TouchableOpacity>
         </View>
-        {/* Settings Screen Modal */}
-        <Modal
-          visible={isSettingsVisible}
-          transparent={false}
-          onRequestClose={closeSettings}
-        >
-          <SettingsScreen onClose={closeSettings}/>
-        </Modal>
         {/* Friend Prompt Modal */}
         <Modal
           visible={friendPromptVisible}
@@ -213,6 +196,7 @@ const styles = StyleSheet.create({
     container: {
       flex: 1,
       alignItems: 'center',
+      backgroundColor: 'black',
     },
     profileImage: {
       width: 150,
@@ -226,23 +210,25 @@ const styles = StyleSheet.create({
       alignItems: 'center',
     },
     userName: {
-      fontSize: 30,
-      fontWeight: 'bold',
+      fontSize: 60,
+      fontFamily: 'Oswald-Regular',
+      textTransform: 'uppercase',
+      color: 'white',
       marginBottom: 10,
     },
     addFriends:{
       alignItems: 'center',
       justifyContent: 'center',
       paddingVertical: 16,
-      backgroundColor: '#0a398a',
+      backgroundColor: 'black',
       margin: 10,
       borderRadius: 12,
       width: 200,
-      height: 50,
+      height: 70,
       alignSelf: 'center'
     },
     settingsButton: {
-      backgroundColor: '#3498db', // Blue color (adjust as needed)
+      backgroundColor: '#272727',
       padding: 10,
       borderRadius: 8,
       marginTop: 15,
@@ -250,22 +236,27 @@ const styles = StyleSheet.create({
       marginRight: 15
     },
     buttonText: {
-      color: '#fff', // White color for text
+      color: 'white', 
       textAlign: 'center',
-      fontWeight: 'bold',
+      fontSize: 20,
+      textTransform: 'uppercase',
+      fontFamily: 'Oswald-Regular',
     },
     friendsInfo: {
       flex: 2,
       width:'100%',
-      backgroundColor: 'lightblue',
+      backgroundColor: '#272727',
       borderRadius: 12,
       justifyContent: 'flex-start',
     },
     friendsHeader:{
       fontSize: 40,
-      fontWeight: 'bold',
+      fontFamily: 'Oswald-Regular',
+      textTransform: 'uppercase',
+      color: 'white',
       marginBottom: 10,
-      alignSelf: 'center'
+      alignSelf: 'center',
+      marginTop: 30,
     },
     friendBadge: {
       width: '75%',
@@ -281,7 +272,7 @@ const styles = StyleSheet.create({
     friendName:{
       fontSize: 15,
       fontWeight: 'bold',
-      color: 'gray'
+      color: 'white'
     },
     row: {
       marginLeft: 10,
@@ -291,12 +282,13 @@ const styles = StyleSheet.create({
     friendText: {
       fontSize: 14,
       fontWeight: '300',
-      color: 'black'
+      color: 'white'
     },
     noFriendsText:{
       fontSize: 14,
       fontWeight: '300',
-      color: 'black',
+      color: 'white',
+      marginBottom: 20,
       alignSelf: 'center'
     }
 });
