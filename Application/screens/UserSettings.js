@@ -5,7 +5,7 @@ import PhotoSelector from "./PhotoSelector";
 
 const icon8_url = "https://icons8.com/icons/collections/stwh66efe54iwrth5ljc";
 
-const UserSettings = ({navigation, onClose}) =>{
+const UserSettings = ({navigation}) =>{
       const [photoSelectorVisibility, setPhotoSelectorVisibility] = useState(false);
 
       const closePhotoSelect = () => {

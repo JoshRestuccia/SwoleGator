@@ -1,6 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import {StyleSheet, Modal, View, Image, Text, FlatList, TouchableHighlight, TouchableOpacity, TextInput} from 'react-native';
 import { useFirestore } from '../api/firestore/FirestoreAPI';
+import UserSettings from './UserSettings';
 import SettingsScreen from './Settings';
 import StatLine from '../components/StatLine';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -226,7 +227,7 @@ const renderItem = ({ item }) => {
           transparent={false}
           onRequestClose={closeSettings}
         >
-          <SettingsScreen onClose={closeSettings}/>
+          <UserSettings onClose={closeSettings}/>
         </Modal>
         {/* Friend Prompt Modal */}
         <Modal
