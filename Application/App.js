@@ -5,7 +5,6 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import LoadingScreen from './screens/LoadingScreen';
 import SignUp from './screens/SignUp';
 import Login from './screens/Login';
-<<<<<<< HEAD
 import Data from './screens/Data';
 import HomeScreen from './screens/HomeScreen';
 import GraphingScreen from './screens/GraphingScreen';
@@ -13,9 +12,7 @@ import Profile from './screens/Profile';
 import FriendWorkout from './screens/FriendWorkout';
 import ManageWorkouts from './screens/ManageWorkouts';
 
-=======
 import Landing from './screens/LandingScreen';
->>>>>>> 08d3411c4ad57a4f3dcbb8bc4f52eed145148182
 import auth from '@react-native-firebase/auth';
 import { BLEProvider } from './api/ble/BLEContext';
 import { FirestoreProvider } from './api/firestore/FirestoreAPI';
@@ -26,48 +23,11 @@ import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIc
 
 const Stack = createNativeStackNavigator();
 const Tabs = createBottomTabNavigator();
+
+
 function UserStackGroup() {
   return(
     <BLEProvider>
-<<<<<<< HEAD
-    <Stack.Navigator initialRouteName='Home'>
-      <Stack.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{title: "Home"}}
-      />
-      <Stack.Screen
-        name="Pair Device"
-        component={PairingScreen}
-        options={{title: "Pair Device"}}
-      />
-      <Stack.Screen
-        name="Live Workout"
-        component={GraphingScreen}
-        options={{title: "Live Workout"}}
-      />
-      <Stack.Screen
-        name="Completed Workouts"
-        component={Data}
-        options={{title: "Completed Workouts"}}
-      />
-      <Stack.Screen
-        name="Profile"
-        component={Profile}
-        options={{title: "Profile"}}
-      />
-      <Stack.Screen
-        name="FriendWorkout"
-        component={FriendWorkout}
-        options={{title: "Friend Workouts"}}
-      />
-      <Stack.Screen
-        name="ManageWorkouts"
-        component={ManageWorkouts}
-        options={{title: 'My Workouts'}}
-      />
-    </Stack.Navigator>
-=======
       <Tabs.Navigator 
         screenOptions={{ headerShown: false }}
         >
@@ -111,7 +71,6 @@ function UserStackGroup() {
             }}
           />
         </Tabs.Navigator>
->>>>>>> 08d3411c4ad57a4f3dcbb8bc4f52eed145148182
     </BLEProvider>
   );
 };

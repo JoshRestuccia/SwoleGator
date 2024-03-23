@@ -9,6 +9,7 @@ import ExerciseSelection from './screens/ExerciseSelection';
 import GraphingScreen from './screens/GraphingScreen';
 import Profile from './screens/Profile';
 import UserSettings from './screens/UserSettings'
+import ManageWorkouts from './screens/ManageWorkouts';
 
 const Stack = createStackNavigator()
 
@@ -16,7 +17,7 @@ const HomeScreenNavigator = () => {
     return(
         <Stack.Navigator>
             <Stack.Screen
-                name = "Home"
+                name = "Main"
                 component={HomeScreen}
                 options={{ 
                     title: 'swolegator', 
@@ -25,7 +26,7 @@ const HomeScreenNavigator = () => {
                     headerTintColor: 'white',
                     headerStyle: {backgroundColor: 'black', height: 80},
                 }}
-            ></Stack.Screen>
+            />
             <Stack.Screen
                 name = "PairDevice"
                 component={PairingScreen}
@@ -36,7 +37,7 @@ const HomeScreenNavigator = () => {
                     headerTintColor: 'white',
                     headerStyle: {backgroundColor: 'black', height: 80},
                 }}
-            ></Stack.Screen>
+            />
         </Stack.Navigator>
     )
 }
@@ -45,17 +46,6 @@ export{HomeScreenNavigator}
 const NewLiftScreenNavigator = () => {
     return(
         <Stack.Navigator>
-            <Stack.Screen
-                name = "Exercise Selection"
-                component={ExerciseSelection}
-                options={{ 
-                    title: 'swolegator', 
-                    headerTitleStyle: {fontFamily: 'Anta-Regular', fontSize: 35,},
-                    headerTitleAlign: 'center',
-                    headerTintColor: 'white',
-                    headerStyle: {backgroundColor: 'black', height: 80},
-                }}
-            ></Stack.Screen>
             <Stack.Screen
                 name = "Graphing Screen"
                 component={GraphingScreen}
@@ -76,7 +66,7 @@ const ProfileScreenNavigator = () => {
     return(
         <Stack.Navigator>
             <Stack.Screen
-                name = "Profile"
+                name = "Main"
                 component={Profile}
                 options={{ 
                     title: 'swolegator', 
@@ -85,7 +75,7 @@ const ProfileScreenNavigator = () => {
                     headerTintColor: 'white',
                     headerStyle: {backgroundColor: 'black', height: 80},
                 }}
-            ></Stack.Screen>
+            />
             <Stack.Screen
                 name = "User Settings"
                 component={UserSettings}
@@ -96,7 +86,18 @@ const ProfileScreenNavigator = () => {
                     headerTintColor: 'white',
                     headerStyle: {backgroundColor: 'black', height: 80},
                 }}
-            ></Stack.Screen>
+            />
+            <Stack.Screen
+                name="Workouts"
+                component={ManageWorkouts}
+                options={{
+                    title: 'swolegator', 
+                    headerTitleStyle: {fontFamily: 'Anta-Regular', fontSize: 35,},
+                    headerTitleAlign: 'center',
+                    headerTintColor: 'white',
+                    headerStyle: {backgroundColor: 'black', height: 80},
+                }}
+            />
         </Stack.Navigator>
     )
 }
