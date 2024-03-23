@@ -77,7 +77,7 @@ function PairingScreen(){
     return(
         <>
             <StatusBar />
-            <SafeAreaView style={styles.body}>
+            <SafeAreaView style={styles.screenSetup}>
                 <Pressable style={styles.scanButton} onPress={isScanning ? handleStopScan : handleStartScan}>
                     <Text style={styles.scanButtonText}>
                         {isScanning ? 'Scanning...' : 'Scan Bluetooth'}
@@ -121,6 +121,10 @@ const boxShadow = {
 };
 
 const styles = StyleSheet.create({
+  screenSetup:{
+    flex: 1,
+    backgroundColor: '#323334'
+  },
     engine: {
       position: 'absolute',
       right: 10,

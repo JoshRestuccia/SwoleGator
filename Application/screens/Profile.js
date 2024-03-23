@@ -3,10 +3,11 @@ import {StyleSheet, Modal, View, Image, Text, FlatList, TouchableHighlight, Touc
 import { useFirestore } from '../api/firestore/FirestoreAPI';
 import SettingsScreen from './Settings';
 import StatLine from '../components/StatLine';
+import SettingsScreen from './UserSettings';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Profile({navigation}) {
-    const [isSettingsVisible, setSettingsVisible] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [friendPromptVisible, setFriendPromptVisible] = useState(false);
     const [userData, setUserData] = useState(null);
     const [friends, setFriends] = useState([]);
@@ -99,15 +100,6 @@ export default function Profile({navigation}) {
         </View>
       );
     };
-
-    const openSettings = () => {
-      setSettingsVisible(true);
-    };
-
-    const closeSettings = () => {
-      setSettingsVisible(false);
-    };
-
     const openFriendPrompt = () => {
       setFriendPromptVisible(true);
     };
@@ -220,14 +212,6 @@ const renderItem = ({ item }) => {
               </View>
           }
         </View>
-        {/* Settings Screen Modal */}
-        <Modal
-          visible={isSettingsVisible}
-          transparent={false}
-          onRequestClose={closeSettings}
-        >
-          <SettingsScreen onClose={closeSettings}/>
-        </Modal>
         {/* Friend Prompt Modal */}
         <Modal
           visible={friendPromptVisible}
@@ -260,6 +244,18 @@ const styles = StyleSheet.create({
     userInfo: {
       width: '100%',
       alignItems: 'center',
+      backgroundColor: 'black',
+    },
+    profileImage: {
+      width: 150,
+      height: 150,
+      borderRadius: 75,
+      marginBottom: 20,
+    },
+    userInfo: {
+      flex:2,
+      flexDirection: 'column',
+      justifyContent: 'space-evenly',
     },
     userInfoHeader: {
       display: 'flex',
@@ -332,7 +328,7 @@ const styles = StyleSheet.create({
       padding: 20
     },
     settingsButton: {
-      backgroundColor: '#3498db', // Blue color (adjust as needed)
+      backgroundColor: '#272727',
       padding: 10,
       borderRadius: 8,
       marginTop: 15,
@@ -366,11 +362,27 @@ const styles = StyleSheet.create({
       alignSelf: 'center'
     },
     buttonText: {
-      color: '#fff', // White color for text
+      color: 'white', 
       textAlign: 'center',
-      fontWeight: 'bold',
-      fontSize: 30,
-      margin: 0
+      fontSize: 20,
+      textTransform: 'uppercase',
+      fontFamily: 'Oswald-Regular',
+    },
+    friendsInfo: {
+      flex: 2,
+      width:'100%',
+      backgroundColor: '#272727',
+      borderRadius: 12,
+      justifyContent: 'flex-start',
+    },
+    friendsHeader:{
+      fontSize: 40,
+      fontFamily: 'Oswald-Regular',
+      textTransform: 'uppercase',
+      color: 'white',
+      marginBottom: 10,
+      alignSelf: 'center',
+      marginTop: 30,
     },
     friendBadge: {
       display: 'flex',
@@ -393,7 +405,7 @@ const styles = StyleSheet.create({
       textAlign: 'left',
       fontSize: 25,
       fontWeight: 'bold',
-      color: 'gray'
+      color: 'white'
     },
     row: {
       marginLeft: 10,
@@ -403,12 +415,13 @@ const styles = StyleSheet.create({
     friendText: {
       fontSize: 14,
       fontWeight: '300',
-      color: 'black'
+      color: 'white'
     },
     noFriendsText:{
       fontSize: 14,
       fontWeight: '300',
-      color: 'black',
+      color: 'white',
+      marginBottom: 20,
       alignSelf: 'center'
     }
 });
