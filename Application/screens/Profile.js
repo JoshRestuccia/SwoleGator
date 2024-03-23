@@ -120,7 +120,7 @@ export default function Profile({navigation}) {
 const renderItem = ({ item }) => {
   if (item) {
     return (
-      <TouchableOpacity onPress={() => navigation.navigate('User Stack', { screen:'FriendWorkout', params: { friend: { uid: item.uid, username: item.username } }})}>
+      <TouchableOpacity onPress={() => navigation.navigate('Friend Workout', {friend: {uid: item.uid, username: item.username}})}>
         <View style={styles.friendBadge}>
           <View style={styles.friendImage}>
             <Image style={styles.smallProfileImage} source={{uri: item.profile_pic}} />

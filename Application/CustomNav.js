@@ -10,6 +10,7 @@ import GraphingScreen from './screens/GraphingScreen';
 import Profile from './screens/Profile';
 import UserSettings from './screens/UserSettings'
 import ManageWorkouts from './screens/ManageWorkouts';
+import FriendWorkout from './screens/FriendWorkout';
 
 const Stack = createStackNavigator()
 
@@ -90,6 +91,17 @@ const ProfileScreenNavigator = () => {
             <Stack.Screen
                 name="Workouts"
                 component={ManageWorkouts}
+                options={{
+                    title: 'swolegator', 
+                    headerTitleStyle: {fontFamily: 'Anta-Regular', fontSize: 35,},
+                    headerTitleAlign: 'center',
+                    headerTintColor: 'white',
+                    headerStyle: {backgroundColor: 'black', height: 80},
+                }}
+            />
+            <Stack.Screen
+                name="Friend Workout"
+                component={FriendWorkout}
                 options={{
                     title: 'swolegator', 
                     headerTitleStyle: {fontFamily: 'Anta-Regular', fontSize: 35,},
