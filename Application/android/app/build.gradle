@@ -95,11 +95,13 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
-        release{            
-            storeFile file(keystoreProps['SG_UPLOAD_STORE_FILE'])
-            storePassword keystoreProps['SG_UPLOAD_STORE_PASSWORD']
-            keyAlias keystoreProps['SG_UPLOAD_KEY_ALIAS']
-            keyPassword keystoreProps['SG_UPLOAD_KEY_PASSWORD']
+        release{    
+            if(project.hasProperty('SG_UPLOAD_STORE_FILE')){
+                storeFile file(keystoreProps['SG_UPLOAD_STORE_FILE'])
+                storePassword keystoreProps['SG_UPLOAD_STORE_PASSWORD']
+                keyAlias keystoreProps['SG_UPLOAD_KEY_ALIAS']
+                keyPassword keystoreProps['SG_UPLOAD_KEY_PASSWORD']
+            }        
         }
     }
     buildTypes {
