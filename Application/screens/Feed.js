@@ -52,47 +52,37 @@ const Feed = () => {
     return <Text>No friend workouts found.</Text>; // Handle empty or undefined cases
   }
 
-  return (
-    <SafeAreaView style={styles.mainContainer}>
-      {isLoading ? (
-        <Text>Loading...</Text>
-      ) : (
-        <View style={styles.workoutContainer}>
-          <View style={styles.headerContainer}>
-            <Text style={styles.header}>Friends' Workout Data</Text>
-          </View>
-          <Picker
-            selectedValue={selectedFriend}
-            onValueChange={handleFriendChange}
-            style={styles.picker}
-          >
-            {friendWorkouts.map(({ friend }) => (
-              <Picker.Item key={friend.uid} label={friend.username} value={friend} />
-            ))}
-          </Picker>
-          {selectedFriend && (
-            <ScrollView style={styles.scrollContainer}>
-              {selectedFriend &&
-                friendWorkouts
-                  .find(({ friend }) => friend.uid === selectedFriend.uid)
-                  ?.publicWorkouts?.length > 0 ? (
-                  friendWorkouts
-                    .find(({ friend }) => friend.uid === selectedFriend.uid)
-                    ?.publicWorkouts?.map((workout, index) => (
-                      <View key={index} style={styles.recent}>
-                        <Text style={styles.sectionHeader}>{`Workout ${index + 1}`}</Text>
-                        <RecentDataGraph raw_data={workout} />
-                      </View>
-                    ))
-                ) : (
-                  <Text>No public workouts found for this friend.</Text>
-                )}
-            </ScrollView>
-          )}
+return (
+  <SafeAreaView style={styles.mainContainer}>
+    {isLoading ? (
+      <Text>Loading...</Text>
+    ) : (
+      <View style={styles.workoutContainer}>
+        <View style={styles.headerContainer}>
+          <Text style={styles.header}>Friends' Workout Data</Text>
         </View>
-      )}
-    </SafeAreaView>
-  );
+        <ScrollView style={styles.scrollContainer}>
+          {friendWorkouts.map(({ friend, publicWorkouts }) => (
+            <View key={friend.uid} style={styles.friendContainer}>
+              <Text style={styles.friendHeader}>{`${friend.username}'s Workouts`}</Text>
+              {publicWorkouts && Object.keys(publicWorkouts).length > 0  ? (
+                Object.keys(publicWorkouts).map((workoutKey, index) => (
+                  <View key={index} style={styles.recent}>
+                    <Text style={styles.sectionHeader}>{`Workout ${index + 1}`}</Text>
+                    <RecentDataGraph raw_data={publicWorkouts[workoutKey]} />
+                  </View>
+                ))
+              ) : (
+                <Text>No recent workouts found for this friend.</Text>
+              )}
+            </View>
+          ))}
+        </ScrollView>
+      </View>
+    )}
+  </SafeAreaView>
+);
+
 
 };
 
