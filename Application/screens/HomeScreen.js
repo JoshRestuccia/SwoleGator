@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import { Text, View, TouchableOpacity, StyleSheet } from 'react-native';
+import { Modal, Text, View, TouchableOpacity, StyleSheet } from 'react-native';
 import { useBLE } from '../api/ble/BLEContext';
 import { useFirestore } from '../api/firestore/FirestoreAPI';
 
@@ -7,14 +7,19 @@ const HomeScreen = ({navigation}) =>{
   const {
     isScanning,
     isConnecting,
-    scannedDevices,
-    connectedDevice,
-    handleRetrieveConnected,
-    handleConnectPeripheral,
-    handleDisconnectPeripheral,
     startBLEScan,
     stopBLEScan,
+    scannedDevices,
+    handleConnectPeripheral,
   } = useBLE();
+  const {
+    currentUser,
+    getUserData,
+  } = useFirestore();
+    
+  const [userData, setUserData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [device, setDevice] = useState(null);
 
   //console.debug("peripherals map updated", [...peripherals.entries()]);
   const handleStartScan = () => {
@@ -25,58 +30,55 @@ const HomeScreen = ({navigation}) =>{
     stopBLEScan();
   };
 
-  const togglePeripheralConnection = async (peripheral) => {
-    if(!peripheral) return;
-    try{
-      if(connectedDevice && (connectedDevice.id === peripheral.id)){
-        await handleDisconnectPeripheral();
-      }else{
-        await handleConnectPeripheral(peripheral);
-      }
-    }catch(err){
-      console.error(err);
-    }
-  };
-
-  const retrieveConnected = async () => {
-      await handleRetrieveConnected();
-  };
-    const {
-      currentUser,
-      getUserData,
-    } = useFirestore();
-    
-    const [userData, setUserData] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-      const fetchData = async() => {
-        try{
-          if(currentUser){
-            const userDataFirestore = await getUserData();
-            setUserData(userDataFirestore);
-            setIsLoading(false);
-          }
-        }catch(err){
-          console.error(err);
+  useEffect(() => {
+    const fetchData = async() => {
+      try{
+        if(currentUser){
+          const userDataFirestore = await getUserData();
+          setUserData(userDataFirestore);
+          setIsLoading(false);
         }
-      };
-      fetchData();
-    }, [currentUser]);
+      }catch(err){
+        console.error(err);
+      }
+    };
+    fetchData();
+  }, [currentUser]);
 
-    return(
-        <View style={styles.screenSetup}>
-            <View style={styles.title}>
-              <Text style={styles.welcome}>{`WELCOME BACK, ${userData?.first}`} </Text>
-            </View>
-            <View style={styles.container}>
-              <TouchableOpacity onPress={isScanning ? handleStopScan : handleStartScan} style={styles.button}>
-                <Text style={styles.textStyle}>{isScanning ? 'Connecting...' : 'Connect'}</Text>
-              </TouchableOpacity>
-            </View>
-        </View>
-    );
+  useEffect(() => {
+    const handleDiscoverAndConnect = async () => {
+      const devices = Array.from(scannedDevices.values());
+      console.log(devices[0]);
+      if(devices[0]?.advertising?.localName === "SwoleGator"){
+        await handleConnectPeripheral(devices[0]);
+        setDevice(devices[0]);
+      }
+    };
+    handleDiscoverAndConnect();
+  }, [scannedDevices]);
+
+  return(
+      <View style={styles.screenSetup}>
+          <View style={styles.title}>
+            <Text style={styles.welcome}>{isLoading? `Loading...` : `WELCOME BACK, ${userData?.first}`} </Text>
+          </View>
+          <View style={styles.container}>
+              {device ? 
+                <View style={styles.connectedContainer}>
+                  <Text style={styles.connectedText}>Connected to SwoleGator</Text>
+                </View>
+              :
+                <TouchableOpacity onPress={isScanning ? handleStopScan : handleStartScan} style={styles.button}>
+                  <Text style={styles.textStyle}>{isConnecting ? 'Connecting...' : 'Connect'}</Text>
+                </TouchableOpacity>
+              }
+          </View>
+      </View>
+  );
 };
+
+
+
 const boxShadow = {
   shadowColor: 'lightgrey',
   shadowOffset: {
@@ -93,6 +95,8 @@ const styles = StyleSheet.create({
       backgroundColor: '#272727'
     },
     container:{
+      flex: 0.4,
+      justifyContent: 'center',
       justifyItems: 'center',
       height:'auto',
       flexDirection:'column',
@@ -107,7 +111,9 @@ const styles = StyleSheet.create({
       fontFamily: 'Oswald-Regular',
       textTransform: 'uppercase',
       color: 'white',
-      fontSize: 30,
+      fontSize: 50,
+      marginHorizontal: 50,
+      textAlign: 'center'
     },
       textInput:{
         borderBottomColor:'grey',
@@ -138,6 +144,7 @@ const styles = StyleSheet.create({
       justifyContent: 'center',
     },
     title:{
+      flex: 0.4,
       alignItems: 'center',
       justifyContent: 'center',
       marginTop: 35,
@@ -145,8 +152,21 @@ const styles = StyleSheet.create({
     },
     titleText:{
       textAlign:'center',
-      fontSize: 30,
       width:250
+    },
+    connectedContainer: {
+      flex: 0.5,
+      justifyContent: 'center',
+      alignSelf: 'center',
+      paddingHorizontal: 50
+    },
+    connectedText: {
+      color: 'green',
+      fontFamily: 'Oswald-Regular',
+      fontSize: 40,
+      textAlign: 'center',
+      textAlignVertical: 'center',
     }
-  })
+});
+
 export default HomeScreen;
