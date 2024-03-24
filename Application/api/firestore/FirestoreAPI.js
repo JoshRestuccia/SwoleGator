@@ -1,14 +1,13 @@
 import React, {useState, useEffect, createContext, useContext} from 'react';
 import firestore, { firebase } from '@react-native-firebase/firestore';
+import storage from '@react-native-firebase/storage';
 import auth from '@react-native-firebase/auth';
 
 const FirestoreContext = createContext();
 
 export const FirestoreProvider = ({children}) => {
-  
     const [currentUser, setCurrentUser] = useState(null);
     const [currentEmail, setCurrentEmail] = useState(''); 
-    const [friends, setFriends] = useState([]);
     const [isDataLoading, setIsDataLoading] = useState(false);
     const [isFriendsLoading, setIsFriendsLoading] = useState(false);
 
@@ -19,16 +18,20 @@ export const FirestoreProvider = ({children}) => {
                 uid: friendUID,
                 username: friendData.username || 'No Username',
                 email: friendData.email,
-                profileImage: friendData.profileImage || 'default-profile-image-url',
+                profile_pic: 'https://firebasestorage.googleapis.com/v0/b/swolegator-9539f.appspot.com/o/default-profile-pics%2Ficons8-dumbell-100-4.png?alt=media&token=332db3c3-4d6c-40ee-aa42-855afa689608',
                 friendsSince: firestore.FieldValue.serverTimestamp()
             });
-        } 
+        }
+        const date = friendData.friendsSince.toDate();
+        const mm = date.getMonth();
+        const dd = date.getDate();
+        const yyyy = date.getFullYear();
         return({
             uid: friendUID,
             username: friendData.username || 'No Username',
             email: friendData.email,
-            profileImage: friendData.profileImage || 'default-profile-image-url',
-            friendsSince: friendData.friendedDate
+            profile_pic: friendData.profile_pic || 'https://firebasestorage.googleapis.com/v0/b/swolegator-9539f.appspot.com/o/default-profile-pics%2Ficons8-dumbell-100-4.png?alt=media&token=332db3c3-4d6c-40ee-aa42-855afa689608',
+            friendsSince: `${mm}/${dd}/${yyyy}`
         });
     };
     
@@ -40,6 +43,7 @@ export const FirestoreProvider = ({children}) => {
                 last: last,
                 username: username,
                 totalWorkouts: 0,
+                profile_pic: "https://firebasestorage.googleapis.com/v0/b/swolegator-9539f.appspot.com/o/default-profile-pics%2Ficons8-dumbell-100-4.png?alt=media&token=332db3c3-4d6c-40ee-aa42-855afa689608"
             });
     };
 
@@ -61,7 +65,7 @@ export const FirestoreProvider = ({children}) => {
             //console.log(`Starting Avg Calculation for rep data`);
             repData.forEach((rep) => {
                 //console.log('REP: ',rep);
-                sum += parseFloat(rep.currV);
+                sum += Math.abs(parseFloat(rep.currV));
                 cnt += 1;
                 //console.log(`SUM: ${sum} :: CNT: ${cnt}`); 
             });
@@ -109,7 +113,7 @@ export const FirestoreProvider = ({children}) => {
             maxVs: maxVs,
             avgVs: avgVs
         };
-        console.log(victoryDataObject);
+        //console.log(victoryDataObject);
         return victoryDataObject;
     };
 
@@ -157,7 +161,8 @@ export const FirestoreProvider = ({children}) => {
                     startDate.setDate(endDate.getMonth() - 1); // subtract a month
                     break;
                 case 'year':
-                    startDate.setDate(endDate.getFullYear() - 1); // subtract a year
+                    startDate.setFullYear(endDate.getFullYear()-1); // subtract a year
+                    console.log(startDate);
                     break;
                 default:
                     console.warn('Invalid timescale selected. Defaulting to today.');
@@ -286,7 +291,6 @@ export const FirestoreProvider = ({children}) => {
                 console.error(err);
             }
         }
-
     };
 
     const friendsFromDatabase = async() => {
@@ -303,7 +307,12 @@ export const FirestoreProvider = ({children}) => {
                 console.log('Number of Friends: ', friendsSnapshot.docs.length);
                 for(const friendDoc of friendsSnapshot.docs){
                     const formatted = formattedFriend(false, friendDoc.id, friendDoc.data());
-                    console.log('Formatted Friend:', formatted);
+                    // Check for profile picture updates and update
+                    const friendProfilePic = await getFriendProfilePicture(friendDoc.id);
+                    console.log(`Friend's profile Image URL: ${friendProfilePic}`);
+                    if(formatted.profile_pic != friendProfilePic){
+                        formatted['profile_pic'] = friendProfilePic;
+                    }
                     updatedFriendsList.push(formatted);
                 }
                 setIsFriendsLoading(false);
@@ -359,16 +368,17 @@ export const FirestoreProvider = ({children}) => {
                 //console.log("Fetching sessionsSnap for", workoutType, ":", sessionsSnap, '\n Total of ', sessions.length, 'sessions.');
                 await Promise.all(sessionsSnap.docs.map(async (session) => {
                     try{
-                        console.log('Getting session data for: ', session.id);
+                        //console.log('Getting session data for: ', session.id);
                         const sessionName = session.id;
                         const sessionDate = session.get('date');
+                        const isPublic = session.get('isPublic');
                         await session.ref.collection('data').get().then((sessionDataDoc) => {
                             const sessionData = sessionDataDoc.docs.map((datapoint) => datapoint.data());
-                            console.log("Pushing workoutTypeData for", workoutType, ":", workoutTypeData);
-                            console.log(Array.from(Object.values(sessionData)));
+                            //console.log("Pushing workoutTypeData for", workoutType, ":", workoutTypeData);
+                            //console.log(Array.from(Object.values(sessionData)));
                             const victoryData = generateVictoryDataObject(sessionData);
                             addWorkoutCalculationsToFirestore(victoryData, workoutType, sessionName); // Ideally, this should probably be in a better spot but as of now its gotta go here
-                            workoutTypeData.push({name: sessionName, date: sessionDate, data: Array.from(Object.values(sessionData))});
+                            workoutTypeData.push({name: sessionName, date: sessionDate, data: Array.from(Object.values(sessionData)), public: isPublic});
                         });
                     }catch(err){
                         console.error(err);
@@ -464,11 +474,6 @@ export const FirestoreProvider = ({children}) => {
         if(authUser){
             setCurrentUser(authUser);
             setCurrentEmail(authUser.email);
-            console.log('About to fetch friends...');
-            const tempFriends = await friendsFromDatabase();
-            //console.log('TempFriends:',tempFriends);
-            setFriends(tempFriends);  
-            await getTotalNumOfWorkouts();
         }
     };
 
@@ -573,7 +578,7 @@ export const FirestoreProvider = ({children}) => {
             await firestore().collection('users').doc(currentUser.uid)
             .collection('workouts').doc(type)
             .collection('sessions').doc(workoutName)
-            .set({date: timestamp, weight: wgt}); // must set a field value in order for the collection to be referencable
+            .set({date: timestamp, weight: wgt, isPublic: false}); // must set a field value in order for the collection to be referencable
 
             await updateTotalWorkoutsOfType(type);
             await updateTotalWorkouts();
@@ -583,12 +588,31 @@ export const FirestoreProvider = ({children}) => {
         }
     };
 
-    const makeWorkoutPublic = async (recentVictoryData, workoutName, type) => {
+    const makeWorkoutPublic = async (recentVictoryData, workoutDate, workoutName, type) => {
         try{
+            // add a public flag on document
+            await firestore().collection('users').doc(currentUser.uid)
+                    .collection('workouts').doc(type)
+                    .collection('sessions').doc(workoutName)
+                    .set({ isPublic: true}, {merge: true});
             //console.log('DATA: ', recentVictoryData);
             await firestore().collection('users').doc(currentUser.uid)
-                .collection('public').doc(workoutName).set({data: recentVictoryData, shared_on: firestore.Timestamp.now(), name: workoutName, type: type});
+                .collection('public').doc(workoutName).set({data: recentVictoryData, date: workoutDate, shared_on: firestore.Timestamp.now(), name: workoutName, type: type});
             console.log(`Made Workout ${workoutName} public!`);
+        }catch(err){
+            throw err;
+        }
+    };
+
+    const makeWorkoutPrivate = async (workoutName, type) => {
+        try{
+            // falsify public flag
+            await firestore().collection('users').doc(currentUser.uid)
+                    .collection('workouts').doc(type)
+                    .collection('sessions').doc(workoutName)
+                    .set({isPublic: false}, {merge: true});
+            await firestore().collection('users').doc(currentUser.uid)
+            .collection('public').doc(workoutName).delete();
         }catch(err){
             throw err;
         }
@@ -662,6 +686,18 @@ export const FirestoreProvider = ({children}) => {
         }
     };
 
+    const getFriendProfilePicture = async (friendUID) => {
+        try{
+            const friendDoc = await firestore().collection('users')
+                .doc(friendUID).get();
+            if(friendDoc.exists){
+                return friendDoc.get('profile_pic');
+            }
+        }catch(err){
+            console.error(err);
+        }
+    };
+
     const getFriendData = async (friendUID) => {
         try{
             console.log('Friend UID:', friendUID);
@@ -693,24 +729,76 @@ export const FirestoreProvider = ({children}) => {
         }
     };
 
+    // Profile Photo Functions
+    const getDefaultProfileImages = async () => {
+        try{
+            const list = await storage().ref('default-profile-pics').listAll();
+            const default_pics = [];
+            await Promise.all(list.items.map(async (item) => {
+                    const path = item.fullPath;
+                    const ref = storage().ref(path);
+                    const url = await ref.getDownloadURL();
+                    default_pics.push({name: path, url: url});
+                })
+            );
+            return default_pics;
+        }catch(err){
+            console.error(err);
+        }
+    };
+
+    const setProfilePicture = (picture_uri) => {
+        if(currentUser){
+            firestore().collection('users').doc(currentUser.uid).update({
+                profile_pic: picture_uri
+            });
+        }
+    };
+
+    const uploadPhotoToStorage = async (filename, blob) => {
+        try{
+            const profile_pics_ref = storage().ref('profile-pics');
+            // delete previous photos
+            const users_pics = profile_pics_ref.child(`${currentUser.uid}`);
+            const images = await users_pics.listAll();
+            images.items.forEach((item) => item.delete());
+            // store new photo            
+            await profile_pics_ref.child(`${currentUser.uid}/${filename}`).put(blob); 
+        }catch(err){
+            throw err;
+        }
+    };
+
+    const getImageURL = async (filename) => {
+        try{
+            console.log('Filename: ', filename);
+            const profile_pics_ref = storage().ref('profile-pics');
+            const img = profile_pics_ref.child(`${currentUser.uid}/${filename}`);
+            const url = await img.getDownloadURL();
+            return url;
+        }catch(err){
+            throw err;
+        }
+    };
+
     // CONTEXT VALUE (WHICH FUNCTIONS TO EXPORT)
     const contextValue = {
         currentUser,
-        friends,
         isDataLoading,
         isFriendsLoading,
+        friendsFromDatabase,
         setIsDataLoading,
         getPublicWorkoutsOfUser,
         getNumberWorkoutsOfType,
         getTotalNumOfWorkouts,
         getAllWorkoutData,
         getMostRecentSession,
-        setFriends,
         friendsFromDatabase,
         signUp,
         signIn,
         saveWorkoutData,
         makeWorkoutPublic,
+        makeWorkoutPrivate,
         getUserData,
         addFriend,
         getFriendData,
@@ -718,6 +806,10 @@ export const FirestoreProvider = ({children}) => {
         signOut,
         generateVictoryDataObject,
         generateVictoryDataByTimescale,
+        setProfilePicture,
+        getDefaultProfileImages,
+        uploadPhotoToStorage,
+        getImageURL
     }
 
     return(

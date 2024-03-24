@@ -1,17 +1,18 @@
-import React, {useState, useEffect} from 'react';
-import { useFirestore } from '../api/firestore/FirestoreAPI';
+import React, {useState} from 'react';
 import { StyleSheet, View, TouchableOpacity, Text } from "react-native";
+import PhotoSelector from "./PhotoSelector";
 
 const UserSettings = ({navigation}) =>{
-    const {
-        currentUser,
-        getUserData,
-        signOut
-      } = useFirestore();
-      
-      const [userData, setUserData] = useState(null);
-      const [isLoading, setIsLoading] = useState(true);
+      const [photoSelectorVisibility, setPhotoSelectorVisibility] = useState(false);
+
+      const closePhotoSelect = () => {
+          setPhotoSelectorVisibility(false);
+      }
+      const openPhotoSelect = () => {
+          setPhotoSelectorVisibility(true);
+      }
   
+
       const pressLogOut = async() => {
         console.log('Signout button pressed.');
         try{
@@ -26,30 +27,18 @@ const UserSettings = ({navigation}) =>{
         }
       };
   
-      useEffect(() => {
-        const fetchData = async() => {
-          try{
-            if(currentUser){
-              const userDataFirestore = await getUserData();
-              setUserData(userDataFirestore);
-              setIsLoading(false);
-            }
-          }catch(err){
-            console.error(err);
-          }
-        };
-        fetchData();
-      }, [currentUser]);
-  
     return(
         <View style={styles.screenSetup}>
           <Text style={styles.titleText}>Settings</Text>
-            <TouchableOpacity style={styles.button}>
+          <View style={styles.buttons}>
+            <TouchableOpacity style={styles.button} onPress={openPhotoSelect}>
                 <Text style={styles.textStyle}> Change Profile Photo </Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.button} onPress={pressLogOut}>
                 <Text style={styles.textStyle}> Log Out </Text>
             </TouchableOpacity>
+          </View>
+          <PhotoSelector isVisible={photoSelectorVisibility} onClose={closePhotoSelect}/>
         </View>
     );
 };
@@ -68,39 +57,41 @@ const styles = StyleSheet.create({
     screenSetup:{
       flex: 1,
       backgroundColor: '#272727',
-      alignItems: 'center',
+    },
+    buttons: {
+      flex: 0.4,
+      justifyContent: 'center',
+      alignItems: 'center'      
     },
     button:{
-      alignItems: 'center',
+      justifyContent: 'center',
       backgroundColor: 'black',
       borderRadius: 30,
       padding:5,
       marginTop: 45,
       marginBottom: 10,
-      height: 45,
+      height: 70,
       width: 250,
       ...boxShadow,
     },
     textStyle:{
       color: 'white',
-      textTransform: 'uppercase',
       fontFamily: 'Oswald-Regular',
       fontSize: 18,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    title:{
-      marginTop: 25,
-      height:180
+      textAlign: 'center',
+      textAlignVertical: 'center',
     },
     titleText:{
-      textAlign:'center',
+      flex: 0.3,
+      textAlign: 'center',
+      textAlignVertical: 'center',
       fontSize: 30,
       textTransform: 'uppercase',
       fontFamily: 'Oswald-Regular',
       color: 'white',
       margin: 50,
-    }
+    },
+
   })
 
 export default UserSettings;

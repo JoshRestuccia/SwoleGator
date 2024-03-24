@@ -63,7 +63,7 @@ const Data = () => {
         const getNameAndSetData = async () => {
             try{
                 const mostRecentName = await getMostRecentSession(typeSelection);
-                console.log(mostRecentName);
+                //console.log(mostRecentName);
                 if(workoutDataOfType.length > 0 && mostRecentName){
                     for(const session of Object.values(allWorkoutData[typeSelection])){
                         if(session.name === mostRecentName){

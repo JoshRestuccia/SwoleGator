@@ -5,7 +5,8 @@ import {
     VictoryVoronoiContainer,
     VictoryTheme,
     VictoryChart,
-    VictoryScatter
+    VictoryScatter,
+    VictoryTooltip
 } from "victory-native";
 import { useFirestore } from "../api/firestore/FirestoreAPI";
 
@@ -19,12 +20,14 @@ import { useFirestore } from "../api/firestore/FirestoreAPI";
 const RecentDataGraph = ({raw_data}) => {
     const {generateVictoryDataObject} = useFirestore();
     const [victoryData, setVictoryData] = useState({maxVs: [], avgVs: []});
-    const [victoryDomain, setVictoryDomain] = useState({x: [], y: []});
+    const [victoryDomain, setVictoryDomain] = useState(null);
     const [strainPoints, setStrainPoints] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         if(raw_data){
             //console.log('RAW_DATA: \n', raw_data);
+            setIsLoading(true);
             const victDataObj = generateVictoryDataObject(raw_data);
             console.log(victDataObj);
             setVictoryData(victDataObj);
@@ -53,12 +56,13 @@ const RecentDataGraph = ({raw_data}) => {
                 x: rep_domain,
                 y: vel_domain
             };
+            console.log('DOMAIN:', domains);
             return domains;
         };
 
         const getStrainPoints = () => {
             const strainPoints = [];
-            const max = Math.max(...victoryData.avgVs.map(obj => obj.data));
+            const max = Math.max(...victoryData.maxVs.map(obj => obj.value));
             const thresh = 0.9*max;
             for(const dp of victoryData.avgVs){
                 if(dp.data >= thresh){
@@ -74,6 +78,7 @@ const RecentDataGraph = ({raw_data}) => {
             const vicDomain = calcDomains(victoryData);
             setVictoryDomain(vicDomain);
             getStrainPoints();
+            setIsLoading(false);
         }
     }, [victoryData]);
 
@@ -83,20 +88,21 @@ const RecentDataGraph = ({raw_data}) => {
     
     return(
         <View>
-        {(!victoryData || !victoryDomain) ? (
-            <View style={{flex: 1, alignContent: 'space-around', justifyContent: 'space-around'}}>
-                <Text style={{textAlign: 'center', fontSize: 18, fontFamily: 'Helvetica', padding: 20, color: 'teal'}}>
-                    {`Calculating Victory Data and Domain...`}
-                </Text>
-            </View>
-        ) : (
+        {!isLoading && victoryData && victoryDomain ? (
             <VictoryChart 
                 style={styles.chart}
                 theme={VictoryTheme.material}
                 domain={victoryDomain}
                 containerComponent={
                     <VictoryVoronoiContainer
-                        labels={({datum}) => `REP: ${Math.round(datum.rep, 2)}, VELO: ${Math.round(datum.data, 2)}`}
+                        labels={({datum}) => `REP: ${datum.rep}, VELO: ${Math.round(datum.data*100)/100}`}
+                        labelComponent={
+                            <VictoryTooltip
+                                constrainToVisibleArea
+                                center={{y: 20}}
+                                style={{color: 'red'}}
+                            />
+                        }
                     />
                 }      
             >
@@ -119,12 +125,19 @@ const RecentDataGraph = ({raw_data}) => {
                         />)
                 }
                 {
-                    victoryData.avgVs.length > 0 &&
+                    strainPoints.length > 0 &&
                         (<VictoryScatter data={strainPoints} x='rep' y='data'
                             style={styles.strainPoints}
                         />)
                 }
             </VictoryChart>
+        )
+        : (
+            <View style={{flex: 1, alignContent: 'space-around', justifyContent: 'space-around'}}>
+                <Text style={{textAlign: 'center', fontSize: 18, fontFamily: 'Helvetica', padding: 20, color: 'teal'}}>
+                    {`Calculating Victory Data and Domain...`}
+                </Text>
+            </View>
         )}
         </View>
     );
