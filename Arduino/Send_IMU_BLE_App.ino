@@ -307,13 +307,13 @@ int cal(){
   float y_a = a.acceleration.y;
   bool st = false;
   Serial.println("Detecting Orientation in 5 seconds");
-  delay(5000);
+  delay(5000); // calibrates for 10 seconds
   int orient = orientation(x_a, y_a, z_a);
-  Serial.println("Starting calibration in 5 seconds...");
-  delay(5000);
+  //Serial.println("Starting calibration in 5 seconds...");
+  //delay(5000);
   while (st == false){
     elapsedtime = millis() - starttime;
-    if (elapsedtime < 30000) {
+    if (elapsedtime < 10000) { //calibrate for 10 seconds
       calibrate(orient);
     }
     else {
@@ -373,6 +373,7 @@ void setup() {
   BLEDevice::startAdvertising();
   Serial.println("Characteristic defined!");
   pinMode(calb.PIN, INPUT_PULLUP);
+  orn = cal(); // calibrate on startup/restart
   delay(100);
 }
 
