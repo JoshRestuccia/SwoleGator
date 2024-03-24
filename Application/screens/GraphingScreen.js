@@ -11,18 +11,22 @@ import { useFirestore } from '../api/firestore/FirestoreAPI';
 import { useBLE } from '../api/ble/BLEContext';
 import MotivationQuotes from '../data/motivation.js';
 import containerStyles from '../styles/container-view-styles';
+import LiveWorkoutModal from '../components/LiveWorkoutModal';
+import ConnectedDeviceModal from '../components/ConnectedDeviceModal';
+import { CommonActions } from '@react-navigation/native';
 
 const MemoizedMotivationQuotes = React.memo(MotivationQuotes);
 
 // ToDo: Add a Modal that appears when Calibration is occurring.
 
-function GraphingScreen() {
+function GraphingScreen({navigation}) {
   const {
     bleData,
     isReadingData,
     startReadingData,
     stopReadingData,
-    calibrating
+    calibrating,
+    connectedDevice
   } = useBLE();
   const { 
     isDataLoading,
@@ -30,7 +34,7 @@ function GraphingScreen() {
     getNumberWorkoutsOfType,
   } = useFirestore();
 
-
+  const [deviceConnected, setDeviceConnected] = useState(false);
   const [workoutStarted, setWorkoutStarted] = useState(false);
   const [currentWorkoutType, setCurrentWorkoutType] = useState('Squat');
   const [currentWorkoutWeight, setCurrentWorkoutWeight] = useState('100');
@@ -79,6 +83,16 @@ function GraphingScreen() {
     }
   }, [workoutStarted]);
 
+  useEffect(() => {
+    console.log(connectedDevice);
+    if(connectedDevice){
+      setDeviceConnected(true);
+    }else{
+      setDeviceConnected(false);
+    }
+    console.log(deviceConnected);
+  }, [connectedDevice]);
+
   // When bleData is updated
   useEffect(() => {
     // format and move data to workoutData[]
@@ -115,6 +129,15 @@ function GraphingScreen() {
     console.log(`Starting workout ${workoutName}`);
     setWorkoutStarted(true);
   };
+
+  const handleConnect = () => {
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{name: 'Home', params: {screen: 'Main'}}]
+      })
+    )
+  }
 
   return (
     <View style={containerStyles.container}>
@@ -185,36 +208,20 @@ function GraphingScreen() {
             </TouchableOpacity>  
           </View>
         </View>
-        {/* Display Active Variables (Workout Parameters & Reps & Velocity)*/}
-        <View style={styles.parametersAndSaveButton}>
-          <View style={styles.parameterDisplay}>
-            <View style={styles.singleParameter}>
-              <Text style={styles.textStyleA}> {`Current Exercise: `} </Text>
-              <Text style={styles.textStyleB}>{`${currentWorkoutType}`}</Text>
-            </View>
-            <View style={styles.singleParameter}>
-              <Text style={styles.textStyleA}> {`Current Weight: `} </Text>
-              <Text style={styles.textStyleB}> {`${currentWorkoutWeight || "- - -"}`} </Text>
-            </View>
-            <View style={styles.singleParameter}>
-              <Text style={styles.textStyleA}> {`Rep Count: `} </Text>
-              <Text style={styles.textStyleB}> {`${repCount}`} </Text>
-            </View>
-            <View style={styles.singleParameter}>
-              <Text style={styles.textStyleA}> {`Peak Velocity: `} </Text>
-              <Text style={styles.textStyleB}> {`${peakVelocity}`} </Text>
-            </View>            
-          </View>
-          <View style={styles.saveButtonContainer}>
-            <TouchableOpacity style={styles.saveButton}
-              onPress={handleSaveWorkout}>
-              <Text style={styles.saveButtonText}>
-                {isDataLoading ? `Loading...` : `Save Workout Data`}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>      
+      </View>
+      <LiveWorkoutModal
+        visible={workoutStarted}
+        currentWorkoutType={currentWorkoutType}
+        currentWorkoutWeight={currentWorkoutWeight}
+        repCount={repCount}
+        peakVelocity={peakVelocity}
+        handleSaveWorkout={handleSaveWorkout}
+        isDataLoading={isDataLoading}  
+      />
+      <ConnectedDeviceModal
+        visible={!deviceConnected}
+        onConnect={handleConnect}
+      />   
     </View>
   );
 }
@@ -318,55 +325,5 @@ const styles = StyleSheet.create({
       padding: 10,
     },
 
-// Parameters and Save Button 
-parametersAndSaveButton: {
-  flexDirection: 'row',
-  flex: 0.25,
-  justifyContent: 'flex-start',
-  //borderColor: 'black',
-  //borderWidth: 5
-},
-  // Parameters
-  parameterDisplay: {
-    flexDirection: 'column',
-    flex: 0.5,
-    //borderColor: 'blue',
-    borderWidth: 3
-  },  
-  singleParameter: {
-    flexDirection: 'row',
-    flex: 0.25,
-    alignContent: 'center',
-    justifyContent: 'space-between'
-  },
-    // Parameter Text
-    textStyleA: {
-      fontSize: 12,
-      fontFamily: 'ariel',
-      fontWeight: 'bold',
-    },  
-    textStyleB: {
-      fontSize: 12,
-      marginRight: 10
-    },
-  // Save Button
-  saveButtonContainer: {
-    flex: 0.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    //borderColor: 'red',
-    borderWidth: 3
-  },  
-    saveButton: {
-      justifyContent: 'center',
-      backgroundColor: 'lightblue',
-      borderRadius: 10,
-      padding: 10,
-      marginHorizontal: 0
-    },
-    // Save Button Text
-    saveButtonText: {
-      fontSize: 15,
-      textAlign: 'center',
-    },
+
 });

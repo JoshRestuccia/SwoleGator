@@ -5,12 +5,6 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import LoadingScreen from './screens/LoadingScreen';
 import SignUp from './screens/SignUp';
 import Login from './screens/Login';
-import Data from './screens/Data';
-import HomeScreen from './screens/HomeScreen';
-import GraphingScreen from './screens/GraphingScreen';
-import Profile from './screens/Profile';
-import FriendWorkout from './screens/FriendWorkout';
-import ManageWorkouts from './screens/ManageWorkouts';
 
 import Landing from './screens/LandingScreen';
 import auth from '@react-native-firebase/auth';
