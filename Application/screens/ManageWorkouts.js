@@ -109,7 +109,7 @@ const ManageWorkouts = () => {
     return(
         <View key={key} style={styles.main}>
             <View style={styles.section}>
-                <Text style={styles.sectionHeader}>{`Public`}</Text>
+                <Text style={styles.sectionHeader}>Public</Text>
                 {!isLoading  ?
                     (publicWs.length > 0) ?
                         <WorkoutSection key={key} data={publicWs} renderItem={renderItem}/>
@@ -124,7 +124,7 @@ const ManageWorkouts = () => {
                 }
             </View>
             <View style={styles.section}>
-                <Text style={styles.sectionHeader}>{`Private`}</Text>
+                <Text style={styles.sectionHeader}>Private</Text>
                 {!isLoading ?
                     (privateWs.length > 0) ? 
                         <WorkoutSection key={key} data={privateWs} renderItem={renderItem}/>
@@ -160,34 +160,30 @@ const styles = StyleSheet.create({
     main: {
         height: '100%',
         flexDirection: 'column',
-        padding: 25,
         backgroundColor: 'gray',
-        justifyContent: 'space-evenly'
+        justifyContent: 'space-between',
     },
     section: {
-        flex: 0.4,
+        flex: 0.5,
         backgroundColor: 'pink',
         padding: 20,
-        backgroundColor: 'lightblue',
-        borderRadius: 25
+        backgroundColor: '#272727',
     },
     sectionHeader: {
         textAlign: 'center',
         textAlignVertical: 'center',
         fontSize: 35,
-        fontWeight: 'bold',
-        paddingBottom: 20
-    },
-    sectionBody:{
-        flex: 0.7,
-        backgroundColor: 'white',
-        borderRadius: 25
+        fontFamily: 'Oswald-Regular',
+        paddingBottom: 20,
+        color: 'white',
     },
     loadingText: {
         fontSize: 25,
         fontWeight: 'normal',
         textAlign: 'center',
-        textAlignVertical: 'center'
+        textAlignVertical: 'center',
+        fontFamily: 'Oswald-Regular',
+        color: 'white'
     }
 });
 
@@ -196,14 +192,16 @@ const renderItemStyles = StyleSheet.create({
         flexDirection: 'column',
         padding: 15,
         alignContent: 'center',
-        backgroundColor: 'white',
+        backgroundColor: '#700C0C',
         borderRadius: 25
     },
     name: {
+        color: 'white',
         textAlign: 'center',
         textAlignVertical: 'center'
     },
     date: {
+        color: 'white',
         textAlign: 'center',
         textAlignVertical: 'center'
     }

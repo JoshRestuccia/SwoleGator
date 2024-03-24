@@ -20,7 +20,7 @@ const styles = StyleSheet.create({
     container: {
       flexDirection: 'row',
       borderWidth: 1,
-      borderColor: "black",
+      borderColor: "white",
       borderRadius: 16,
       padding: 10,
       margin: 5,
@@ -36,6 +36,8 @@ const styles = StyleSheet.create({
       fontWeight: 'bold',
       textAlign: 'left',
       fontSize: 15,
+      color: 'white',
+      textAlignVertical: 'center'
     },
     imageContainer: {
       flex: 0.3,

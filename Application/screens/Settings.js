@@ -50,6 +50,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     setting: {
+        justifyContent: 'center',
         backgroundColor: 'lightblue', // Blue color (adjust as needed)
         padding: 10,
         borderRadius: 15,
@@ -57,6 +58,9 @@ const styles = StyleSheet.create({
     },
     settingText:{
         color: 'black',
-        fontSize: 24
+        fontSize: 24,
+        textAlign: 'center',
+        textAlignVertical: 'center',
+        backgroundColor: 'pink',
     }
 });

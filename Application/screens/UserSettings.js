@@ -1,9 +1,6 @@
-import React, {useState, useEffect} from 'react';
-import { useFirestore } from '../api/firestore/FirestoreAPI';
-import { StyleSheet, View, TouchableOpacity, Text, Linking } from "react-native";
+import React, {useState} from 'react';
+import { StyleSheet, View, TouchableOpacity, Text } from "react-native";
 import PhotoSelector from "./PhotoSelector";
-
-const icon8_url = "https://icons8.com/icons/collections/stwh66efe54iwrth5ljc";
 
 const UserSettings = ({navigation}) =>{
       const [photoSelectorVisibility, setPhotoSelectorVisibility] = useState(false);
@@ -15,17 +12,7 @@ const UserSettings = ({navigation}) =>{
           setPhotoSelectorVisibility(true);
       }
   
-      const handleIcon8Navigation = () => {
-          Linking.canOpenURL(icon8_url).then(supported => {
-              console.log(supported);
-              if(supported){
-                  Linking.openURL(icon8_url);
-              }else{
-                  console.warn(`Cannot reach ${icon8_url}`);
-              }
-          }).catch(err => console.error(err));
-      };
-  
+
       const pressLogOut = async() => {
         console.log('Signout button pressed.');
         try{
@@ -43,16 +30,15 @@ const UserSettings = ({navigation}) =>{
     return(
         <View style={styles.screenSetup}>
           <Text style={styles.titleText}>Settings</Text>
+          <View style={styles.buttons}>
             <TouchableOpacity style={styles.button} onPress={openPhotoSelect}>
                 <Text style={styles.textStyle}> Change Profile Photo </Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.button} onPress={pressLogOut}>
                 <Text style={styles.textStyle}> Log Out </Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={handleIcon8Navigation}>
-                <Text>SwoleGator-Defaults icons by Icon8</Text>
-            </TouchableOpacity>
-            <PhotoSelector isVisible={photoSelectorVisibility} onClose={closePhotoSelect}/>
+          </View>
+          <PhotoSelector isVisible={photoSelectorVisibility} onClose={closePhotoSelect}/>
         </View>
     );
 };
@@ -71,39 +57,41 @@ const styles = StyleSheet.create({
     screenSetup:{
       flex: 1,
       backgroundColor: '#272727',
-      alignItems: 'center',
+    },
+    buttons: {
+      flex: 0.4,
+      justifyContent: 'center',
+      alignItems: 'center'      
     },
     button:{
-      alignItems: 'center',
+      justifyContent: 'center',
       backgroundColor: 'black',
       borderRadius: 30,
       padding:5,
       marginTop: 45,
       marginBottom: 10,
-      height: 45,
+      height: 70,
       width: 250,
       ...boxShadow,
     },
     textStyle:{
       color: 'white',
-      textTransform: 'uppercase',
       fontFamily: 'Oswald-Regular',
       fontSize: 18,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    title:{
-      marginTop: 25,
-      height:180
+      textAlign: 'center',
+      textAlignVertical: 'center',
     },
     titleText:{
-      textAlign:'center',
+      flex: 0.3,
+      textAlign: 'center',
+      textAlignVertical: 'center',
       fontSize: 30,
       textTransform: 'uppercase',
       fontFamily: 'Oswald-Regular',
       color: 'white',
       margin: 50,
-    }
+    },
+
   })
 
 export default UserSettings;

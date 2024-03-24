@@ -31,23 +31,28 @@ const ImageSelectionModal = ({isVisible, onClose, setImageSelection}) => {
 
     useEffect(() => {
         const uploadAndSave = async() => {
-            if(imageSelectionResponse){
-                console.log('Image Selection Response: ', imageSelectionResponse);
-                setUploading(true);
-                // parse image selection response
-                const src = imageSelectionResponse.assets[0].uri;
-                const response = await fetch(src);
-                const blob = await response.blob();
-                const filename = src.substring(src.lastIndexOf('/')+1);
-                // save image to firestore storage
-                await uploadPhotoToStorage(filename, blob);
-                const storage_url = await getImageURL(filename);
-                const img = {name: filename, url: storage_url};
-                console.log(img);
-                setImageSelection(img);
-                setUploading(false);
-                setImageSelectionResponse(null);
+            try{
+                if(imageSelectionResponse){
+                    if(imageSelectionResponse.didCancel === true) return;
+                    setUploading(true);
+                    // parse image selection response
+                    const src = imageSelectionResponse.assets[0].uri;
+                    const response = await fetch(src);
+                    const blob = await response.blob();
+                    const filename = src.substring(src.lastIndexOf('/')+1);
+                    // save image to firestore storage
+                    await uploadPhotoToStorage(filename, blob);
+                    const storage_url = await getImageURL(filename);
+                    const img = {name: filename, url: storage_url};
+                    console.log(img);
+                    setImageSelection(img);
+                    setUploading(false);
+                    setImageSelectionResponse(null);
+                }
+            }catch(err){
+                console.error(err);
             }
+            
         };
         uploadAndSave();
     }, [imageSelectionResponse]);
@@ -60,16 +65,12 @@ const ImageSelectionModal = ({isVisible, onClose, setImageSelection}) => {
         >
             <View style={styles.main}>
                 <View style={styles.buttonBox}>
-                    <View style={styles.button}>
-                        <TouchableOpacity onPress={onImageLibraryPress}>
-                            <Text style={styles.buttonText}>Choose from Library</Text>
-                        </TouchableOpacity>
-                    </View>
-                    <View style={styles.button}>
-                        <TouchableOpacity style={styles.button} onPress={onCameraPress}>
-                            <Text style={styles.buttonText}>Take a Photo</Text>
-                        </TouchableOpacity>
-                    </View>
+                    <TouchableOpacity style={styles.button} onPress={onImageLibraryPress}>
+                        <Text style={styles.buttonText}>Choose from Library</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.button} onPress={onCameraPress}>
+                        <Text style={styles.buttonText}>Take a Photo</Text>
+                    </TouchableOpacity>
                 </View>
             </View>
         </Modal>
@@ -79,6 +80,17 @@ const ImageSelectionModal = ({isVisible, onClose, setImageSelection}) => {
 
 
 export default ImageSelectionModal;
+
+const boxShadow = {
+    shadowColor: 'lightgrey',
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 1.84,
+    elevation: 4,
+};
 
 const styles = StyleSheet.create({
     main: {
@@ -93,27 +105,29 @@ const styles = StyleSheet.create({
       margin: 10,
     },
     buttonBox: {
-      flex: 0.5,
+      flex: 0.6,
       margin: 25,
       padding: 25,
-      backgroundColor: 'white',
+      backgroundColor: '#272727',
       flexDirection: 'column',
       borderRadius: 25,
-      justifyContent: 'space-evenly'
+      justifyContent: 'space-evenly',
+      alignItems: 'center'
     },
-    button: {
-      flex: 0.4,
-      margin: 10,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: 'teal',
-      borderRadius: 25
+    button:{
+        justifyContent: 'center',
+        backgroundColor: 'black',
+        borderRadius: 30,
+        padding:5,
+        height: 75,
+        width: 250,
+        ...boxShadow,
     },
     buttonText: {
-      fontSize: 20,
-      color: 'white',
-      fontWeight: '600',
-      textAlign: 'center',
-      textAlignVertical: 'center'
+        fontFamily: 'Oswald-Regular',
+        fontSize: 20,
+        textAlign: 'center',
+        textAlignVertical: 'center',
+        color: 'white',
     },
   });

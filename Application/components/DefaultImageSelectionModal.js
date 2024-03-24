@@ -79,11 +79,12 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         textAlignVertical: 'center',
         padding: 15,
-        paddingBottom: 30
+        paddingBottom: 30,
+        color: 'white'
     },
     scrollStyle: {
         flex: 0.3,
-        backgroundColor: 'white', 
+        backgroundColor: '#272727', 
         margin: 40, 
         padding: 10,
         borderRadius: 25
