@@ -34,6 +34,9 @@ useEffect(() => {
     setIsLoading(true);
     fetchData();
   }
+  else {
+  setPublicWorkouts(null);
+  }
 }, [currentUser]);
 
   useEffect(() => {
@@ -51,13 +54,15 @@ useEffect(() => {
     };
 
 
-  return (
-    <SafeAreaView style={styles.mainContainer} onTouchStart={handleTouchStart}>
-      {publicWorkouts ? 
-        (<View style={styles.workoutContainer}>
-          <View style={styles.headerContainer}>
-            <Text style={styles.header}>{`${friend.username}'s Workout Data`}</Text>          
-          </View>
+return (
+  <SafeAreaView style={styles.mainContainer} onTouchStart={handleTouchStart}>
+    { publicWorkouts !== null && Object.keys(publicWorkouts).length > 0  ? (
+      <View style={styles.workoutContainer}>
+        <View style={styles.headerContainer}>
+          <Text style={styles.header}>{`${friend.username}'s Workout Data`}</Text>
+        </View>
+
+        {  Object.keys(publicWorkouts).length > 0 && (
           <Picker
             selectedValue={selectedWorkout}
             onValueChange={(itemValue) => setSelectedWorkout(itemValue)}
@@ -67,28 +72,32 @@ useEffect(() => {
               <Picker.Item key={workoutName} label={workoutName} value={workoutName} />
             ))}
           </Picker>
-          <ScrollView style={styles.scrollContainer} onScroll={handleScroll}>
-            <View style={styles.recent}>
-              <Text style={styles.sectionHeader}>{selectedWorkout && `(${selectedWorkout})`}</Text>
-              {!isLoading ? (
-                <RecentDataGraph raw_data={publicWorkouts[selectedWorkout]} />
-              ) : (
-                <Text>Loading workout data...</Text>
-              )}
-            </View>
-          </ScrollView>
-        </View>
-        )
-      :
-        (
-          <View style={styles.noWorkouts}>
-            <Text style={styles.header}>{`${friend.username}'s Workout Data`}</Text>
-            <Text style={styles.noWorkoutText}>{`${friend.username} has not shared any workouts.`}</Text>
+        )}
+        <ScrollView style={styles.scrollContainer} onScroll={handleScroll}>
+          <View style={styles.recent}>
+            {selectedWorkout && ( // Check if selectedWorkout is truthy
+              <>
+                <Text style={styles.sectionHeader}>{selectedWorkout && `(${selectedWorkout})`}</Text>
+                {!isLoading ? (
+                  <RecentDataGraph raw_data={publicWorkouts[selectedWorkout]} />
+                ) : (
+                  <Text>Loading workout data...</Text>
+                )}
+              </>
+            )}
           </View>
-        )
-      }
-    </SafeAreaView>
-  );
+        </ScrollView>
+      </View>
+    ) : (
+      <View style={styles.noWorkouts}>
+        <Text style={styles.header}>{`${friend.username}'s Workout Data Empty`}</Text>
+        <Text style={styles.noWorkoutText}>{`${friend.username} has not shared any workouts.`}</Text>
+      </View>
+    )}
+  </SafeAreaView>
+);
+
+
 };
 
 
