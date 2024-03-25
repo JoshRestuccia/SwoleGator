@@ -1,16 +1,11 @@
 import React from 'react'
-import { Settings, StyleSheet } from 'react-native';
 import {createStackNavigator } from '@react-navigation/stack'
-import Login from './screens/Login'
-import SignUp from './screens/SignUp'
 import HomeScreen from './screens/HomeScreen'
 import PhotoSelector from './screens/PhotoSelector';
 import SettingsScreen from './screens/Settings';
 import PairingScreen from './screens/PairingScreen'
-import ExerciseSelection from './screens/ExerciseSelection';
 import GraphingScreen from './screens/GraphingScreen';
 import Profile from './screens/Profile';
-import UserSettings from './screens/UserSettings'
 import ManageWorkouts from './screens/ManageWorkouts';
 import FriendWorkout from './screens/FriendWorkout';
 
@@ -50,7 +45,7 @@ export{HomeScreenNavigator}
 const NewLiftScreenNavigator = () => {
     return(
         <Stack.Navigator
-            initialRouteName='Exercise Selection'>
+            initialRouteName='Graphing Screen'>
             <Stack.Screen
                 name = "Graphing Screen"
                 component={GraphingScreen}
