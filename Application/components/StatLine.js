@@ -1,14 +1,14 @@
 import React from "react";
 
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 
 
-const StatLine = ({header, body}) => {
+const StatLine = ({header, body, onPress}) => {
     return(
-        <View style={styles.statContainer}>
+        <TouchableOpacity style={styles.statContainer} onPress={onPress}>
             <Text style={styles.statHeader}>{header}</Text>
             <Text style={styles.statBody}>{body}</Text>
-        </View>
+        </TouchableOpacity>
     );
 };
 

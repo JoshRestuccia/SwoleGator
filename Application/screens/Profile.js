@@ -1,7 +1,6 @@
 import React, {useState, useEffect} from 'react';
 import {StyleSheet, Modal, View, Image, Text, FlatList, TouchableHighlight, TouchableOpacity, TextInput} from 'react-native';
 import { useFirestore } from '../api/firestore/FirestoreAPI';
-import UserSettings from './UserSettings';
 import SettingsScreen from './Settings';
 import StatLine from '../components/StatLine';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -117,6 +116,12 @@ export default function Profile({navigation}) {
       setFriendPromptVisible(false);
     }
     
+    const handleWorkoutTypePress = (type) => {
+      navigation.navigate('Workouts Of Type', {
+        type: type
+      })
+    };
+
 const renderItem = ({ item }) => {
   if (item) {
     return (
@@ -190,10 +195,10 @@ const renderItem = ({ item }) => {
                   <TouchableOpacity style={styles.settings} onPress={openSettings}>
                     <Text style={styles.settingsText}> Settings </Text>
                   </TouchableOpacity>
-                  <StatLine header={`Squat Sessions`} body={squats}/>
-                  <StatLine header={`Deadlift Sessions`} body={deadlifts}/>
-                  <StatLine header={`Bench Press Sessions`} body={presses}/>
-                  <StatLine header={`Barbell Curl Sessions`} body={curls}/> 
+                  <StatLine header={`Squat Sessions`} body={squats} onPress={() => handleWorkoutTypePress('Squat')}/>
+                  <StatLine header={`Deadlift Sessions`} body={deadlifts} onPress={() => handleWorkoutTypePress('Deadlift')}/>
+                  <StatLine header={`Bench Press Sessions`} body={presses} onPress={() => handleWorkoutTypePress('Bench Press')}/>
+                  <StatLine header={`Barbell Curl Sessions`} body={curls} onPress={() => handleWorkoutTypePress('Barbell Curl')}/> 
                   <View style={styles.totalContainer}>
                       <Text style={styles.total}>Total Lifts</Text>
                       <Text style={styles.textStyle2}>{`${total}`}</Text>
