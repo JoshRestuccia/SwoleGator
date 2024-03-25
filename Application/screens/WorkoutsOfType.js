@@ -1,8 +1,9 @@
 import React, {useState, useEffect} from "react";
-import {ScrollView, View, Text, FlatList, StyleSheet} from 'react-native';
+import {ScrollView, View, Text, Image, StyleSheet, Modal, TouchableOpacity} from 'react-native';
 import { useFirestore } from "../api/firestore/FirestoreAPI";
 import OverallDataGraph from "../victory/OverallData";
 import { firebase } from "@react-native-firebase/firestore";
+import RecentDataGraph from "../victory/RecentData";
 
 
 const WorkoutsOfType = ({route}) => {
@@ -12,6 +13,9 @@ const WorkoutsOfType = ({route}) => {
     } = useFirestore();
     const [workoutsOfType, setWorkoutsOfType] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [showModal, setShowModal] = useState(false);
+    const [selectedData, setSelectedData] = useState([]);
+    const [selectedName, setSelectedName] = useState("");
 
     useEffect(() => {
         console.log(workoutsOfType);
@@ -31,7 +35,7 @@ const WorkoutsOfType = ({route}) => {
         onMount();
     },[]);
 
-    const WorkoutCard = ({name, date}) => {
+    const WorkoutCard = ({name, date, onPress}) => {
         const convertDate = date.toDate();
         let dd, mm, yyyy;
         if(convertDate){
@@ -40,16 +44,27 @@ const WorkoutsOfType = ({route}) => {
             yyyy = convertDate.getFullYear();
         }
         return(
-            <View style={styles.workoutCard}>
+            <TouchableOpacity style={styles.workoutCard} onPress={onPress}>
                 <Text style={styles.workoutCardHeader}>
                     {name}
                 </Text>
                 <Text style={styles.workoutCardBody}>
                     {`${mm}/${dd}/${yyyy}`}
                 </Text>
-            </View>
+            </TouchableOpacity>
         );
     };
+
+    const handleWorkoutSelect = (workout) => {
+        console.log(workout);
+        setSelectedData(workout.data);
+        setSelectedName(workout.name);
+        setShowModal(true);
+    }
+
+    useEffect(() => {
+        console.log(selectedData);
+    }, [selectedData])
 
     return(
         <View style={styles.main}>
@@ -63,10 +78,20 @@ const WorkoutsOfType = ({route}) => {
                 <OverallDataGraph type={type}/>
                 {/* Flat List of all Workouts of Given Type*/}
                 <ScrollView style={styles.workouts}>
-                    <Text style={styles.dataHeader}>{`${type} Workouts`}</Text>
+                    <View style={styles.dataHeaderBox}>
+                        <Text style={styles.dataHeader}>{`${type} Workouts`}</Text>
+                        <Image style={styles.scrollIcon} source={require('../assets/icons/scroll-down.png')}/>
+                    </View>
                     {workoutsOfType.length > 0 ? 
                         Array.from(workoutsOfType.values()).map((workout) => {
-                            return( <WorkoutCard key={workout.name} name={workout.name} date={workout.date}/> );
+                            console.log('Workout:', workout);
+                            return( 
+                                <WorkoutCard key={workout.name} 
+                                    name={workout.name} 
+                                    date={workout.date}
+                                    onPress={() => handleWorkoutSelect(workout)}
+                                /> 
+                            );
                         })
                     :
                         <Text>{`No ${type} workouts yet.`}</Text>
@@ -74,6 +99,13 @@ const WorkoutsOfType = ({route}) => {
                 </ScrollView> 
             </View> 
             }
+            <Modal
+                visible={showModal && !(selectedData===null)}
+                transparent
+                onRequestClose={() => setShowModal(false)}
+            >
+                <RecentDataGraph raw_data={selectedData} name={selectedName}/>
+            </Modal>
         </View>
     );
 };
@@ -96,12 +128,23 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         textAlignVertical: 'center'
     },
+    dataHeaderBox:{
+        alignSelf: 'center',
+        width: '90%',
+        flexDirection: 'row',
+        justifyContent: 'space-between'
+    },
     dataHeader: {
         textAlign: 'left',
         fontFamily: 'Oswald-Regular',
         fontSize: 25,
         color: 'white',
         padding: 15
+    },
+    scrollIcon:{
+        alignSelf: 'center',
+        height: 50,
+        width: 50
     },
     content: {
         flex: 1,
