@@ -60,7 +60,7 @@ const HomeScreen = ({navigation}) =>{
   return(
       <View style={styles.screenSetup}>
           <View style={styles.title}>
-            <Text style={styles.welcome}>{isLoading? `Loading...` : `WELCOME BACK, ${userData?.first}`} </Text>
+            <Text style={styles.welcome}>{isLoading? `Loading...` : `Welcome, ${userData?.first}`} </Text>
           </View>
           <View style={styles.container}>
               {device ? 
@@ -69,7 +69,7 @@ const HomeScreen = ({navigation}) =>{
                 </View>
               :
                 <TouchableOpacity onPress={isScanning ? handleStopScan : handleStartScan} style={styles.button}>
-                  <Text style={styles.textStyle}>{isConnecting ? 'Connecting...' : 'Connect'}</Text>
+                  <Text style={styles.textStyle}>{isConnecting ? 'Connecting...' : 'Connect Device'}</Text>
                 </TouchableOpacity>
               }
           </View>
@@ -78,24 +78,13 @@ const HomeScreen = ({navigation}) =>{
 };
 
 
-
-const boxShadow = {
-  shadowColor: 'lightgrey',
-  shadowOffset: {
-    width: 0,
-    height: 0,
-  },
-  shadowOpacity: 0.25,
-  shadowRadius: 1.84,
-  elevation: 4,
-};
 const styles = StyleSheet.create({
     screenSetup:{
       flex: 1,
       backgroundColor: '#272727'
     },
     container:{
-      flex: 0.4,
+      flex: 0.5,
       justifyContent: 'center',
       justifyItems: 'center',
       height:'auto',
@@ -108,8 +97,7 @@ const styles = StyleSheet.create({
       marginTop: 50,
     },
     welcome :{
-      fontFamily: 'Oswald-Regular',
-      textTransform: 'uppercase',
+      fontFamily: 'Anta-Regular',
       color: 'white',
       fontSize: 50,
       marginHorizontal: 50,
@@ -124,23 +112,20 @@ const styles = StyleSheet.create({
         marginTop: 20,
     },
     button:{
-      alignItems: 'center',
-      backgroundColor: 'black',
-      borderRadius: 30,
-      padding:5,
-      marginLeft:100,
-      marginRight: 100,
-      marginTop: 175,
-      marginBottom: 10,
-      height: 45,
-      ...boxShadow,
+      alignSelf: 'center',
+      width: '60%',
+      height: '40%',
+      backgroundColor: '#615F5F',
+      borderColor: '#700C0C',
+      borderWidth: 5,
+      borderRadius: 15,
+      justifyContent: 'center'
     },
     textStyle:{
       color: 'white',
-      textTransform: 'uppercase',
       fontFamily: 'Oswald-Regular',
-      fontSize: 18,
-      alignItems: 'center',
+      fontSize: 30,
+      textAlign: 'center',
       justifyContent: 'center',
     },
     title:{
