@@ -19,23 +19,29 @@ const styles = StyleSheet.create({
     motivationalQuoteContainer: {
         flex: 1,
         justifyContent: 'center',
+        backgroundColor: 'red',
+        borderRadius: 10,
+        padding: 25
         //borderColor: 'black',
         //borderWidth: 5
       },
       motivationalQuote: {
-        fontSize: 50,
-        fontFamily: 'Helvetica',
+        fontSize: 25,
         fontStyle: 'italic',
         fontWeight: 'bold',
         textAlign: 'center',
-        padding: 10
+        padding: 10,
+        color: 'white',
+        fontFamily: 'Oswald-Regular'
       },
       author:{
-        fontSize: 25,
+        fontSize: 18,
         fontFamily: 'helvetica',
         fontStyle: 'italic',
         textAlign: 'right',
-        padding: 10
+        padding: 10,
+        color: 'white',
+        fontFamily: 'Oswald-Regular'
       }
 });
 

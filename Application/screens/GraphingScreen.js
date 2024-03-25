@@ -9,20 +9,22 @@ import {
 import { Picker } from '@react-native-picker/picker';
 import { useFirestore } from '../api/firestore/FirestoreAPI';
 import { useBLE } from '../api/ble/BLEContext';
-import MotivationQuotes from '../data/motivation.js';
 import containerStyles from '../styles/container-view-styles';
+import LiveWorkoutModal from '../components/LiveWorkoutModal';
+import ConnectedDeviceModal from '../components/ConnectedDeviceModal';
+import { CommonActions } from '@react-navigation/native';
 
-const MemoizedMotivationQuotes = React.memo(MotivationQuotes);
 
 // ToDo: Add a Modal that appears when Calibration is occurring.
 
-function GraphingScreen() {
+function GraphingScreen({navigation}) {
   const {
     bleData,
     isReadingData,
     startReadingData,
     stopReadingData,
-    calibrating
+    calibrating,
+    connectedDevice
   } = useBLE();
   const { 
     isDataLoading,
@@ -30,7 +32,7 @@ function GraphingScreen() {
     getNumberWorkoutsOfType,
   } = useFirestore();
 
-
+  const [deviceConnected, setDeviceConnected] = useState(false);
   const [workoutStarted, setWorkoutStarted] = useState(false);
   const [currentWorkoutType, setCurrentWorkoutType] = useState('Squat');
   const [currentWorkoutWeight, setCurrentWorkoutWeight] = useState('100');
@@ -79,6 +81,16 @@ function GraphingScreen() {
     }
   }, [workoutStarted]);
 
+  useEffect(() => {
+    console.log(connectedDevice);
+    if(connectedDevice){
+      setDeviceConnected(true);
+    }else{
+      setDeviceConnected(false);
+    }
+    console.log(deviceConnected);
+  }, [connectedDevice]);
+
   // When bleData is updated
   useEffect(() => {
     // format and move data to workoutData[]
@@ -116,105 +128,90 @@ function GraphingScreen() {
     setWorkoutStarted(true);
   };
 
+  const handleCloseWorkout = () => {
+    setWorkoutStarted(false);
+  };
+
+  const handleConnect = () => {
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{name: 'Home', params: {screen: 'Main'}}]
+      })
+    )
+  }
+
   return (
-    <View style={containerStyles.container}>
-
+    <View style={styles.container}>
+      
       {/* Picker for selecting Workout Type */}
-      <Picker style={styles.workoutSelector}
-        selectedValue={currentWorkoutType}
-        onValueChange={(value) => setCurrentWorkoutType(value)}
-      >
-        <Picker.Item label="Squat" value="Squat" />
-        <Picker.Item label="Deadlift" value="Deadlift" />
-        <Picker.Item label="Bench Press" value="Bench Press" />
-        <Picker.Item label="Barbell Curl" value="Barbell Curl" />
-      </Picker>
-
-      {/* Workout Parameter Selections */}
-      <View style={styles.workoutParameterContainer}>
-        <TextInput
-            style={styles.textInputWeight}
-            placeholder='Weight'
-            onChangeText={(text) => setCurrentWorkoutWeight(text)}
-            value={currentWorkoutWeight}
-        />
-        <TextInput
-          style={styles.textInputName}
-          placeholder={isLoading ? (`Loading...`) : (`${currentWorkoutType} Workout #${total + 1}`)}
-          onChangeText={(text) => setWorkoutName(text)}
-          value={workoutName}
-        />
+      <View style={styles.workoutType}>
+        <Text style={styles.selectWorkoutHeader}>Select the workout type:</Text>
+        <View style={styles.workoutSelector}>
+          <Picker
+            style={styles.picker}
+            selectedValue={currentWorkoutType}
+            onValueChange={(value) => setCurrentWorkoutType(value)}
+          >
+            <Picker.Item label="Squat" value="Squat" />
+            <Picker.Item label="Deadlift" value="Deadlift" />
+            <Picker.Item label="Bench Press" value="Bench Press" />
+            <Picker.Item label="Barbell Curl" value="Barbell Curl" />
+          </Picker>
+        </View>
       </View>
 
-      {/* Workout Parameter List && Save Button */}
-      <View style={styles.restOfScreenContainer}>
-        
-        {/* Graphic / Motivational Text */}
-        <View style={styles.graphicContainer}> 
-          {!workoutStarted ? 
-            (
-              <View style={styles.notStartedContainer}>
-                <Text style={styles.notStartedText}> Workout has not started </Text>
-              </View>
-            ) 
-            : 
-            (
-              /*<LiveDataGraph 
-                maxVelocity={maxVelocity || 0} 
-                currentVelocity={currentVelocity || 0}
-                />*/
-                <MemoizedMotivationQuotes/>
-            )
-          }  
-        </View>
-        {/* Start and Reset Buttons */}
-        <View style={styles.startAndResetContainer}>
-          <View style={styles.startWorkoutButtonContainer}>
-            <TouchableOpacity style={styles.startWorkoutButton}
-              onPress={handleBeginWorkout}
-            >
-              <Text style={styles.saveButtonText}> Begin Workout </Text>
-            </TouchableOpacity>
+      {/* Workout Parameter Selections */}
+      <View style={styles.workoutParams}> 
+        <Text style={styles.selectWorkoutHeader}>Set your parameters:</Text>
+        <View style={styles.workoutParameterContainer}>
+          <View style={styles.leftBox}>
+            <Text style={styles.parameterLabel}>Weight</Text>
+            <TextInput
+                style={styles.textInputWeight}
+                placeholder='Weight'
+                onChangeText={(text) => setCurrentWorkoutWeight(text)}
+                value={currentWorkoutWeight}
+            />
           </View>
-          <View style={styles.resetButtonContainer}>
-            <TouchableOpacity style={styles.resetButton}
-              onPress={cleanUp}>
-              <Text style={styles.saveButtonText}>
-                {isDataLoading ? `Loading...` : `Reset / Clear Workout Data`}
-              </Text>
-            </TouchableOpacity>  
+          <View style={styles.rightBox}>
+            <Text style={styles.parameterLabel}>Name</Text>
+            <TextInput
+              style={styles.textInputName}
+              placeholder={isLoading ? (`Loading...`) : (`${currentWorkoutType} Workout #${total + 1}`)}
+              onChangeText={(text) => setWorkoutName(text)}
+              value={workoutName}
+            />
           </View>
         </View>
-        {/* Display Active Variables (Workout Parameters & Reps & Velocity)*/}
-        <View style={styles.parametersAndSaveButton}>
-          <View style={styles.parameterDisplay}>
-            <View style={styles.singleParameter}>
-              <Text style={styles.textStyleA}> {`Current Exercise: `} </Text>
-              <Text style={styles.textStyleB}>{`${currentWorkoutType}`}</Text>
-            </View>
-            <View style={styles.singleParameter}>
-              <Text style={styles.textStyleA}> {`Current Weight: `} </Text>
-              <Text style={styles.textStyleB}> {`${currentWorkoutWeight || "- - -"}`} </Text>
-            </View>
-            <View style={styles.singleParameter}>
-              <Text style={styles.textStyleA}> {`Rep Count: `} </Text>
-              <Text style={styles.textStyleB}> {`${repCount}`} </Text>
-            </View>
-            <View style={styles.singleParameter}>
-              <Text style={styles.textStyleA}> {`Peak Velocity: `} </Text>
-              <Text style={styles.textStyleB}> {`${peakVelocity}`} </Text>
-            </View>            
-          </View>
-          <View style={styles.saveButtonContainer}>
-            <TouchableOpacity style={styles.saveButton}
-              onPress={handleSaveWorkout}>
-              <Text style={styles.saveButtonText}>
-                {isDataLoading ? `Loading...` : `Save Workout Data`}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>      
+      </View>
+
+      {/* Start and Reset Buttons */}
+      <View style={styles.startContainer}>
+        <TouchableOpacity style={styles.startWorkoutButton}
+          onPress={handleBeginWorkout}
+        >
+          <Text style={styles.saveButtonText}> Begin Workout </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Modals */}
+      <LiveWorkoutModal
+        visible={workoutStarted}
+        currentWorkoutType={currentWorkoutType}
+        currentWorkoutWeight={currentWorkoutWeight}
+        repCount={repCount}
+        peakVelocity={peakVelocity}
+        handleSaveWorkout={handleSaveWorkout}
+        handleCloseWorkout={handleCloseWorkout}
+        isDataLoading={isDataLoading}  
+        cleanUp={cleanUp}
+        calibrating={calibrating}
+      />
+      <ConnectedDeviceModal
+        visible={!deviceConnected}
+        onConnect={handleConnect}
+      />   
     </View>
   );
 }
@@ -223,150 +220,111 @@ export default GraphingScreen;
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     flexDirection: 'column',
-    flex: 1
+    justifyContent: 'space-between',
+    backgroundColor: '#272727'
+  },
+  selectWorkoutHeader: {
+    textAlign: 'left',
+    textAlignVertical: 'bottom',
+    fontFamily: 'Oswald-Regular',
+    fontSize: 30,
+    padding: 20,
+    color: 'white'
+  },
+  workoutType:{
+    flex: 0.25,
+    flexDirection: 'column'
+  },
+  workoutParams: {
+    flex: 0.5,
+    paddingBottom: 0 
   },
   // Picker for selecting Workout Type
   workoutSelector: {
-    backgroundColor: '#a3c1ad',
+    flex: 0.8,
+    alignSelf: 'center',
+    justifyContent: 'center',
+    width: '70%',
+    backgroundColor: 'red',
+    borderRadius: 15
   },
+  picker: {
+    color: 'white',
+    alignSelf: 'center',
+    width: '90%',
+  },  
   // Workout Parameter Selections 
   workoutParameterContainer: {
     padding: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    flex: 0.1,
-  },
-  textInputWeight: {
-    borderBottomColor: 'grey',
-    borderBottomWidth: 2,
-    fontSize: 18,
-    width: 225,
-    height: 50,
-    marginBottom: 10, // Add marginBottom to create space below the TextInput
-    flex: 0.15,
-  },  
-  textInputName: {
-    borderBottomColor: 'grey',
-    borderBottomWidth: 2,
-    fontSize: 18,
-    width: 225,
-    height: 50,
-    marginBottom: 10, // Add marginBottom to create space below the TextInput
-    flex: 0.65,
-  },
-
-  // Rest of the Screen
-  restOfScreenContainer: {
-    flex: 1,
-    flexDirection: 'column'
-  },
-  // Graphic / Motivation
-  graphicContainer: {
-    flex: 0.8,
-    alignContent: 'center',
-    justifyContent: 'space-between',
-  },
-  notStartedContainer: {
-    flex: 1,
-    justifyContent: 'space-around'
-  },
-    notStartedText: {
-      fontSize: 20,
-      fontStyle: 'normal',
-      fontFamily: 'helvetica',
-      fontWeight: 'bold',
-      textAlign: 'center'
-    },
-  // Start and Reset Buttons
-  startAndResetContainer: {
-    flexDirection: 'row',
-    flex: 0.2,
-    //borderColor: 'black',
-    //borderWidth: 5
-  },
-    // Start Workout Button
-    startWorkoutButtonContainer: {
-      flex: 0.4,
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'space-evenly',
-      //borderColor: 'purple',
-      //borderWidth: 3
-    },
-    startWorkoutButton: {
-      justifyContent: 'center',
-      backgroundColor: 'lightblue',
-      borderRadius: 10,
-      padding: 10,
-      margin: 10
-    },
-    // Reset Button
-    resetButtonContainer:{
-      flex: 0.6,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'flex-end',
-      marginRight: 10
-      //borderColor: 'green',
-      //borderWidth: 3
-    },
-    resetButton: {
-      justifyContent: 'center',
-      backgroundColor: 'lightblue',
-      borderRadius: 10,
-      padding: 10,
-    },
-
-// Parameters and Save Button 
-parametersAndSaveButton: {
-  flexDirection: 'row',
-  flex: 0.25,
-  justifyContent: 'flex-start',
-  //borderColor: 'black',
-  //borderWidth: 5
-},
-  // Parameters
-  parameterDisplay: {
+    paddingHorizontal: 20,
     flexDirection: 'column',
+    flex: 0.75,
+    width: '80%',
+    alignSelf: 'center',
+    backgroundColor: 'red',
+    paddingTop: 15,
+    borderRadius: 15,
+},
+  leftBox: {
     flex: 0.5,
-    //borderColor: 'blue',
-    borderWidth: 3
-  },  
-  singleParameter: {
     flexDirection: 'row',
-    flex: 0.25,
-    alignContent: 'center',
     justifyContent: 'space-between'
   },
-    // Parameter Text
-    textStyleA: {
-      fontSize: 12,
-      fontFamily: 'ariel',
-      fontWeight: 'bold',
-    },  
-    textStyleB: {
-      fontSize: 12,
-      marginRight: 10
-    },
-  // Save Button
-  saveButtonContainer: {
+  parameterLabel: {
+    fontFamily: 'Oswald-Regular',
+    fontSize: 30,
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    color: 'white',
+    height: '80%'
+  },
+  rightBox: {
     flex: 0.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    //borderColor: 'red',
-    borderWidth: 3
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  textInputWeight: {
+    fontSize: 18,
+    width: '30%',
+    height: '80%',
+    alignSelf: 'center',
+    fontFamily: 'Arial',
+    color: 'black',
+    backgroundColor: 'lightgray',
+    borderRadius: 15,
+    textAlign: 'center',
   },  
-    saveButton: {
-      justifyContent: 'center',
-      backgroundColor: 'lightblue',
-      borderRadius: 10,
-      padding: 10,
-      marginHorizontal: 0
-    },
-    // Save Button Text
-    saveButtonText: {
-      fontSize: 15,
-      textAlign: 'center',
-    },
+  textInputName: {
+    fontSize: 18,
+    width: '70%',
+    height: '80%',
+    fontFamily: 'Arial',
+    color: 'black',
+    backgroundColor: 'lightgray',
+    borderRadius: 15,
+    textAlign: 'center',
+  },
+  // Start and Reset Buttons
+  startContainer: {
+    flexDirection: 'column',
+    flex: 0.25,
+    justifyContent: 'center',
+  },
+  // Start Workout Button
+  startWorkoutButton: {
+    height: '80%',
+    alignSelf: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'red',
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 50
+  },
+  saveButtonText: {
+    fontFamily: 'Oswald-Regular',
+    fontSize: 30,
+    color: 'white'
+  }
 });

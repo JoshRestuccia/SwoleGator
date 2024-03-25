@@ -44,8 +44,9 @@ const HomeScreenNavigator = () => {
         </Stack.Navigator>
     )
 }
-
 export{HomeScreenNavigator}
+
+
 const NewLiftScreenNavigator = () => {
     return(
         <Stack.Navigator
@@ -75,8 +76,9 @@ const NewLiftScreenNavigator = () => {
         </Stack.Navigator>
     )
 }
-
 export{NewLiftScreenNavigator}
+
+
 const ProfileScreenNavigator = () => {
     return(
         <Stack.Navigator>
@@ -138,6 +140,5 @@ const ProfileScreenNavigator = () => {
         </Stack.Navigator>
     )
 }
-
 export{ProfileScreenNavigator}
 
