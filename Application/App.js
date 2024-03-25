@@ -5,6 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import LoadingScreen from './screens/LoadingScreen';
 import SignUp from './screens/SignUp';
 import Login from './screens/Login';
+import Feed from './screens/Feed';
 
 import Landing from './screens/LandingScreen';
 import auth from '@react-native-firebase/auth';
