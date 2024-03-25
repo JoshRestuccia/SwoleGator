@@ -28,12 +28,14 @@ const styles = StyleSheet.create({
     statHeader:{
         flex: 0.8,
         fontSize: 18,
-        fontWeight: 'bold',
-        color: 'blue',
-        textAlign: 'right'
+        color: 'black',
+        textAlign: 'right',
+        fontFamily: 'Oswald-Regular',
+        textTransform: 'uppercase',
     },
     statBody:{
         flex:0.2,
+        color: 'darkred',
         fontSize: 20,
         textAlign: 'left',
         paddingLeft: 50

@@ -185,7 +185,7 @@ const renderItem = ({ item }) => {
                     </View>
                   {/*<Text>{`Age: ${userData?.age}`}</Text>*/}
                   <TouchableOpacity style={styles.smallButton} onPress={() => navigation.navigate('Workouts')}>
-                          <Text style={styles.total}>{`Manage Workouts`}</Text>
+                          <Text style={styles.total}>{`Manage Visibility`}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.settings} onPress={openSettings}>
                     <Text style={styles.settingsText}> Settings </Text>
@@ -279,6 +279,7 @@ const styles = StyleSheet.create({
   settings:{
     position: 'absolute',
     left: 320,
+    top: 5,
   },
   settingsText:{
     fontSize: 15,
@@ -321,7 +322,7 @@ const styles = StyleSheet.create({
     },
     totalContainer:{
       position: 'absolute',
-      top: 90, // Adjust as needed
+      top: 100, // Adjust as needed
       left: 130, // Adjust as needed
       width: 120,
       height: 90,
@@ -330,7 +331,7 @@ const styles = StyleSheet.create({
     },
     friendsContainer:{
       position: 'absolute',
-      top: 90, // Adjust as needed
+      top: 100, // Adjust as needed
       left: 260, // Adjust as needed
       width: 120,
       height: 90,
@@ -383,7 +384,7 @@ const styles = StyleSheet.create({
     userInfoHeaderRight: {
       position: 'absolute',
       left: 175,
-      top: 20,
+      top: 30,
       width: '100%',
       flex: 0.7,
       display: 'flex',
@@ -404,7 +405,7 @@ const styles = StyleSheet.create({
       textAlign: 'center',
     },
     smallButton: {
-      width: 150,
+      width: 250,
       height: 50,
       marginTop: 50,
       marginBottom: 25,
@@ -429,14 +430,6 @@ const styles = StyleSheet.create({
       borderTopRightRadius: 25,
       padding: 20
     },
-    settingsButton: {
-      backgroundColor: '#3498db', // Blue color (adjust as needed)
-      padding: 10,
-      borderRadius: 8,
-      marginTop: 15,
-      alignSelf:'flex-end',
-      marginRight: 15
-    },
     friendsHeader: {
       display: 'flex',
       color: 'white',
@@ -456,12 +449,11 @@ const styles = StyleSheet.create({
       color: 'white',
     },
     addFriends:{
-      flex: 0.2,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: '#0a398a',
-      borderRadius: 25,
-      width: 200,
+      backgroundColor: 'darkred',
+      borderRadius: 100,
+      width: 50,
       height: 50,
       alignSelf: 'center'
     },
