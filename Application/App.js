@@ -52,6 +52,19 @@ function UserStackGroup() {
             }}
           />
           <Tabs.Screen
+              name = "Friend's Lifts"
+                  component={Feed}
+                   options = {{
+                     tabBarActiveTintColor: '#AD0000',
+                        tabBarStyle: {height: 65, backgroundColor:'white', fontSize: 20},
+                        tabBarLabelStyle: {fontSize: 10, marginBottom: 8},
+                       tabBarIconStyle: {marginTop: 10},
+                       tabBarIcon: ({ color, size }) => (
+                        <MaterialCommunityIcon name="account-group" color={color} size={30} />
+                                  ),
+                                }}
+                              />
+          <Tabs.Screen
             name = "Profile"
             component={ProfileScreenNavigator}
             options = {{
@@ -64,6 +77,7 @@ function UserStackGroup() {
               ),
             }}
           />
+
         </Tabs.Navigator>
     </BLEProvider>
   );
