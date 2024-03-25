@@ -52,17 +52,6 @@ const NewLiftScreenNavigator = () => {
         <Stack.Navigator
             initialRouteName='Exercise Selection'>
             <Stack.Screen
-                name = "Exercise Selection"
-                component={ExerciseSelection}
-                options={{ 
-                    title: 'swolegator', 
-                    headerTitleStyle: {fontFamily: 'Anta-Regular', fontSize: 35,},
-                    headerTitleAlign: 'center',
-                    headerTintColor: 'white',
-                    headerStyle: {backgroundColor: 'black', height: 80},
-                }}
-            ></Stack.Screen>
-                  <Stack.Screen
                 name = "Graphing Screen"
                 component={GraphingScreen}
                 options={{ 
