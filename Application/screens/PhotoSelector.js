@@ -57,15 +57,19 @@ const PhotoSelector = ({isVisible, onClose}) => {
             <View style={styles.main}>
                 <Text style={styles.header}>Change your Profile Photo</Text>
                 <View style={styles.body}>
-                    <TouchableOpacity style={styles.button} onPress={() => setDefaultTrigger(true)}>
-                        <Text style={styles.buttonText}>Select a Default</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={handleIcon8Navigation}>
-                        <Text style={styles.icon8Text}>Powered by Icon8</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.button} onPress={() => setPersonalTrigger(true)}>
-                        <Text style={styles.buttonText}>Select your Own</Text>
-                    </TouchableOpacity>
+                    <View style={styles.default}>
+                        <TouchableOpacity style={styles.button} onPress={() => setDefaultTrigger(true)}>
+                            <Text style={styles.buttonText}>Select a Default</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.icon8} onPress={handleIcon8Navigation}>
+                            <Text style={styles.icon8Text}>Powered by Icon8</Text>
+                        </TouchableOpacity>
+                    </View>
+                    <View style={styles.custom}>
+                        <TouchableOpacity style={styles.button} onPress={() => setPersonalTrigger(true)}>
+                            <Text style={styles.buttonText}>Select your Own</Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
             </View>
             {defaultTrigger && <DefaultImageSelectionModal
@@ -104,7 +108,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#272727', // Semi-transparent background
     },
     header:{
-        flex: 0.5,
+        flex: 0.3,
         textAlignVertical: 'center',
         textAlign: 'center',
         fontSize: 30,
@@ -112,23 +116,33 @@ const styles = StyleSheet.create({
         color: 'white',
     },
     body: {
-        flex: 0.5,
+        flex: 0.7,
         display: 'flex',
         flexDirection: 'column',
         alignContent: 'center',
-        justifyContent: 'flex-start',
+        justifyContent: '',
         alignItems: 'center',
     },
-    button:{
+    default: {
+        flex: 0.5,
+        width: '60%',
+        alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: 'black',
-        borderRadius: 30,
-        padding:5,
-        marginTop: 45,
-        marginBottom: 10,
-        height: 50,
-        width: 250,
-        ...boxShadow,
+        alignSelf: 'center',
+    },
+    custom: {
+        flex: 0.3,
+        width: '60%',
+        alignItems: 'center',
+        justifyContent: 'center',
+        alignSelf: 'center',
+    },
+    button:{
+        alignItems: 'center',
+        backgroundColor: 'red',
+        borderRadius: 15,
+        padding: 15,
+        width: '60%',
     },
     buttonText: {
         fontFamily: 'Oswald-Regular',
@@ -140,7 +154,9 @@ const styles = StyleSheet.create({
     icon8Text: {
         color: 'white',
         fontFamily: 'Oswald-Regular',
-        fontSize: 18
+        fontSize: 18,
+        textAlign: 'center',
+        textAlignVertical: 'center'
     }
 });
 

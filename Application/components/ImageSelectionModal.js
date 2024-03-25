@@ -115,13 +115,11 @@ const styles = StyleSheet.create({
       alignItems: 'center'
     },
     button:{
-        justifyContent: 'center',
-        backgroundColor: 'black',
-        borderRadius: 30,
-        padding:5,
-        height: 75,
-        width: 250,
-        ...boxShadow,
+        alignItems: 'center',
+        backgroundColor: 'red',
+        borderRadius: 15,
+        padding: 15,
+        width: '60%',
     },
     buttonText: {
         fontFamily: 'Oswald-Regular',

@@ -65,71 +65,57 @@ const SettingsScreen = ({onClose}) => {
     };
 
     return(
-        <View style={styles.screenSetup}>
+        <View style={styles.main}>
             <View style={styles.exitButton}>
-            <TouchableOpacity onPress={onClose}>
-                <Text style={styles.exitText}>X</Text>
-            </TouchableOpacity>
+              <TouchableOpacity onPress={onClose}>
+                  <Text style={styles.exitText}>X</Text>
+              </TouchableOpacity>
             </View>
             <View style={styles.optionButtons}>
-            <TouchableOpacity style={styles.button} onPress={openPhotoSelect}>
-                <Text style={styles.textStyle}> Change Profile Photo </Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.button} onPress={pressLogOut}>
-                <Text style={styles.textStyle}> Log Out </Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={handleIcon8Navigation}>
-                <Text>SwoleGator-Defaults icons by Icon8</Text>
-            </TouchableOpacity>
-            <PhotoSelector isVisible={photoSelectorVisibility} onClose={closePhotoSelect}/>
+              <TouchableOpacity style={styles.button} onPress={openPhotoSelect}>
+                  <Text style={styles.textStyle}> Change Profile Photo </Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.button} onPress={pressLogOut}>
+                  <Text style={styles.textStyle}> Log Out </Text>
+              </TouchableOpacity>
+              <PhotoSelector isVisible={photoSelectorVisibility} onClose={closePhotoSelect}/>
             </View>
         </View>
     );
 };
 
 export default SettingsScreen;
-const boxShadow = {
-    shadowColor: 'lightgrey',
-    shadowOffset: {
-      width: 0,
-      height: 0,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 1.84,
-    elevation: 4,
-  };
+
   const styles = StyleSheet.create({
-      screenSetup:{
+      main:{
         flex: 1,
         backgroundColor: '#272727',
       },
       optionButtons: {
-        justifyContent: 'center',
+        flex: 0.8,
+        justifyContent: 'space-evenly',
         alignItems: 'center',
       },
       exitButton:{
+        flex: 0.1,
+        justifyContent: 'flex-start',
         color: 'white',
-        justifyContent: 'flex-end',
         alignItems: 'flex-end',
       },
       exitText:{
         color: 'white',
+        textAlign: 'right',
+        textAlignVertical: 'center',
         fontSize: 25,
-        alignItems: 'flex-end',
-        justifyContent: 'flex-end',
         marginEnd: 25,
-        marginTop: 15,
+        marginTop: 25,
     },
       button:{
         alignItems: 'center',
-        backgroundColor: 'black',
-        borderRadius: 30,
-        padding:5,
-        marginTop: 45,
-        marginBottom: 10,
-        height: 45,
-        width: 250,
-        ...boxShadow,
+        backgroundColor: 'red',
+        borderRadius: 15,
+        padding: 15,
+        width: '60%',
       },
       textStyle:{
         color: 'white',
@@ -150,5 +136,9 @@ const boxShadow = {
         fontFamily: 'Oswald-Regular',
         color: 'white',
         margin: 50,
+      },
+      icon8Text: {
+        fontSize: 18,
+        color: 'white'
       }
     })
