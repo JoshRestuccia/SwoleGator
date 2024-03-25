@@ -108,10 +108,14 @@ function GraphingScreen({navigation}) {
  
   useEffect(() => {
     const onMount = async () => {
-      setIsLoading(true);
-      let n = await getNumberWorkoutsOfType(currentWorkoutType); //getAllWorkoutsOfType ==> length
-      setTotal(n);
-      setIsLoading(false);
+      try{
+        setIsLoading(true);
+        let n = await getNumberWorkoutsOfType(currentWorkoutType); //getAllWorkoutsOfType ==> length
+        setTotal(n);
+        setIsLoading(false); 
+      }catch(err){
+        console.error(err);
+      }
     };
     onMount();
   }, [currentWorkoutType]);
@@ -130,6 +134,7 @@ function GraphingScreen({navigation}) {
 
   const handleCloseWorkout = () => {
     setWorkoutStarted(false);
+    stopReadingData();
   };
 
   const handleConnect = () => {

@@ -1,7 +1,5 @@
-import React, {useState, useEffect} from 'react';
+import React from 'react';
 import { Text, View, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
-
-import { useFirestore } from '../api/firestore/FirestoreAPI';
 
 const ButtonItem = ({ title, onPress }) => (
     <TouchableOpacity onPress={onPress} style={styles.button}>

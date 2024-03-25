@@ -234,7 +234,7 @@ const renderItem = ({ item }) => {
           transparent={false}
           onRequestClose={closeSettings}
         >
-          <SettingsScreen onClose={closeSettings}/>
+          <SettingsScreen onClose={closeSettings} navigation={navigation}/>
         </Modal>
         {/* Friend Prompt Modal */}
         <Modal

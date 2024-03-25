@@ -1,12 +1,12 @@
 
 import React, {useState, useEffect} from 'react';
 import { useFirestore } from '../api/firestore/FirestoreAPI';
-import { StyleSheet, View, TouchableOpacity, Text, Linking, Modal} from "react-native";
+import { StyleSheet, View, TouchableOpacity, Text} from "react-native";
+import { CommonActions } from '@react-navigation/native';
 import PhotoSelector from "./PhotoSelector";
 
-const icon8_url = "https://icons8.com/icons/collections/stwh66efe54iwrth5ljc";
-
-const SettingsScreen = ({onClose}) => {
+const SettingsScreen = ({navigation, onClose}) => {
+    const { signOut } = useFirestore();
     const [photoSelectorVisibility, setPhotoSelectorVisibility] = useState(false);
 
     const closePhotoSelect = () => {
@@ -15,53 +15,21 @@ const SettingsScreen = ({onClose}) => {
     const openPhotoSelect = () => {
         setPhotoSelectorVisibility(true);
     }
-    const {
-        currentUser,
-        getUserData,
-        signOut
-      } = useFirestore();
       
-      const [userData, setUserData] = useState(null);
-      const [isLoading, setIsLoading] = useState(true);
-  
-      const pressLogOut = async() => {
+    const pressLogOut = async() => {
         console.log('Signout button pressed.');
         try{
           await signOut();
           // Reset Navigation Stack
-          navigation.reset({
-            index: 0,
-            routes: [{name: 'Guest Stack', params:{screen: 'Landing'}}]
-          });
+          navigation.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [{name: 'Guest Stack', params: {screen: 'Landing'}}]
+            })
+          )
         }catch(error){
-          console.error('Error signing out...');
+          console.error('Error signing out...', error);
         }
-      };
-  
-      useEffect(() => {
-        const fetchData = async() => {
-          try{
-            if(currentUser){
-              const userDataFirestore = await getUserData();
-              setUserData(userDataFirestore);
-              setIsLoading(false);
-            }
-          }catch(err){
-            console.error(err);
-          }
-        };
-        fetchData();
-      }, [currentUser]);
-
-    const handleIcon8Navigation = () => {
-        Linking.canOpenURL(icon8_url).then(supported => {
-            console.log(supported);
-            if(supported){
-                Linking.openURL(icon8_url);
-            }else{
-                console.warn(`Cannot reach ${icon8_url}`);
-            }
-        }).catch(err => console.error(err));
     };
 
     return(
