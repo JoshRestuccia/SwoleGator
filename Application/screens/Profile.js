@@ -449,12 +449,11 @@ const styles = StyleSheet.create({
       color: 'white',
     },
     addFriends:{
-      flex: 0.2,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: '#0a398a',
-      borderRadius: 25,
-      width: 200,
+      backgroundColor: 'darkred',
+      borderRadius: 100,
+      width: 50,
       height: 50,
       alignSelf: 'center'
     },
