@@ -49,7 +49,7 @@ const Login = ({navigation}) => {
       </View>
       <View styles={styles.textBoxes}>
         <TextInput
-          style={styles.textInput}
+          style={styles.pwStyle}
           placeholder='PASSWORD'
           placeholderTextColor= '#323334'
           onChangeText={setPassword}
@@ -133,6 +133,16 @@ textStyle:{
   alignItems: 'center',
   justifyContent: 'center',
   margin:10,
+},
+pwStyle:{
+  borderBottomColor:'white',
+  borderBottomWidth: 1,
+  fontSize:20,
+  alignItems: 'flex-end',
+  fontFamily: 'Oswald-Regular',
+  color:'white',
+  width: 340,
+  height: 50,
 },
 title:{
   alignItems: 'center',

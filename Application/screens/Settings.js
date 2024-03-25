@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+
+import React, {useState, useEffect} from 'react';
+import { useFirestore } from '../api/firestore/FirestoreAPI';
 import { StyleSheet, View, TouchableOpacity, Text, Linking, Modal} from "react-native";
 import PhotoSelector from "./PhotoSelector";
 
@@ -13,6 +15,43 @@ const SettingsScreen = ({onClose}) => {
     const openPhotoSelect = () => {
         setPhotoSelectorVisibility(true);
     }
+    const {
+        currentUser,
+        getUserData,
+        signOut
+      } = useFirestore();
+      
+      const [userData, setUserData] = useState(null);
+      const [isLoading, setIsLoading] = useState(true);
+  
+      const pressLogOut = async() => {
+        console.log('Signout button pressed.');
+        try{
+          await signOut();
+          // Reset Navigation Stack
+          navigation.reset({
+            index: 0,
+            routes: [{name: 'Guest Stack', params:{screen: 'Landing'}}]
+          });
+        }catch(error){
+          console.error('Error signing out...');
+        }
+      };
+  
+      useEffect(() => {
+        const fetchData = async() => {
+          try{
+            if(currentUser){
+              const userDataFirestore = await getUserData();
+              setUserData(userDataFirestore);
+              setIsLoading(false);
+            }
+          }catch(err){
+            console.error(err);
+          }
+        };
+        fetchData();
+      }, [currentUser]);
 
     const handleIcon8Navigation = () => {
         Linking.canOpenURL(icon8_url).then(supported => {
@@ -26,41 +65,90 @@ const SettingsScreen = ({onClose}) => {
     };
 
     return(
-        <View style={styles.container}>
-            <TouchableOpacity style={styles.setting} onPress={openPhotoSelect}>
-                <Text style={styles.settingText}> Change Profile Photo </Text>
+        <View style={styles.screenSetup}>
+            <View style={styles.exitButton}>
+            <TouchableOpacity onPress={onClose}>
+                <Text style={styles.exitText}>X</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.setting} onPress={onClose}>
-                <Text style={styles.settingText}> Close Settings </Text>
+            </View>
+            <View style={styles.optionButtons}>
+            <TouchableOpacity style={styles.button} onPress={openPhotoSelect}>
+                <Text style={styles.textStyle}> Change Profile Photo </Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.button} onPress={pressLogOut}>
+                <Text style={styles.textStyle}> Log Out </Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={handleIcon8Navigation}>
                 <Text>SwoleGator-Defaults icons by Icon8</Text>
             </TouchableOpacity>
             <PhotoSelector isVisible={photoSelectorVisibility} onClose={closePhotoSelect}/>
+            </View>
         </View>
     );
 };
 
 export default SettingsScreen;
-
-const styles = StyleSheet.create({
-    container: {
+const boxShadow = {
+    shadowColor: 'lightgrey',
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 1.84,
+    elevation: 4,
+  };
+  const styles = StyleSheet.create({
+      screenSetup:{
         flex: 1,
-        justifyContent: 'space-evenly',
-        alignItems: 'center',
-    },
-    setting: {
+        backgroundColor: '#272727',
+      },
+      optionButtons: {
         justifyContent: 'center',
-        backgroundColor: 'lightblue', // Blue color (adjust as needed)
-        padding: 10,
-        borderRadius: 15,
-        marginTop: 20,
+        alignItems: 'center',
+      },
+      exitButton:{
+        color: 'white',
+        justifyContent: 'flex-end',
+        alignItems: 'flex-end',
+      },
+      exitText:{
+        color: 'white',
+        fontSize: 25,
+        alignItems: 'flex-end',
+        justifyContent: 'flex-end',
+        marginEnd: 25,
+        marginTop: 15,
     },
-    settingText:{
-        color: 'black',
-        fontSize: 24,
-        textAlign: 'center',
-        textAlignVertical: 'center',
-        backgroundColor: 'pink',
-    }
-});
+      button:{
+        alignItems: 'center',
+        backgroundColor: 'black',
+        borderRadius: 30,
+        padding:5,
+        marginTop: 45,
+        marginBottom: 10,
+        height: 45,
+        width: 250,
+        ...boxShadow,
+      },
+      textStyle:{
+        color: 'white',
+        textTransform: 'uppercase',
+        fontFamily: 'Oswald-Regular',
+        fontSize: 18,
+        alignItems: 'center',
+        justifyContent: 'center',
+      },
+      title:{
+        marginTop: 25,
+        height:180
+      },
+      titleText:{
+        textAlign:'center',
+        fontSize: 30,
+        textTransform: 'uppercase',
+        fontFamily: 'Oswald-Regular',
+        color: 'white',
+        margin: 50,
+      }
+    })

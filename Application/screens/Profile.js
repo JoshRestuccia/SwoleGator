@@ -166,11 +166,7 @@ const renderItem = ({ item }) => {
     },[friendUpdateFlag]);
 
     return(
-    <SafeAreaView style={styles.container}>
-        {/* Settings Button */}        
-        <TouchableOpacity style={styles.settingsButton} onPress={openSettings}>
-          <Text style={{fontSize: 15}}> Settings </Text>
-        </TouchableOpacity>          
+    <SafeAreaView style={styles.screenSetup}>         
         {/* User profile data */}
         <View style={styles.userInfoContainer}>
             {isDataLoading ? 
@@ -183,18 +179,29 @@ const renderItem = ({ item }) => {
                   <View style={styles.userInfoHeader}>
                     <Image source={{ uri: userData.profile_pic }} style={styles.profileImage} />
                     <View style={styles.userInfoHeaderRight} >
-                      <Text style={styles.userName}>{`${userData?.username}`}</Text>
-                      <Text style={styles.total}>{`Total: ${total}`}</Text>
-                      <TouchableOpacity style={styles.smallButton} onPress={() => navigation.navigate('Workouts')}>
-                          <Text style={styles.smallButtonText}>{`Manage Workouts`}</Text>
-                      </TouchableOpacity>
+                      <Text style={styles.textStyle}>{`${userData?.username}`}</Text>
                     </View>
-                  </View>
+                   
+                    </View>
                   {/*<Text>{`Age: ${userData?.age}`}</Text>*/}
+                  <TouchableOpacity style={styles.smallButton} onPress={() => navigation.navigate('Workouts')}>
+                          <Text style={styles.total}>{`Manage Workouts`}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.settings} onPress={openSettings}>
+                    <Text style={styles.settingsText}> Settings </Text>
+                  </TouchableOpacity>
                   <StatLine header={`Squat Sessions`} body={squats}/>
                   <StatLine header={`Deadlift Sessions`} body={deadlifts}/>
                   <StatLine header={`Bench Press Sessions`} body={presses}/>
-                  <StatLine header={`Barbell Curl Sessions`} body={curls}/>
+                  <StatLine header={`Barbell Curl Sessions`} body={curls}/> 
+                  <View style={styles.totalContainer}>
+                      <Text style={styles.total}>Total Lifts</Text>
+                      <Text style={styles.textStyle2}>{`${total}`}</Text>
+                  </View>
+                  <View style={styles.friendsContainer}>
+                      <Text style={styles.total}>Friends</Text>
+                      <Text style={styles.textStyle2}>{`${friends? friends.length : 0}`}</Text>
+                    </View>
                 </View>)
             }
         </View>
@@ -227,7 +234,7 @@ const renderItem = ({ item }) => {
           transparent={false}
           onRequestClose={closeSettings}
         >
-          <UserSettings onClose={closeSettings}/>
+          <SettingsScreen onClose={closeSettings}/>
         </Modal>
         {/* Friend Prompt Modal */}
         <Modal
@@ -242,8 +249,68 @@ const renderItem = ({ item }) => {
     )
 };
 
-
+const boxShadow = {
+  shadowColor: 'black',
+  shadowOffset: {
+    width: 0,
+    height: 0,
+  },
+  shadowOpacity: 0.25,
+  shadowRadius: 1.84,
+  elevation: 4,
+};
 const styles = StyleSheet.create({
+  screenSetup:{
+    flex: 1,
+    backgroundColor: '#272727',
+    alignItems: 'center',
+  },
+  button:{
+    alignItems: 'center',
+    backgroundColor: 'black',
+    borderRadius: 30,
+    padding:5,
+    marginTop: 45,
+    marginBottom: 10,
+    height: 45,
+    width: 250,
+    ...boxShadow,
+  },
+  settings:{
+    position: 'absolute',
+    left: 320,
+  },
+  settingsText:{
+    fontSize: 15,
+    color:'white',
+    textTransform: 'uppercase',
+    fontFamily: 'Oswald-Regular',
+  },
+  textStyle:{
+    color: 'white',
+    textTransform: 'uppercase',
+    fontFamily: 'Oswald-Regular',
+    fontSize: 32,
+  },
+  textStyle2:{
+    color: 'red',
+    alignSelf: 'center',
+    textTransform: 'uppercase',
+    fontFamily: 'Oswald-Regular',
+    fontSize: 32,
+  },
+  title:{
+    marginTop: 25,
+    height:180
+  },
+  titleText:{
+    textAlign:'center',
+    fontSize: 30,
+    textTransform: 'uppercase',
+    fontFamily: 'Oswald-Regular',
+    color: 'white',
+    margin: 50,
+  },
     container: {
       display: 'flex',
       height: '100%',
@@ -251,6 +318,24 @@ const styles = StyleSheet.create({
       flexDirection: 'column',
       alignContent: 'center',
       backgroundColor: 'gray'
+    },
+    totalContainer:{
+      position: 'absolute',
+      top: 90, // Adjust as needed
+      left: 130, // Adjust as needed
+      width: 120,
+      height: 90,
+      backgroundColor: '#272727', // Background color of the top view
+      ...boxShadow,
+    },
+    friendsContainer:{
+      position: 'absolute',
+      top: 90, // Adjust as needed
+      left: 260, // Adjust as needed
+      width: 120,
+      height: 90,
+      backgroundColor: '#272727', // Background color of the top view
+      ...boxShadow,
     },
     userInfoContainer:{
       flex: 0.7,
@@ -265,20 +350,24 @@ const styles = StyleSheet.create({
     userInfoHeader: {
       display: 'flex',
       flexDirection: 'row',
-      width: '90%',
-      backgroundColor: 'gray',
+      width: '100%',
+      height: 150,
+      backgroundColor: 'black',
       justifyContent: 'space-evenly'
     },
     profileImage: {
-      alignContent: 'center',
-      alignSelf: 'flex-start',
+      position: 'absolute',
+      top: 20, // Adjust as needed
+      left: 10, // Adjust as needed
       width: 120,
-      height: 120,
-      backgroundColor: 'gray',
+      width: 100,
+      height: 100,
+      backgroundColor: '#272727',
       borderColor: 'black',
       borderWidth: 5,
-      borderRadius: 25,
-      margin: 20,
+      borderRadius: 100,
+      marginTop: 10,
+
     },
     smallProfileImage: {
       alignContent: 'center',
@@ -292,6 +381,9 @@ const styles = StyleSheet.create({
       margin: 5,
     },
     userInfoHeaderRight: {
+      position: 'absolute',
+      left: 175,
+      top: 20,
       width: '100%',
       flex: 0.7,
       display: 'flex',
@@ -299,7 +391,6 @@ const styles = StyleSheet.create({
       justifyContent: 'space-evenly',
     },
     userName: {
-      alignSelf: 'center',
       fontSize: 30,
       fontWeight: 'bold',
       textAlign: 'center',
@@ -307,15 +398,20 @@ const styles = StyleSheet.create({
     total: {
       alignSelf: 'center',
       fontSize: 20,
-      fontWeight: 'bold',
+      textTransform: 'uppercase',
+      color: 'white',
+      fontFamily: 'Oswald-Regular',
       textAlign: 'center',
     },
     smallButton: {
-      width: '100%',
-      flex: 0.3,
-      backgroundColor: 'lightblue',
+      width: 150,
+      height: 50,
+      marginTop: 50,
+      marginBottom: 25,
+      backgroundColor: 'black',
       borderRadius: 25,
-      padding: 10
+      padding: 10,
+      ...boxShadow,
     },
     smallButtonText: {
       textAlign: 'center',
@@ -324,10 +420,11 @@ const styles = StyleSheet.create({
     },
     friendInfoContainer:{
       flex: 0.6,
+      marginTop: 280,
       width: '100%',
       display: 'flex',
       flexDirection: 'column',
-      backgroundColor: 'lightblue',
+      backgroundColor: 'black',
       borderTopLeftRadius: 25,
       borderTopRightRadius: 25,
       padding: 20
@@ -342,6 +439,7 @@ const styles = StyleSheet.create({
     },
     friendsHeader: {
       display: 'flex',
+      color: 'white',
       flexDirection: 'row',
       width: '100%',
       alignSelf: 'center',
@@ -355,6 +453,7 @@ const styles = StyleSheet.create({
       fontWeight: 'bold',
       margin: 10,
       textAlign: 'left',
+      color: 'white',
     },
     addFriends:{
       flex: 0.2,

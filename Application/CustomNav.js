@@ -4,6 +4,8 @@ import {createStackNavigator } from '@react-navigation/stack'
 import Login from './screens/Login'
 import SignUp from './screens/SignUp'
 import HomeScreen from './screens/HomeScreen'
+import PhotoSelector from './screens/PhotoSelector';
+import SettingsScreen from './screens/Settings';
 import PairingScreen from './screens/PairingScreen'
 import ExerciseSelection from './screens/ExerciseSelection';
 import GraphingScreen from './screens/GraphingScreen';
@@ -46,8 +48,20 @@ const HomeScreenNavigator = () => {
 export{HomeScreenNavigator}
 const NewLiftScreenNavigator = () => {
     return(
-        <Stack.Navigator>
+        <Stack.Navigator
+            initialRouteName='Exercise Selection'>
             <Stack.Screen
+                name = "Exercise Selection"
+                component={ExerciseSelection}
+                options={{ 
+                    title: 'swolegator', 
+                    headerTitleStyle: {fontFamily: 'Anta-Regular', fontSize: 35,},
+                    headerTitleAlign: 'center',
+                    headerTintColor: 'white',
+                    headerStyle: {backgroundColor: 'black', height: 80},
+                }}
+            ></Stack.Screen>
+                  <Stack.Screen
                 name = "Graphing Screen"
                 component={GraphingScreen}
                 options={{ 
@@ -57,7 +71,7 @@ const NewLiftScreenNavigator = () => {
                     headerTintColor: 'white',
                     headerStyle: {backgroundColor: 'black', height: 80},
                 }}
-            ></Stack.Screen>
+            />
         </Stack.Navigator>
     )
 }
@@ -79,7 +93,7 @@ const ProfileScreenNavigator = () => {
             />
             <Stack.Screen
                 name = "User Settings"
-                component={UserSettings}
+                component={SettingsScreen}
                 options={{ 
                     title: 'swolegator', 
                     headerTitleStyle: {fontFamily: 'Anta-Regular', fontSize: 35,},
@@ -91,6 +105,17 @@ const ProfileScreenNavigator = () => {
             <Stack.Screen
                 name="Workouts"
                 component={ManageWorkouts}
+                options={{
+                    title: 'swolegator', 
+                    headerTitleStyle: {fontFamily: 'Anta-Regular', fontSize: 35,},
+                    headerTitleAlign: 'center',
+                    headerTintColor: 'white',
+                    headerStyle: {backgroundColor: 'black', height: 80},
+                }}
+            />
+             <Stack.Screen
+                name="Change Profile Picture"
+                component={PhotoSelector}
                 options={{
                     title: 'swolegator', 
                     headerTitleStyle: {fontFamily: 'Anta-Regular', fontSize: 35,},
