@@ -28,6 +28,7 @@ const HomeScreen = ({navigation}) =>{
 
   const handleStopScan = () => {
     stopBLEScan();
+
   };
 
   useEffect(() => {
@@ -55,6 +56,7 @@ const HomeScreen = ({navigation}) =>{
       }
     };
     handleDiscoverAndConnect();
+
   }, [scannedDevices]);
 
   return(
@@ -69,7 +71,7 @@ const HomeScreen = ({navigation}) =>{
                 </View>
               :
                 <TouchableOpacity onPress={isScanning ? handleStopScan : handleStartScan} style={styles.button}>
-                  <Text style={styles.textStyle}>{isConnecting ? 'Connecting...' : 'Connect Device'}</Text>
+                  <Text style={styles.textStyle}>{isScanning ? 'Finding Device...' : isConnecting ? 'Connecting' :'Connect Device'}</Text>
                 </TouchableOpacity>
               }
           </View>

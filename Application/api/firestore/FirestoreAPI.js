@@ -630,6 +630,7 @@ export const FirestoreProvider = ({children}) => {
                 });
                 await userRef.update({'totalWorkouts': totalWorkouts});
                 console.log('Updated total workouts successfully!');
+                alert('Workout saved successfully! \nNavigate to Profile to view past workouts');
             }catch(err){
                 console.error(`Error updating totalWorkouts for user ${currentUser.email}`, err);
             }

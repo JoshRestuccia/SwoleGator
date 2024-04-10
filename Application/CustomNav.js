@@ -57,6 +57,17 @@ const NewLiftScreenNavigator = () => {
                     headerStyle: {backgroundColor: 'black', height: 80},
                 }}
             />
+            <Stack.Screen
+                            name = "Main"
+                            component={Profile}
+                            options={{
+                                title: 'swolegator',
+                                headerTitleStyle: {fontFamily: 'Anta-Regular', fontSize: 35,},
+                                headerTitleAlign: 'center',
+                                headerTintColor: 'white',
+                                headerStyle: {backgroundColor: 'black', height: 80},
+                            }}
+                        />
         </Stack.Navigator>
     )
 }

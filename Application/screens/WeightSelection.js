@@ -16,7 +16,7 @@ const MemoizedMotivationQuotes = React.memo(MotivationQuotes);
 
 // ToDo: Add a Modal that appears when Calibration is occurring.
 
-function WeightSelection() {
+function WeightSelection({navigation}) {
   const {
     bleData,
     isReadingData,
@@ -34,7 +34,7 @@ function WeightSelection() {
   const [workoutStarted, setWorkoutStarted] = useState(false);
   const [currentWorkoutType, setCurrentWorkoutType] = useState('Squat');
   const [currentWorkoutWeight, setCurrentWorkoutWeight] = useState('100');
-  
+  const [offset, setOffset] = useState('0');
   const [maxVelocity, setMaxVelocity] = useState('0');
   const [repCount, setRepCount] = useState('0');
   const [currentVelocity, setCurrentVelocity] = useState('0');
@@ -46,8 +46,11 @@ function WeightSelection() {
   const [workoutData, setWorkoutData] = useState([]);
 
   const cleanUp = () => {
+
+    setOffset(repCount);
+    console.log(offset);
+    setRepCount(repCount-offset);
     setWorkoutData([]); // Clear workout data for next session
-    setRepCount(0);
     setMaxVelocity(0);
     setCurrentVelocity(0);
     setPeakVelocity(0);
@@ -60,13 +63,15 @@ function WeightSelection() {
     await saveWorkoutData(workoutName, workoutData, currentWorkoutType, currentWorkoutWeight);
     cleanUp();
     setIsLoading(false);
+
   };
 
   const handleDataFormat = (data) => {
     const textData = String.fromCharCode.apply(null, new Uint8Array(data));
     const [maxV, rep, currentV] = textData.split(',').map(parseFloat);
+    setRepCount(rep - offset);
     console.log([maxV.toString(), rep.toString(), currentV.toString()]);
-    
+
     return { maxV, rep, currentV };
   };
 
@@ -178,7 +183,7 @@ function WeightSelection() {
           </View>
           <View style={styles.resetButtonContainer}>
             <TouchableOpacity style={styles.resetButton}
-              onPress={cleanUp}>
+              onPress={(cleanUp)}>
               <Text style={styles.saveButtonText}>
                 {isDataLoading ? `Loading...` : `Reset / Clear Workout Data`}
               </Text>

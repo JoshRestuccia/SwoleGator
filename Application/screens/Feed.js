@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
     flex: 0.5,
     alignContent: 'center',
     justifyContent: 'center',
-    backgroundColor: 'teal',
+    backgroundColor: 'black',
     borderBottomColor: 'white',
     borderBottomWidth: 2
   },
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   picker: {
-    backgroundColor: 'teal',
+    backgroundColor: 'black',
     color: 'white',
   },
 });
