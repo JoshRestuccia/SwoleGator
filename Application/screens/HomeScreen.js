@@ -27,6 +27,7 @@ const HomeScreen = ({navigation}) =>{
   };
 
   const handleStopScan = () => {
+    //TODO: add popup 
     stopBLEScan();
   };
 

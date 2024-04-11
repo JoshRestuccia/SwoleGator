@@ -1,15 +1,15 @@
 import React, {useState, useEffect} from 'react';
-import {StyleSheet, Modal, View, Image, Text, TouchableOpacity} from 'react-native';
+import {StyleSheet, Modal, View, Image, Text, FlatList, Button, TouchableHighlight, TouchableOpacity, TextInput} from 'react-native';
 import { useFirestore } from '../api/firestore/FirestoreAPI';
-import SettingsScreen from './Settings';
-import StatLine from '../components/StatLine';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function Profile({navigation}) {
-    const [isSettingsVisible, setSettingsVisible] = useState(false);
+export default function Friends({navigation}) {
+    const [friendPromptVisible, setFriendPromptVisible] = useState(false);
     const [userData, setUserData] = useState(null);
     const [friends, setFriends] = useState([]);
     const [isDataLoading, setIsDataLoading] = useState(true);
+    const [updateKey, setUpdateKey] = useState(true);
+    const [friendUpdateFlag, setFriendUpdateFlag] = useState(false);
 
     const [squats, setSquats] = useState(0);
     const [presses, setPresses] = useState(0);
@@ -20,6 +20,8 @@ export default function Profile({navigation}) {
     const {
       currentUser,
       getUserData,
+      addFriend,
+      isFriendsLoading,
       getNumberWorkoutsOfType,
       getTotalNumOfWorkouts,
       friendsFromDatabase
@@ -49,15 +51,85 @@ export default function Profile({navigation}) {
       });
     }, [userData])
 
+    const FriendPrompt = () => {
+      const [friendEmail, setFriendEmail] = useState('');
+      
+      const handleSubmitFriendEmail = async() => {
+        if(friendEmail){
+          try{
+            console.log('[Profile:FriendPrompt] Adding friend!');
+            await addFriend(friendEmail);
+            setFriendUpdateFlag(true);
+            setFriendEmail('');
+            closeFriendPrompt();
+          }catch(error){
+            console.error(error);
+          }
+        } else { 
+          console.warn('Cannot add friend. Email is empty');
+        }
+      };
 
-    const openSettings = () => {
-      setSettingsVisible(true);
+      useEffect(() => {
+        console.log(`FriendEmail: ${friendEmail}`);
+      }, [friendEmail]);
+    
+      return(
+        <View style={popup.modalContainer}>
+            <View style={popup.modalContent}>
+              <TouchableOpacity onPress={closeFriendPrompt} style={styles.closeFriend}>
+                  <Text style={styles.close}>X</Text>
+              </TouchableOpacity>
+              <Text style={popup.headerText}> Join Your Friends! </Text>
+              <Text style={popup.subheaderText}> Enter your friend's email below </Text>
+              <TextInput
+                style={popup.textInput}
+                placeholder='Friends Email'
+                onChangeText={setFriendEmail}
+                secureTextEntry={false}
+                value={friendEmail}
+              />
+              <TouchableOpacity 
+                style={popup.joinButton} 
+                onPress={handleSubmitFriendEmail}
+              >
+                <Text style={popup.buttonText}> Make Friends! </Text>
+              </TouchableOpacity>
+            </View>
+        </View>
+      );
     };
-    const closeSettings = () => {
-      setSettingsVisible(false);
+
+
+    const openFriendPrompt = () => {
+      setFriendPromptVisible(true);
     };
- 
-  useEffect(() => {
+
+    const closeFriendPrompt = () => {
+      setFriendPromptVisible(false);
+    }
+    
+const renderItem = ({ item }) => {
+  if (item) {
+    return (
+      <TouchableOpacity onPress={() => navigation.navigate('Friend Workout', {friend: {uid: item.uid, username: item.username}})}>
+        <View style={styles.friendBadge}>
+          <View style={styles.friendImage}>
+            <Image style={styles.smallProfileImage} source={{uri: item.profile_pic}} />
+          </View>
+          <View style={styles.friendBadgeBody}>
+            <Text style={styles.friendName}>{item.username}</Text>
+            <Text style={styles.friendText}>{`Friends Since: ${item.friendsSince}`}</Text>
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  } else {
+    return null;
+  }
+};
+
+    useEffect(() => {
       const fetchData = async() => {
         try{
           if(currentUser){
@@ -73,55 +145,62 @@ export default function Profile({navigation}) {
       fetchData();
     }, [currentUser]);
 
+    useEffect(() => {
+      const fetchFriends = async() => {
+        const tempFriends = await friendsFromDatabase();
+        setFriends(tempFriends);
+        setUpdateKey(!updateKey);
+      }
+      if(friendUpdateFlag === true){
+        fetchFriends();
+        setFriendUpdateFlag(false);
+      }
+    },[friendUpdateFlag]);
+
     return(
     <SafeAreaView style={styles.screenSetup}>         
-        {/* User profile data */}
-        <View style={styles.userInfoContainer}>
+        <View>
             {isDataLoading ? 
               ( <View style={styles.userInfo}>
                   <Text style={styles.userName}>{`${userData?.username}`}</Text>
                   <Text> Loading Data... </Text>
                 </View>)
             :
-              ( <View  style={styles.userInfo}>
-                  <View style={styles.userInfoHeader}>
-                    <Image source={{ uri: userData.profile_pic }} style={styles.profileImage} />
-                    <View style={styles.userInfoHeaderRight} >
-                      <Text style={styles.textStyle}>{`${userData?.username}`}</Text>
-                    </View>
-                   
-                    </View>
-                  {/*<Text>{`Age: ${userData?.age}`}</Text>*/}
-                  <TouchableOpacity style={styles.smallButton} onPress={() => navigation.navigate('Workouts')}>
-                          <Text style={styles.total}>{`Manage Visibility`}</Text>
+              (   
+              <View >
+                <View style={styles.friendsHeader}>
+                  <Text style={styles.friendsHeaderText}>{`Friends (${friends? friends.length : 0})`}</Text>
+                  <TouchableOpacity style={styles.addFriends} onPress={openFriendPrompt}>
+                    <Text style={styles.buttonText}>{` + `}</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.settings} onPress={openSettings}>
-                    <Text style={styles.settingsText}> Settings </Text>
-                  </TouchableOpacity>
-                  <StatLine header={`Squat Sessions`} body={squats}/>
-                  <StatLine header={`Deadlift Sessions`} body={deadlifts}/>
-                  <StatLine header={`Bench Press Sessions`} body={presses}/>
-                  <StatLine header={`Barbell Curl Sessions`} body={curls}/> 
-                  <View style={styles.totalContainer}>
-                      <Text style={styles.total}>Total Lifts</Text>
-                      <Text style={styles.textStyle2}>{`${total}`}</Text>
+                </View>
+              {isFriendsLoading ? 
+                <Text>Loading friends...</Text> 
+                : friends && (friends.length !== 0) ? 
+                  <FlatList
+                    key={updateKey}
+                    data={friends}
+                    keyExtractor={(item) => item.uid}
+                    renderItem={renderItem}
+                    contentContainerStyle={{rowGap: 12}}
+                  />
+                : <View>
+                    <Text style={styles.noFriendsText}>No friends to show</Text>
                   </View>
-                  <TouchableOpacity style={styles.friendsContainer} onPress={() =>navigation.navigate('Friends')}>
-                      <Text style={styles.total}>Friends</Text>
-                      <Text style={styles.textStyle2}>{`${friends? friends.length : 0}`}</Text>
-                    </TouchableOpacity>
-                </View>)
+              }
+               <Modal
+                visible={friendPromptVisible}
+                transparent={true}
+                onRequestClose={closeFriendPrompt}>
+                     <FriendPrompt/>
+                </Modal>
+            </View>)
             }
         </View>
-
-        {/* Settings Screen Modal */}
-        <Modal
-          visible={isSettingsVisible}
-          transparent={false}
-          onRequestClose={closeSettings}
-        >
-          <SettingsScreen onClose={closeSettings} navigation={navigation}/>
-        </Modal>
+        {/* Friends Data */}
+      
+        {/* Friend Prompt Modal */}
+       
     </SafeAreaView>
     )
 };
@@ -153,22 +232,27 @@ const styles = StyleSheet.create({
     width: 250,
     ...boxShadow,
   },
-  settings:{
-    position: 'absolute',
-    left: 320,
-    top: 5,
-  },
-  settingsText:{
-    fontSize: 15,
-    color:'white',
-    textTransform: 'uppercase',
-    fontFamily: 'Oswald-Regular',
-  },
   textStyle:{
     color: 'white',
     textTransform: 'uppercase',
     fontFamily: 'Oswald-Regular',
     fontSize: 32,
+  },
+  closeFriend:{
+    backgroundColor: 'white',
+    alignContent: 'end', 
+    justifyContent: 'flex-end',
+    fontSize: 32,
+    width: 20,
+  },
+  join:{
+    backgroundColor: 'darkred',
+    alignItems: "center",
+  },
+  close:{
+    color: 'black',
+    justifyContent: 'right',
+    fontSize: 20,
   },
   textStyle2:{
     color: 'red',
@@ -225,28 +309,6 @@ const styles = StyleSheet.create({
       width: '100%',
       alignItems: 'center',
     },
-    userInfoHeader: {
-      display: 'flex',
-      flexDirection: 'row',
-      width: '100%',
-      height: 150,
-      backgroundColor: 'black',
-      justifyContent: 'space-evenly'
-    },
-    profileImage: {
-      position: 'absolute',
-      top: 20, // Adjust as needed
-      left: 10, // Adjust as needed
-      width: 120,
-      width: 100,
-      height: 100,
-      backgroundColor: '#272727',
-      borderColor: 'black',
-      borderWidth: 5,
-      borderRadius: 100,
-      marginTop: 10,
-
-    },
     smallProfileImage: {
       alignContent: 'center',
       alignSelf: 'flex-start',
@@ -257,29 +319,6 @@ const styles = StyleSheet.create({
       borderWidth: 2,
       borderRadius: 10,
       margin: 5,
-    },
-    userInfoHeaderRight: {
-      position: 'absolute',
-      left: 175,
-      top: 30,
-      width: '100%',
-      flex: 0.7,
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'space-evenly',
-    },
-    userName: {
-      fontSize: 30,
-      fontWeight: 'bold',
-      textAlign: 'center',
-    },
-    total: {
-      alignSelf: 'center',
-      fontSize: 20,
-      textTransform: 'uppercase',
-      color: 'white',
-      fontFamily: 'Oswald-Regular',
-      textAlign: 'center',
     },
     smallButton: {
       width: 250,
@@ -326,25 +365,26 @@ const styles = StyleSheet.create({
       color: 'white',
     },
     addFriends:{
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: 'darkred',
-      borderRadius: 100,
-      width: 50,
-      height: 50,
-      alignSelf: 'center'
+        position: 'absolute',
+        left: 320,
+        top: 5,
+        backgroundColor: 'darkred',
+        borderRadius: 100,
+        width: 50,
+        height: 50,
+        alignSelf: 'center'
     },
     buttonText: {
-      color: '#fff', // White color for text
-      textAlign: 'center',
+      color: 'white', // White color for text
       fontWeight: 'bold',
       fontSize: 30,
-      margin: 0
+      alignSelf: 'center',
+      justifyContent: 'center',
     },
     friendBadge: {
       display: 'flex',
       flexDirection: 'row',
-      width: '80%',
+      width: '95%',
       padding: 10,
       borderRadius: 25,
       backgroundColor: 'white', // Add a contrasting background color
@@ -415,7 +455,7 @@ const popup = StyleSheet.create({
     marginBottom: 15,
   },
   joinButton: {
-    backgroundColor: '#3498db', // Blue color (adjust as needed)
+    backgroundColor: 'darkred', // Blue color (adjust as needed)
     padding: 10,
     borderRadius: 8,
     alignItems: 'center',
