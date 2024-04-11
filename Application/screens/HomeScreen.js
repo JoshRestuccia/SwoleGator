@@ -65,14 +65,21 @@ const HomeScreen = ({navigation}) =>{
             <Text style={styles.welcome}>{isLoading? `Loading...` : `Welcome, ${userData?.first}`} </Text>
           </View>
           <View style={styles.container}>
-              {device ? 
+              {device ?
                 <View style={styles.connectedContainer}>
                   <Text style={styles.connectedText}>Connected to SwoleGator</Text>
+
                 </View>
               :
+              <>
                 <TouchableOpacity onPress={isScanning ? handleStopScan : handleStartScan} style={styles.button}>
-                  <Text style={styles.textStyle}>{isScanning ? 'Finding Device...' : isConnecting ? 'Connecting' :'Connect Device'}</Text>
+                  <Text style={styles.textStyle}>{isScanning ? 'Finding Device...' :'Connect Device'}</Text>
                 </TouchableOpacity>
+
+                <Text style = {styles.warnStyle}>SWOLEGATOR not connected. </Text>
+                <Text style = {styles.warnStyle}>Please ensure device is turned on and in range.</Text>
+                <Text style = {styles.warnStyle}>You may need to restart the device</Text>
+ </>
               }
           </View>
       </View>
@@ -130,6 +137,13 @@ const styles = StyleSheet.create({
       textAlign: 'center',
       justifyContent: 'center',
     },
+    warnStyle:{
+          color: 'red',
+          fontFamily: 'Oswald-Regular',
+          fontSize: 16,
+          textAlign: 'center',
+          justifyContent: 'left',
+        },
     title:{
       flex: 0.4,
       alignItems: 'center',

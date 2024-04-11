@@ -69,9 +69,11 @@ export const BLEProvider = ({children}) => {
     const handleBLEScanStopped = () => {
         setIsScanning(false);
         console.log('[BLEContext::handleBLEScanStopped] stopped scanning');
-        if(!connectedDevice){
-        alert('Failed to connect to SWOLEGATOR. \n\nPlease ensure device is turned on and in range. \n\n\ You may need to restart the device');
-    };
+       // console.log(connectedDevice);
+        //console.log(isConnecting);
+      ///  if(connectedDevice == null && !isConnecting){
+       // alert('Failed to connect to SWOLEGATOR. \n\nPlease ensure device is turned on and in range. \n\n\ You may need to restart the device');
+    //};
     };
 
     const handleConnectPeripheral = async (peripheral) => {
