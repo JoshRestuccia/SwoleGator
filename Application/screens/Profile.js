@@ -1,7 +1,6 @@
 import React, {useState, useEffect} from 'react';
 import {StyleSheet, Modal, View, Image, Text, FlatList, TouchableHighlight, TouchableOpacity, TextInput} from 'react-native';
 import { useFirestore } from '../api/firestore/FirestoreAPI';
-import UserSettings from './UserSettings';
 import SettingsScreen from './Settings';
 import StatLine from '../components/StatLine';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -117,6 +116,12 @@ export default function Profile({navigation}) {
       setFriendPromptVisible(false);
     }
     
+    const handleWorkoutTypePress = (type) => {
+      navigation.navigate('Workouts Of Type', {
+        type: type
+      })
+    };
+
 const renderItem = ({ item }) => {
   if (item) {
     return (
@@ -180,9 +185,8 @@ const renderItem = ({ item }) => {
                     <Image source={{ uri: userData.profile_pic }} style={styles.profileImage} />
                     <View style={styles.userInfoHeaderRight} >
                       <Text style={styles.textStyle}>{`${userData?.username}`}</Text>
-                    </View>
-                   
-                    </View>
+                    </View> 
+                  </View>
                   {/*<Text>{`Age: ${userData?.age}`}</Text>*/}
                   <TouchableOpacity style={styles.smallButton} onPress={() => navigation.navigate('Workouts')}>
                           <Text style={styles.total}>{`Manage Visibility`}</Text>
@@ -190,10 +194,10 @@ const renderItem = ({ item }) => {
                   <TouchableOpacity style={styles.settings} onPress={openSettings}>
                     <Text style={styles.settingsText}> Settings </Text>
                   </TouchableOpacity>
-                  <StatLine header={`Squat Sessions`} body={squats}/>
-                  <StatLine header={`Deadlift Sessions`} body={deadlifts}/>
-                  <StatLine header={`Bench Press Sessions`} body={presses}/>
-                  <StatLine header={`Barbell Curl Sessions`} body={curls}/> 
+                  <StatLine header={`Squat Sessions`} body={squats} onPress={() => handleWorkoutTypePress('Squat')}/>
+                  <StatLine header={`Deadlift Sessions`} body={deadlifts} onPress={() => handleWorkoutTypePress('Deadlift')}/>
+                  <StatLine header={`Bench Press Sessions`} body={presses} onPress={() => handleWorkoutTypePress('Bench Press')}/>
+                  <StatLine header={`Barbell Curl Sessions`} body={curls} onPress={() => handleWorkoutTypePress('Barbell Curl')}/> 
                   <View style={styles.totalContainer}>
                       <Text style={styles.total}>Total Lifts</Text>
                       <Text style={styles.textStyle2}>{`${total}`}</Text>
@@ -201,8 +205,9 @@ const renderItem = ({ item }) => {
                   <View style={styles.friendsContainer}>
                       <Text style={styles.total}>Friends</Text>
                       <Text style={styles.textStyle2}>{`${friends? friends.length : 0}`}</Text>
-                    </View>
-                </View>)
+                  </View>
+                </View>
+                )
             }
         </View>
         {/* Friends Data */}
@@ -216,13 +221,15 @@ const renderItem = ({ item }) => {
           {isFriendsLoading ? 
             <Text>Loading friends...</Text> 
             : friends && (friends.length !== 0) ? 
-              <FlatList
-                key={updateKey}
-                data={friends}
-                keyExtractor={(item) => item.uid}
-                renderItem={renderItem}
-                contentContainerStyle={{rowGap: 12}}
-              />
+              <View style={styles.friends}>
+                <FlatList
+                  key={updateKey}
+                  data={friends}
+                  keyExtractor={(item) => item.uid}
+                  renderItem={renderItem}
+                  contentContainerStyle={{rowGap: 12}}
+                />
+              </View>
             : <View>
                 <Text style={styles.noFriendsText}>No friends to show</Text>
               </View>
@@ -264,6 +271,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#272727',
     alignItems: 'center',
+    justifyContent: 'space-between'
   },
   button:{
     alignItems: 'center',
@@ -327,6 +335,7 @@ const styles = StyleSheet.create({
       width: 120,
       height: 90,
       backgroundColor: '#272727', // Background color of the top view
+      borderRadius: 10,
       ...boxShadow,
     },
     friendsContainer:{
@@ -336,6 +345,7 @@ const styles = StyleSheet.create({
       width: 120,
       height: 90,
       backgroundColor: '#272727', // Background color of the top view
+      borderRadius: 10,
       ...boxShadow,
     },
     userInfoContainer:{
@@ -364,11 +374,8 @@ const styles = StyleSheet.create({
       width: 100,
       height: 100,
       backgroundColor: '#272727',
-      borderColor: 'black',
-      borderWidth: 5,
-      borderRadius: 100,
+      borderRadius: 15,
       marginTop: 10,
-
     },
     smallProfileImage: {
       alignContent: 'center',
@@ -383,7 +390,7 @@ const styles = StyleSheet.create({
     },
     userInfoHeaderRight: {
       position: 'absolute',
-      left: 175,
+      left: 150,
       top: 30,
       width: '100%',
       flex: 0.7,
@@ -394,7 +401,7 @@ const styles = StyleSheet.create({
     userName: {
       fontSize: 30,
       fontWeight: 'bold',
-      textAlign: 'center',
+      textAlign: 'left',
     },
     total: {
       alignSelf: 'center',
@@ -410,7 +417,7 @@ const styles = StyleSheet.create({
       marginTop: 50,
       marginBottom: 25,
       backgroundColor: 'black',
-      borderRadius: 25,
+      borderRadius: 10,
       padding: 10,
       ...boxShadow,
     },
@@ -420,30 +427,35 @@ const styles = StyleSheet.create({
       fontSize: 15,
     },
     friendInfoContainer:{
-      flex: 0.6,
-      marginTop: 280,
+      flex: 0.25,
       width: '100%',
       display: 'flex',
       flexDirection: 'column',
+      justifyContent: 'space-evenly',
       backgroundColor: 'black',
-      borderTopLeftRadius: 25,
-      borderTopRightRadius: 25,
-      padding: 20
+      borderTopLeftRadius: 15,
+      borderTopRightRadius: 15,
+      paddingHorizontal: 20
     },
     friendsHeader: {
+      flex: 0.5,
       display: 'flex',
-      color: 'white',
       flexDirection: 'row',
       width: '100%',
       alignSelf: 'center',
       justifyContent: 'space-between',
-      marginBottom: 20,
+      alignContent: 'center',
       borderRadius: 25
     },
+    friends: {
+      flex: 0.3,
+      margin: 0,
+      padding: 0
+    },
     friendsHeaderText: {
+      fontFamily: 'Oswald-Regular',
       flex: 0.6,
       fontSize: 30,
-      fontWeight: 'bold',
       margin: 10,
       textAlign: 'left',
       color: 'white',
@@ -452,7 +464,7 @@ const styles = StyleSheet.create({
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: 'darkred',
-      borderRadius: 100,
+      borderRadius: 15,
       width: 50,
       height: 50,
       alignSelf: 'center'
@@ -470,7 +482,7 @@ const styles = StyleSheet.create({
       width: '80%',
       padding: 10,
       borderRadius: 25,
-      backgroundColor: 'white', // Add a contrasting background color
+      backgroundColor: 'lightgray', // Add a contrasting background color
       alignSelf: 'center',
       justifyContent: 'space-evenly'
     },
@@ -482,10 +494,10 @@ const styles = StyleSheet.create({
       paddingLeft: 20
     },
     friendName:{
+      fontFamily: 'Oswald-Regular',
       textAlign: 'left',
       fontSize: 25,
-      fontWeight: 'bold',
-      color: 'gray'
+      color: '#272727'
     },
     row: {
       marginLeft: 10,
