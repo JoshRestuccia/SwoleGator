@@ -73,16 +73,25 @@ const OverallDataGraph = ({type}) => {
   },[trendData]);
 
   return (
-    <View>
-      <Picker
-        selectedValue={timeScale}
-        onValueChange={(value) => setTimeScale(value)}
-      >
-        <Picker.Item label="Week" value="week" />
-        <Picker.Item label="Month" value="month" />
-        <Picker.Item label="Year" value="year" />
-      </Picker>
-      <View>
+    <View style={styles.main}>
+        <View style={styles.header}>
+            <View style={styles.headerLeft}>
+                <Text style={styles.dataHeader}>{`Overall Trends (${type})`}</Text>
+            </View>
+            <View style={styles.headerRight}>
+                <Picker
+                    style={styles.picker}
+                    selectedValue={timeScale}
+                    onValueChange={(value) => setTimeScale(value)}
+                >
+                    <Picker.Item label="Week" value="week" />
+                    <Picker.Item label="Month" value="month" />
+                    <Picker.Item label="Year" value="year" />
+                </Picker>
+            </View>
+        </View>
+
+      <View style={styles.chartView}>
         { (!isLoadingData && trendData && victoryDomains) ?
             (<VictoryChart
                 theme={VictoryTheme.material}
@@ -137,6 +146,41 @@ const OverallDataGraph = ({type}) => {
 };
 
 const styles = StyleSheet.create({
+    main: {
+        flexDirection: 'column'
+    },
+    header:{
+        flexDirection: 'row',
+        justifyContent: 'center',
+        justifyContent:'space-between',
+        padding: 15,
+        paddingBottom: 0
+    },
+    headerLeft: {
+        flex: 0.6,
+    },
+        dataHeader: {
+            textAlign: 'center',
+            textAlignVertical: 'center',
+            fontFamily: 'Oswald-Regular',
+            fontSize: 30,
+            color: 'white',
+            padding: 15
+        },
+    headerRight: {
+        flex: 0.4,
+        backgroundColor: 'red',
+        borderRadius: 15,
+        marginHorizontal: 25,
+        alignSelf: 'center'
+
+    },
+    picker:{
+        color: 'white'
+    },
+    chartView: {
+        width: '100%',
+    },
     averages: {
         data: {
             stroke: 'blue',

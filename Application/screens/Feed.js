@@ -11,6 +11,10 @@ const Feed = () => {
   const [friendWorkouts, setFriendWorkouts] = useState([]);
   const [selectedFriend, setSelectedFriend] = useState(null);
 
+  // Create method to accumulate friend workouts over the last week
+  // Sort by date, newest on top, oldest on bottom
+  // Generate the display for each
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -96,7 +100,7 @@ const styles = StyleSheet.create({
     flex: 0.5,
     alignContent: 'center',
     justifyContent: 'center',
-    backgroundColor: 'teal',
+    backgroundColor: 'black',
     borderBottomColor: 'white',
     borderBottomWidth: 2
   },
@@ -126,7 +130,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   picker: {
-    backgroundColor: 'teal',
+    backgroundColor: 'black',
     color: 'white',
   },
 });

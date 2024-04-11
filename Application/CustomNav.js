@@ -58,6 +58,17 @@ const NewLiftScreenNavigator = () => {
                     headerStyle: {backgroundColor: 'black', height: 80},
                 }}
             />
+            <Stack.Screen
+                            name = "Main"
+                            component={Profile}
+                            options={{
+                                title: 'swolegator',
+                                headerTitleStyle: {fontFamily: 'Anta-Regular', fontSize: 35,},
+                                headerTitleAlign: 'center',
+                                headerTintColor: 'white',
+                                headerStyle: {backgroundColor: 'black', height: 80},
+                            }}
+                        />
         </Stack.Navigator>
     )
 }
@@ -122,9 +133,20 @@ const ProfileScreenNavigator = () => {
                     headerStyle: {backgroundColor: 'black', height: 80},
                 }}
             />
-              <Stack.Screen
+            <Stack.Screen
                 name="Friends"
                 component={Friends}
+                options={{
+                    title: 'swolegator', 
+                    headerTitleStyle: {fontFamily: 'Anta-Regular', fontSize: 35,},
+                    headerTitleAlign: 'center',
+                    headerTintColor: 'white',
+                    headerStyle: {backgroundColor: 'black', height: 80},
+                }}
+            />
+            <Stack.Screen
+                name="Workouts Of Type"
+                component={WorkoutsOfType}
                 options={{
                     title: 'swolegator', 
                     headerTitleStyle: {fontFamily: 'Anta-Regular', fontSize: 35,},

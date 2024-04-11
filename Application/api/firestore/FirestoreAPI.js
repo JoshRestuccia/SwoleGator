@@ -394,44 +394,44 @@ export const FirestoreProvider = ({children}) => {
         }
     };
 
-        const getFriendWorkoutData = async (friendUID) => {
-            try{
-                const userRef = firestore().collection('users').doc(friendUID);
-                const workoutsSnap = await userRef.collection('workouts').get();
-                const workoutDataObj = {};
-                //console.log("Fetching workoutsSnap:", workoutsSnap);
-                await Promise.all(workoutsSnap.docs.map(async (workoutDoc) => {
-                    const workoutType = workoutDoc.id;
-                    const workoutRef = workoutDoc.ref;
-                    const sessionsSnap = await workoutRef.collection('sessions').get();
-                    const workoutTypeData = [];
-                    //console.log("Fetching sessionsSnap for", workoutType, ":", sessionsSnap, '\n Total of ', sessions.length, 'sessions.');
-                    await Promise.all(sessionsSnap.docs.map(async (session) => {
-                        try{
-                            console.log('Getting session data for: ', session.id);
-                            const sessionName = session.id;
-                            const sessionDate = session.get('date');
-                            await session.ref.collection('data').get().then((sessionDataDoc) => {
-                                const sessionData = sessionDataDoc.docs.map((datapoint) => datapoint.data());
-                                console.log("Pushing workoutTypeData for", workoutType, ":", workoutTypeData);
-                                console.log(Array.from(Object.values(sessionData)));
-                                const victoryData = generateVictoryDataObject(sessionData);
-                                addWorkoutCalculationsToFirestore(victoryData, workoutType, sessionName); // Ideally, this should probably be in a better spot but as of now its gotta go here
-                                workoutTypeData.push({name: sessionName, date: sessionDate, data: Array.from(Object.values(sessionData))});
-                            });
-                        }catch(err){
-                            console.error(err);
-                        }
-                    }));
-                    workoutDataObj[workoutType] = workoutTypeData;
+    const getFriendWorkoutData = async (friendUID) => {
+        try{
+            const userRef = firestore().collection('users').doc(friendUID);
+            const workoutsSnap = await userRef.collection('workouts').get();
+            const workoutDataObj = {};
+            //console.log("Fetching workoutsSnap:", workoutsSnap);
+            await Promise.all(workoutsSnap.docs.map(async (workoutDoc) => {
+                const workoutType = workoutDoc.id;
+                const workoutRef = workoutDoc.ref;
+                const sessionsSnap = await workoutRef.collection('sessions').get();
+                const workoutTypeData = [];
+                //console.log("Fetching sessionsSnap for", workoutType, ":", sessionsSnap, '\n Total of ', sessions.length, 'sessions.');
+                await Promise.all(sessionsSnap.docs.map(async (session) => {
+                    try{
+                        console.log('Getting session data for: ', session.id);
+                        const sessionName = session.id;
+                        const sessionDate = session.get('date');
+                        await session.ref.collection('data').get().then((sessionDataDoc) => {
+                            const sessionData = sessionDataDoc.docs.map((datapoint) => datapoint.data());
+                            console.log("Pushing workoutTypeData for", workoutType, ":", workoutTypeData);
+                            console.log(Array.from(Object.values(sessionData)));
+                            const victoryData = generateVictoryDataObject(sessionData);
+                            addWorkoutCalculationsToFirestore(victoryData, workoutType, sessionName); // Ideally, this should probably be in a better spot but as of now its gotta go here
+                            workoutTypeData.push({name: sessionName, date: sessionDate, data: Array.from(Object.values(sessionData))});
+                        });
+                    }catch(err){
+                        console.error(err);
+                    }
                 }));
-                //Example of how to get data out of the array
-                //console.log(workoutDataObj['Bench Press'][0].data);
-                return workoutDataObj;
-            }catch(err){
-                console.error(err);
-            }
-        };
+                workoutDataObj[workoutType] = workoutTypeData;
+            }));
+            //Example of how to get data out of the array
+            //console.log(workoutDataObj['Bench Press'][0].data);
+            return workoutDataObj;
+        }catch(err){
+            console.error(err);
+        }
+    };
 
     const getPublicWorkoutsOfUser = async (userUID) => {
         try{
@@ -630,6 +630,7 @@ export const FirestoreProvider = ({children}) => {
                 });
                 await userRef.update({'totalWorkouts': totalWorkouts});
                 console.log('Updated total workouts successfully!');
+                alert('Workout saved successfully! \nNavigate to Profile to view past workouts');
             }catch(err){
                 console.error(`Error updating totalWorkouts for user ${currentUser.email}`, err);
             }

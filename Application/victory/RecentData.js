@@ -6,7 +6,10 @@ import {
     VictoryTheme,
     VictoryChart,
     VictoryScatter,
-    VictoryTooltip
+    VictoryTooltip,
+    Background,
+    VictoryLabel,
+    VictoryAxis
 } from "victory-native";
 import { useFirestore } from "../api/firestore/FirestoreAPI";
 
@@ -17,7 +20,7 @@ import { useFirestore } from "../api/firestore/FirestoreAPI";
     rep: <number>
 }*/
 
-const RecentDataGraph = ({raw_data}) => {
+const RecentDataGraph = ({raw_data, name}) => {
     const {generateVictoryDataObject} = useFirestore();
     const [victoryData, setVictoryData] = useState({maxVs: [], avgVs: []});
     const [victoryDomain, setVictoryDomain] = useState(null);
@@ -87,50 +90,68 @@ const RecentDataGraph = ({raw_data}) => {
     }, [victoryDomain])
     
     return(
-        <View>
+        <View style={styles.main}>
         {!isLoading && victoryData && victoryDomain ? (
-            <VictoryChart 
-                style={styles.chart}
-                theme={VictoryTheme.material}
-                domain={victoryDomain}
-                containerComponent={
-                    <VictoryVoronoiContainer
-                        labels={({datum}) => `REP: ${datum.rep}, VELO: ${Math.round(datum.data*100)/100}`}
-                        labelComponent={
-                            <VictoryTooltip
-                                constrainToVisibleArea
-                                center={{y: 20}}
-                                style={{color: 'red'}}
-                            />
-                        }
+            <View style={styles.chartContainer}>
+                <Text style={styles.chartTitle}>{name}</Text>
+                <VictoryChart 
+                    width={325}
+                    height={350}
+                    padding={50}
+                    style={styles.chart}
+                    theme={VictoryTheme.grayscale}
+                    domain={victoryDomain}
+                    containerComponent={
+                        <VictoryVoronoiContainer
+                            labels={({datum}) => `REP: ${datum.rep}, VELO: ${Math.round(datum.data*100)/100}`}
+                            labelComponent={
+                                <VictoryTooltip
+                                    constrainToVisibleArea
+                                    center={{y: 20}}
+                                    style={{color: 'red'}}
+                                />
+                            }
+                        />
+                    }
+                >
+                    <VictoryAxis crossAxis
+                        label={'REPS'}
+                        width={300}
+                        height={350}
+                        style={styles.axisStyleX}
                     />
-                }      
-            >
-                {
-                    victoryData.maxVs.length > 0 &&
-                        (<VictoryLine data={victoryData.maxVs} x='rep' y='data' 
-                            style={styles.maxLine}
-                        />)
-                }
-                {
-                    victoryData.avgVs.length > 0 && 
-                        (<VictoryLine data={victoryData.avgVs} x='rep' y='data'
-                            interpolation={'linear'}
-                            style={{
-                                data:{
-                                    stroke: 'darkblue',
-                                    strokeWidth: 4
-                                }
-                            }}
-                        />)
-                }
-                {
-                    strainPoints.length > 0 &&
-                        (<VictoryScatter data={strainPoints} x='rep' y='data'
-                            style={styles.strainPoints}
-                        />)
-                }
-            </VictoryChart>
+                    <VictoryAxis dependentAxis crossAxis
+                        label={'VELOS'}
+                        width={300}
+                        height={350}
+                        style={styles.axisStyleY}
+                    />
+                    {
+                        victoryData.maxVs.length > 0 &&
+                            (<VictoryLine data={victoryData.maxVs} x='rep' y='data' 
+                                style={styles.maxLine}
+                            />)
+                    }
+                    {
+                        victoryData.avgVs.length > 0 && 
+                            (<VictoryLine data={victoryData.avgVs} x='rep' y='data'
+                                interpolation={'linear'}
+                                style={{
+                                    data:{
+                                        stroke: 'darkblue',
+                                        strokeWidth: 4
+                                    }
+                                }}
+                            />)
+                    }
+                    {
+                        strainPoints.length > 0 &&
+                            (<VictoryScatter data={strainPoints} x='rep' y='data'
+                                style={styles.strainPoints}
+                            />)
+                    }
+                </VictoryChart>
+            </View>
         )
         : (
             <View style={{flex: 1, alignContent: 'space-around', justifyContent: 'space-around'}}>
@@ -145,8 +166,49 @@ const RecentDataGraph = ({raw_data}) => {
 
 
 const styles = StyleSheet.create({
+    main: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        alignContent: 'center',
+        justifyContent: 'center'
+    },
+    chartContainer: {
+        flex: 0.6,
+        alignSelf: 'center',
+        alignItems: 'center',
+        borderWidth: 3,
+        paddingLeft: 15,
+        borderColor: 'white',
+        borderRadius: 15,
+        backgroundColor: 'red',
+        width: '80%'
+    },
     chart:{
-        background: {fill: 'pink'},
+        background: {
+            fill: 'lightgray',
+        },
+        parent: {
+            display: 'flex',
+            flex: 0.8,
+            margin: 20,
+            marginTop: 0,
+            alignSelf: 'center',
+            justifyContent: 'center',
+        },
+    },
+    axisStyleX: {
+        axis: {stroke: 'white', strokeWidth: 3},
+        axisLabel: {fontFamily: 'Oswald-Regular', fontSize: 20, fill: 'white', padding: 30},
+        grid: {stroke: 'white'},
+        ticks: {stroke: 'white', size: 2},
+        tickLabels: {fontFamily: 'Oswald-Regular', fill: 'white', dx: -10}
+    },
+    axisStyleY: {
+        axis: {stroke: 'white', strokeWidth: 3},
+        axisLabel: {fontFamily: 'Oswald-Regular', fontSize: 20, fill: 'white', padding: 30},
+        grid: {stroke: 'white'},
+        ticks: {stroke: 'white', size: 2},
+        tickLabels: {fontFamily: 'Oswald-Regular', fill: 'white', padding: 3}
     },
     maxLine: {
         data: {
@@ -158,6 +220,18 @@ const styles = StyleSheet.create({
         data:{
             fill: 'red'
         }
+    },
+    chartTitle: {
+        paddingBottom: 0,
+        marginBottom: 0,
+        width: '80%',
+        alignSelf: 'center',
+        flex: 0.2,
+        fontSize: 30,
+        fontFamily: 'Oswald-Regular',
+        color: 'white',
+        textAlign: 'center',
+        textAlignVertical: 'center'
     }
 });
 
