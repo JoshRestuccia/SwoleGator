@@ -347,17 +347,11 @@ const styles = StyleSheet.create({
       padding: 20
     },
     friendsHeader: {
-      display: 'flex',
       color: 'white',
-      flexDirection: 'row',
-      width: '100%',
       alignSelf: 'center',
-      justifyContent: 'space-between',
       marginBottom: 20,
-      borderRadius: 25
     },
     friendsHeaderText: {
-      flex: 0.6,
       fontSize: 30,
       fontWeight: 'bold',
       margin: 10,
@@ -366,8 +360,8 @@ const styles = StyleSheet.create({
     },
     addFriends:{
         position: 'absolute',
-        left: 320,
-        top: 5,
+        left: 210,
+        top: 10,
         backgroundColor: 'darkred',
         borderRadius: 100,
         width: 50,
