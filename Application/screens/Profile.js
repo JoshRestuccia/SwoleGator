@@ -56,6 +56,11 @@ export default function Profile({navigation}) {
     const closeSettings = () => {
       setSettingsVisible(false);
     };
+    const handleWorkoutTypePress = (type) => {
+      navigation.navigate('Workouts Of Type', {
+        type: type
+      })
+    };
  
   useEffect(() => {
       const fetchData = async() => {
