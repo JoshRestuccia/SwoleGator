@@ -9,6 +9,7 @@ import Profile from './screens/Profile';
 import ManageWorkouts from './screens/ManageWorkouts';
 import FriendWorkout from './screens/FriendWorkout';
 import Friends from './screens/Friends';
+import WorkoutsOfType from './screens/WorkoutsOfType';
 
 const Stack = createStackNavigator()
 
