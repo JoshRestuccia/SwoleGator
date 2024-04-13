@@ -12,7 +12,6 @@ export default function Profile({navigation}) {
       getNumberWorkoutsOfType,
       getTotalNumOfWorkouts,
       friendsFromDatabase,
-      getMostRecentOfEachType
     } = useFirestore();
     const [isSettingsVisible, setSettingsVisible] = useState(false);
     const [userData, setUserData] = useState(null);
