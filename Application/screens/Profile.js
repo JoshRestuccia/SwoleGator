@@ -99,17 +99,18 @@ export default function Profile({navigation}) {
                     </View> 
                   </View>
                   {/*<Text>{`Age: ${userData?.age}`}</Text>*/}
-                  <TouchableOpacity style={styles.smallButton} onPress={() => navigation.navigate('Workouts')}>
-                          <Text style={styles.total}>{`Manage Visibility`}</Text>
-                  </TouchableOpacity>
                   <TouchableOpacity style={styles.settings} onPress={openSettings}>
                     <Text style={styles.settingsText}> Settings </Text>
                   </TouchableOpacity>
-                  <StatLine header={`Squat Sessions`} body={squats} onPress={() => handleWorkoutTypePress('Squat')}/>
-                  <StatLine header={`Deadlift Sessions`} body={deadlifts} onPress={() => handleWorkoutTypePress('Deadlift')}/>
-                  <StatLine header={`Bench Press Sessions`} body={presses} onPress={() => handleWorkoutTypePress('Bench Press')}/>
-                  <StatLine header={`Barbell Curl Sessions`} body={curls} onPress={() => handleWorkoutTypePress('Barbell Curl')}/> 
-
+                  <View style={styles.stats}>
+                      <StatLine header={`Squat Sessions`} body={squats} onPress={() => handleWorkoutTypePress('Squat')}/>
+                      <StatLine header={`Deadlift Sessions`} body={deadlifts} onPress={() => handleWorkoutTypePress('Deadlift')}/>
+                      <StatLine header={`Bench Press Sessions`} body={presses} onPress={() => handleWorkoutTypePress('Bench Press')}/>
+                      <StatLine header={`Barbell Curl Sessions`} body={curls} onPress={() => handleWorkoutTypePress('Barbell Curl')}/> 
+                  </View>
+                  <TouchableOpacity style={styles.smallButton} onPress={() => navigation.navigate('Workouts')}>
+                      <Text style={styles.total}>{`Manage Visibility`}</Text>
+                  </TouchableOpacity>
                   <View style={styles.totalContainer}>
                       <Text style={styles.total}>Total Lifts</Text>
                       <Text style={styles.textStyle2}>{`${total}`}</Text>
@@ -393,5 +394,8 @@ const styles = StyleSheet.create({
       fontWeight: '300',
       color: 'black',
       alignSelf: 'center'
+    },
+    stats: {
+      paddingTop: 100
     }
 });
