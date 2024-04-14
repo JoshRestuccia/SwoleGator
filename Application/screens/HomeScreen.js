@@ -84,12 +84,6 @@ const HomeScreen = ({ navigation }) => {
   }, [recents])
 
   useEffect(() => {
-    if(recs){
-      console.log("Recs: ", recs["Squat"]);
-    }
-  }, [recs])
-
-  useEffect(() => {
     const fetchData = async () => {
       try {
         if (currentUser) {
