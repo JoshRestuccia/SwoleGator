@@ -470,6 +470,36 @@ export const FirestoreProvider = ({children}) => {
         }
     };
 
+    const getMostRecentOfEachType = async () => {
+        try{
+            const userRef = firestore().collection('users').doc(currentUser.uid);
+            const types = ["Squat", "Deadlift", "Bench Press", "Barbell Curl"];
+            const mostRecentSessions = {};
+
+            for(const type of types){
+                const workoutsRef = userRef.collection('workouts').doc(type);
+                const sessionSnap = await workoutsRef.collection('sessions')
+                    .orderBy('date', 'desc').limit(1).get();
+                if(!sessionSnap.empty){
+                    const wt = sessionSnap.docs[0].get('weight');
+                    const mostRecentSessionDataRef = sessionSnap.docs[0].ref;
+                    const bool = checkCalculationsSaved(type, mostRecentSessionDataRef.id);
+                    if(bool){
+                        console.log(mostRecentSessionDataRef.id);
+                        const mostRecentSessionData = (await mostRecentSessionDataRef.collection('calc').get()).docs[0].data();
+                        mostRecentSessions[type] = {weight: wt, data: mostRecentSessionData};
+                    }
+                }else{
+                    mostRecentSessions[type] = null;
+                }
+            }
+            return mostRecentSessions;
+        }catch(err){
+            console.error(`There was an error fetching the most recent session.`, err);
+            throw err;
+        }
+    }
+
     const authStateChanged = async(authUser) => {
         if(authUser){
             setCurrentUser(authUser);
@@ -582,6 +612,7 @@ export const FirestoreProvider = ({children}) => {
 
             await updateTotalWorkoutsOfType(type);
             await updateTotalWorkouts();
+            await getAllWorkoutData();
             setIsDataLoading(false);
         }catch(err){
             throw err;
@@ -794,6 +825,7 @@ export const FirestoreProvider = ({children}) => {
         getTotalNumOfWorkouts,
         getAllWorkoutData,
         getMostRecentSession,
+        getMostRecentOfEachType,
         friendsFromDatabase,
         signUp,
         signIn,

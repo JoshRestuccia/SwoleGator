@@ -11,12 +11,6 @@ export default function Friends({navigation}) {
     const [updateKey, setUpdateKey] = useState(true);
     const [friendUpdateFlag, setFriendUpdateFlag] = useState(false);
 
-    const [squats, setSquats] = useState(0);
-    const [presses, setPresses] = useState(0);
-    const [curls, setCurls] = useState(0);
-    const [deadlifts, setDeadlifts] = useState(0);
-    const [total, setTotal] = useState(0);
-
     const {
       currentUser,
       getUserData,
@@ -26,30 +20,6 @@ export default function Friends({navigation}) {
       getTotalNumOfWorkouts,
       friendsFromDatabase
     } = useFirestore();
-
-    useEffect(() => {
-      const updateWorkoutData = async () => { 
-        try{
-          let n = await getNumberWorkoutsOfType('Squat');
-          setSquats(n || 0);
-          n = await getNumberWorkoutsOfType('Bench Press');
-          setPresses(n || 0);
-          n = await getNumberWorkoutsOfType('Barbell Curl');
-          setCurls(n || 0);
-          n = await getNumberWorkoutsOfType('Deadlift');
-          setDeadlifts(n || 0);  
-          n = await getTotalNumOfWorkouts();
-          setTotal(n || 0);
-        }catch(err){
-          throw err;
-        }
-      };
-      return(async () => {
-        setIsDataLoading(true);
-        await updateWorkoutData();
-        setIsDataLoading(false);
-      });
-    }, [userData])
 
     const FriendPrompt = () => {
       const [friendEmail, setFriendEmail] = useState('');
@@ -100,7 +70,6 @@ export default function Friends({navigation}) {
       );
     };
 
-
     const openFriendPrompt = () => {
       setFriendPromptVisible(true);
     };
@@ -133,10 +102,12 @@ const renderItem = ({ item }) => {
       const fetchData = async() => {
         try{
           if(currentUser){
+            setIsDataLoading(true);
             const userDataFirestore = await getUserData();
             setUserData(userDataFirestore);
             const temp_friends = await friendsFromDatabase();
             setFriends(temp_friends);
+            setIsDataLoading(false);
           }
         }catch(err){
           console.error(err);
@@ -158,50 +129,44 @@ const renderItem = ({ item }) => {
     },[friendUpdateFlag]);
 
     return(
-    <SafeAreaView style={styles.screenSetup}>         
-        <View>
-            {isDataLoading ? 
-              ( <View style={styles.userInfo}>
-                  <Text style={styles.userName}>{`${userData?.username}`}</Text>
-                  <Text> Loading Data... </Text>
-                </View>)
-            :
-              (   
-              <View >
-                <View style={styles.friendsHeader}>
-                  <Text style={styles.friendsHeaderText}>{`Friends (${friends? friends.length : 0})`}</Text>
-                  <TouchableOpacity style={styles.addFriends} onPress={openFriendPrompt}>
-                    <Text style={styles.buttonText}>{` + `}</Text>
-                  </TouchableOpacity>
-                </View>
-              {isFriendsLoading ? 
-                <Text>Loading friends...</Text> 
-                : friends && (friends.length !== 0) ? 
-                  <FlatList
-                    key={updateKey}
-                    data={friends}
-                    keyExtractor={(item) => item.uid}
-                    renderItem={renderItem}
-                    contentContainerStyle={{rowGap: 12}}
-                  />
-                : <View>
-                    <Text style={styles.noFriendsText}>No friends to show</Text>
-                  </View>
-              }
-               <Modal
-                visible={friendPromptVisible}
-                transparent={true}
-                onRequestClose={closeFriendPrompt}>
-                     <FriendPrompt/>
-                </Modal>
+    <View style={styles.screenSetup}>         
+        {isDataLoading ? 
+          ( <View style={styles.userInfo}>
+              <Text style={styles.userName}>{`${userData?.username}`}</Text>
+              <Text> Loading Data... </Text>
             </View>)
+        :
+          (   
+          <View style={styles.friends}>
+            <View style={styles.friendsHeader}>
+              <Text style={styles.friendsHeaderText}>{`Friends (${friends? friends.length : 0})`}</Text>
+              <TouchableOpacity style={styles.addFriends} onPress={openFriendPrompt}>
+                <Text style={styles.buttonText}>{`+`}</Text>
+              </TouchableOpacity>
+            </View>
+            {isFriendsLoading ? 
+              <Text>Loading friends...</Text> 
+              : friends && (friends.length !== 0) ? 
+                <FlatList
+                  key={updateKey}
+                  data={friends}
+                  keyExtractor={(item) => item.uid}
+                  renderItem={renderItem}
+                  contentContainerStyle={{rowGap: 12}}
+                />
+              : <View>
+                  <Text style={styles.noFriendsText}>No friends to show</Text>
+                </View>
             }
-        </View>
-        {/* Friends Data */}
-      
-        {/* Friend Prompt Modal */}
-       
-    </SafeAreaView>
+            <Modal
+            visible={friendPromptVisible}
+            transparent={true}
+            onRequestClose={closeFriendPrompt}>
+                  <FriendPrompt/>
+            </Modal>
+        </View>)
+        }
+    </View>
     )
 };
 
@@ -219,7 +184,6 @@ const styles = StyleSheet.create({
   screenSetup:{
     flex: 1,
     backgroundColor: '#272727',
-    alignItems: 'center',
   },
   button:{
     alignItems: 'center',
@@ -251,7 +215,7 @@ const styles = StyleSheet.create({
   },
   close:{
     color: 'black',
-    justifyContent: 'right',
+    justifyContent: 'flex-start',
     fontSize: 20,
   },
   textStyle2:{
@@ -273,107 +237,41 @@ const styles = StyleSheet.create({
     color: 'white',
     margin: 50,
   },
-    container: {
-      display: 'flex',
-      height: '100%',
-      width: '100%',
-      flexDirection: 'column',
-      alignContent: 'center',
-      backgroundColor: 'gray'
-    },
-    totalContainer:{
-      position: 'absolute',
-      top: 100, // Adjust as needed
-      left: 130, // Adjust as needed
-      width: 120,
-      height: 90,
-      backgroundColor: '#272727', // Background color of the top view
-      ...boxShadow,
-    },
-    friendsContainer:{
-      position: 'absolute',
-      top: 100, // Adjust as needed
-      left: 260, // Adjust as needed
-      width: 120,
-      height: 90,
-      backgroundColor: '#272727', // Background color of the top view
-      ...boxShadow,
-    },
-    userInfoContainer:{
-      flex: 0.7,
-      width: '100%',
-      display: 'flex',
-      flexDirection: 'row',
-    },
-    userInfo: {
-      width: '100%',
-      alignItems: 'center',
-    },
-    smallProfileImage: {
-      alignContent: 'center',
-      alignSelf: 'flex-start',
-      width: 50,
-      height: 50,
-      backgroundColor: 'gray',
-      borderColor: 'black',
-      borderWidth: 2,
-      borderRadius: 10,
-      margin: 5,
-    },
-    smallButton: {
-      width: 250,
-      height: 50,
-      marginTop: 50,
-      marginBottom: 25,
-      backgroundColor: 'black',
-      borderRadius: 25,
-      padding: 10,
-      ...boxShadow,
-    },
-    smallButtonText: {
-      textAlign: 'center',
-      textAlignVertical: 'center',
-      fontSize: 15,
-    },
-    friendInfoContainer:{
-      flex: 0.6,
-      marginTop: 280,
-      width: '100%',
-      display: 'flex',
-      flexDirection: 'column',
-      backgroundColor: 'black',
-      borderTopLeftRadius: 25,
-      borderTopRightRadius: 25,
-      padding: 20
-    },
+  friends: {
+    flex: 1,
+    flexDirection: 'column',
+    alignContent: 'center',
+  },
     friendsHeader: {
+      flex: 0.2,
+      width: '100%',
+      flexDirection: 'row',
+      paddingHorizontal: 15,
+      justifyContent: 'space-between',
+      alignItems: 'center',
       color: 'white',
       alignSelf: 'center',
       marginBottom: 20,
     },
     friendsHeaderText: {
-      fontSize: 30,
-      fontWeight: 'bold',
+      fontSize: 40,
+      fontFamily: 'Oswald-Regular',
       margin: 10,
-      textAlign: 'left',
+      textAlign: 'center',
       color: 'white',
     },
     addFriends:{
-        position: 'absolute',
-        left: 210,
-        top: 10,
         backgroundColor: 'darkred',
-        borderRadius: 100,
-        width: 50,
-        height: 50,
-        alignSelf: 'center'
+        borderRadius: 15,
+        width: 65,
+        height: 65,
     },
     buttonText: {
+      fontFamily: 'Oswald-Regular',
       color: 'white', // White color for text
-      fontWeight: 'bold',
-      fontSize: 30,
-      alignSelf: 'center',
-      justifyContent: 'center',
+      fontSize: 38,
+      textAlign: 'center',
+      textAlignVertical: 'center'
     },
     friendBadge: {
       display: 'flex',
@@ -411,7 +309,7 @@ const styles = StyleSheet.create({
     noFriendsText:{
       fontSize: 14,
       fontWeight: '300',
-      color: 'black',
+      color: 'white',
       alignSelf: 'center'
     }
 });

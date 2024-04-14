@@ -1,11 +1,18 @@
 import React, {useState, useEffect} from 'react';
-import {StyleSheet, Modal, View, Image, Text, TouchableOpacity} from 'react-native';
+import {StyleSheet, Modal, View, Image, Text, TouchableOpacity, FlatList} from 'react-native';
 import { useFirestore } from '../api/firestore/FirestoreAPI';
 import SettingsScreen from './Settings';
 import StatLine from '../components/StatLine';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Profile({navigation}) {
+    const {
+      currentUser,
+      getUserData,
+      getNumberWorkoutsOfType,
+      getTotalNumOfWorkouts,
+      friendsFromDatabase,
+    } = useFirestore();
     const [isSettingsVisible, setSettingsVisible] = useState(false);
     const [userData, setUserData] = useState(null);
     const [friends, setFriends] = useState([]);
@@ -17,13 +24,6 @@ export default function Profile({navigation}) {
     const [deadlifts, setDeadlifts] = useState(0);
     const [total, setTotal] = useState(0);
 
-    const {
-      currentUser,
-      getUserData,
-      getNumberWorkoutsOfType,
-      getTotalNumOfWorkouts,
-      friendsFromDatabase
-    } = useFirestore();
 
     useEffect(() => {
       const updateWorkoutData = async () => { 
@@ -38,6 +38,7 @@ export default function Profile({navigation}) {
           setDeadlifts(n || 0);  
           n = await getTotalNumOfWorkouts();
           setTotal(n || 0);
+
         }catch(err){
           throw err;
         }
@@ -48,7 +49,6 @@ export default function Profile({navigation}) {
         setIsDataLoading(false);
       });
     }, [userData])
-
 
     const openSettings = () => {
       setSettingsVisible(true);
@@ -78,6 +78,8 @@ export default function Profile({navigation}) {
       fetchData();
     }, [currentUser]);
 
+
+
     return(
     <SafeAreaView style={styles.screenSetup}>         
         {/* User profile data */}
@@ -96,16 +98,18 @@ export default function Profile({navigation}) {
                     </View> 
                   </View>
                   {/*<Text>{`Age: ${userData?.age}`}</Text>*/}
-                  <TouchableOpacity style={styles.smallButton} onPress={() => navigation.navigate('Workouts')}>
-                          <Text style={styles.total}>{`Manage Visibility`}</Text>
-                  </TouchableOpacity>
                   <TouchableOpacity style={styles.settings} onPress={openSettings}>
                     <Text style={styles.settingsText}> Settings </Text>
                   </TouchableOpacity>
-                  <StatLine header={`Squat Sessions`} body={squats} onPress={() => handleWorkoutTypePress('Squat')}/>
-                  <StatLine header={`Deadlift Sessions`} body={deadlifts} onPress={() => handleWorkoutTypePress('Deadlift')}/>
-                  <StatLine header={`Bench Press Sessions`} body={presses} onPress={() => handleWorkoutTypePress('Bench Press')}/>
-                  <StatLine header={`Barbell Curl Sessions`} body={curls} onPress={() => handleWorkoutTypePress('Barbell Curl')}/> 
+                  <View style={styles.stats}>
+                      <StatLine header={`Squat Sessions`} body={squats} onPress={() => handleWorkoutTypePress('Squat')}/>
+                      <StatLine header={`Deadlift Sessions`} body={deadlifts} onPress={() => handleWorkoutTypePress('Deadlift')}/>
+                      <StatLine header={`Bench Press Sessions`} body={presses} onPress={() => handleWorkoutTypePress('Bench Press')}/>
+                      <StatLine header={`Barbell Curl Sessions`} body={curls} onPress={() => handleWorkoutTypePress('Barbell Curl')}/> 
+                  </View>
+                  <TouchableOpacity style={styles.smallButton} onPress={() => navigation.navigate('Workouts')}>
+                      <Text style={styles.total}>{`Manage Visibility`}</Text>
+                  </TouchableOpacity>
                   <View style={styles.totalContainer}>
                       <Text style={styles.total}>Total Lifts</Text>
                       <Text style={styles.textStyle2}>{`${total}`}</Text>
@@ -113,7 +117,7 @@ export default function Profile({navigation}) {
                   <TouchableOpacity style={styles.friendsContainer} onPress={() =>navigation.navigate('Friends')}>
                       <Text style={styles.total}>Friends</Text>
                       <Text style={styles.textStyle2}>{`${friends? friends.length : 0}`}</Text>
-                    </TouchableOpacity>
+                  </TouchableOpacity>
                 </View>)
             }
         </View>
@@ -231,6 +235,7 @@ const styles = StyleSheet.create({
     userInfo: {
       width: '100%',
       alignItems: 'center',
+      flexDirection: 'column'
     },
     userInfoHeader: {
       display: 'flex',
@@ -388,49 +393,8 @@ const styles = StyleSheet.create({
       fontWeight: '300',
       color: 'black',
       alignSelf: 'center'
+    },
+    stats: {
+      paddingTop: 100
     }
-});
-
-
-const popup = StyleSheet.create({
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
-  },
-  modalContent: {
-    backgroundColor: '#fff', // White background
-    padding: 20,
-    borderRadius: 10,
-    width: '80%',
-  },
-  headerText: {
-    fontSize: 20,
-    textAlign: 'center',
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  subheaderText: {
-    textAlign: 'center',
-    fontSize: 16,
-    marginBottom: 15,
-  },
-  textInput: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 15,
-  },
-  joinButton: {
-    backgroundColor: '#3498db', // Blue color (adjust as needed)
-    padding: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: '#fff', // White color for text
-    fontWeight: 'bold',
-  },
 });
