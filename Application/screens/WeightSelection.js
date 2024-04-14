@@ -44,6 +44,7 @@ function WeightSelection({navigation}) {
   const [isLoading, setIsLoading] = useState(false);
   const [workoutName, setWorkoutName] = useState('');
   const [workoutData, setWorkoutData] = useState([]);
+  const [batteryPercentage, setBatteryPercentage] = useState('--%');
 
   const cleanUp = () => {
 
@@ -88,10 +89,11 @@ function WeightSelection({navigation}) {
   useEffect(() => {
     // format and move data to workoutData[]
     if(isReadingData && bleData && !calibrating){
-      const {maxV, rep, currentV, flag} = handleDataFormat(bleData);
+      const {maxV, rep, currentV, flag, battery} = handleDataFormat(bleData);
       setMaxVelocity(maxV);
-      setRepCount(rep);
+      setRepCount(rep-offset);
       setCurrentVelocity(currentV);
+      setBatteryPercentage(battery ? `${battery}%` : '--%');
       // Update peakVelocity only if the new currentV is greater
       setPeakVelocity((prevPeakVelocity) => Math.max(prevPeakVelocity, currentV));
       setWorkoutData([...workoutData, {maxV, rep, currentV}]);

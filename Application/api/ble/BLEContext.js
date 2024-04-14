@@ -27,11 +27,11 @@ export const BLEProvider = ({children}) => {
     useEffect(() => {
         const handleDataFormat = (data) => {
             const textData = String.fromCharCode.apply(null, new Uint8Array(data));
-            const [maxV, rep, currentV, flag] = textData.split(',').map(parseFloat);            
-            return { maxV, rep, currentV, flag };
+            const [maxV, rep, currentV, flag, battery] = textData.split(',').map(parseFloat);
+            return { maxV, rep, currentV, flag , battery};
         };
         if(bleData){
-            const {maxV, rep, currentV, flag} = handleDataFormat(bleData);
+            const {maxV, rep, currentV, flag, battery} = handleDataFormat(bleData);
             if(flag === 0){
                 setCalibrating(false);
             }else{

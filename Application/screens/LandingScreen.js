@@ -21,6 +21,7 @@ const Landing = ({navigation}) =>{
         <View style={styles.container}>
           <View style={styles.title}>
             <Text style={styles.swoleGator}>swolegator</Text>
+            <Text style={styles.batteryPercentage}>{batteryPercentage}</Text>
           </View>
           <FlatList
             data={data}
@@ -87,5 +88,10 @@ titleText:{
   textTransform: 'uppercase',
   fontFamily: 'Oswald-Medium',
   color: 'white',
-}
+},
+batteryPercentage: {
+    color: 'white',
+    alignItems: 'right',
+    fontSize: 10,
+  }
 })
