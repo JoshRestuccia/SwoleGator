@@ -31,6 +31,7 @@ int averagey = 0;
 int totalz = 0;
 int READZ[WINDOW_SIZE];
 int averagez = 0;
+int batterylevel = 0;
 
 //Velocity variables
 float prevvx = 0;
@@ -45,7 +46,7 @@ float minn = 0.0;
 float currv[10];
 float currvx[30];
 float reps = 0;
-float t;
+float t = -1.0;
 float vv;
 int state = 0;
 int orn;
@@ -116,7 +117,7 @@ void calibrate(int ori){
     vv = ((currv[9] - currv[0]) * 1000) + 81.0; // velocity from rate of change
     Serial.print("v: ");
     Serial.println(vv);
-    if (vv > maxx){ // if current velocity is greater than the max, set max to that velocity
+    /**if (vv > maxx){ // if current velocity is greater than the max, set max to that velocity
       maxx = vv;
       Serial.print("max: ");
       Serial.println(maxx);
@@ -125,7 +126,7 @@ void calibrate(int ori){
       minn = vv;
       Serial.print("min: ");
       Serial.println(minn);
-    }
+    }**/
     for (int k = 0; k < 10; k++){ // reset rate of change array to account for accumulating errors
       currv[k] = 0;
     }
@@ -149,7 +150,7 @@ void calibrate(int ori){
     vv = ((currv[9] - currv[0]) * 1000) + 81.0; // velocity from rate of change
     Serial.print("v: ");
     Serial.println(vv);
-    if (vv > maxx){ // if current velocity is greater than the max, set max to that velocity
+    /**if (vv > maxx){ // if current velocity is greater than the max, set max to that velocity
       maxx = vv;
       Serial.print("max: ");
       Serial.println(maxx);
@@ -158,7 +159,7 @@ void calibrate(int ori){
       minn = vv;
       Serial.print("min: ");
       Serial.println(minn);
-    }
+    }**/
     for (int k = 0; k < 10; k++){ // reset rate of change array to account for accumulating errors
       currv[k] = 0;
     }
@@ -282,7 +283,7 @@ void calibrate(int ori){
     vv = ((currv[9] - currv[0]) * 1000) - 90.0; // velocity from rate of change
     Serial.print("v: ");
     Serial.println(vv);
-    if (vv > maxx){ // if current velocity is greater than the max, set max to that velocity
+    /**if (vv > maxx){ // if current velocity is greater than the max, set max to that velocity
       maxx = vv;
       Serial.print("max: ");
       Serial.println(maxx);
@@ -291,7 +292,7 @@ void calibrate(int ori){
       minn = vv;
       Serial.print("min: ");
       Serial.println(minn);
-    }
+    }**/
     for (int k = 0; k < 10; k++){ // reset rate of change array to account for accumulating errors
       currv[k] = 0;
     }
@@ -305,13 +306,12 @@ int cal(){
   float x_a = a.acceleration.x;
   float z_a = a.acceleration.z;
   float y_a = a.acceleration.y;
-  bool st = false;
-  Serial.println("Detecting Orientation in 5 seconds");
+  //bool st = false;
+  Serial.println("Starting in 5 seconds");
   delay(5000);
   int orient = orientation(x_a, y_a, z_a);
-  Serial.println("Starting calibration in 5 seconds...");
   delay(5000);
-  while (st == false){
+  /**while (st == false){
     elapsedtime = millis() - starttime;
     if (elapsedtime < 30000) {
       calibrate(orient);
@@ -319,8 +319,7 @@ int cal(){
     else {
       st = true;
     }
-  }
-  t = (maxx + minn) / 2.0;
+  }**/
   return orient;
 }
 
@@ -373,6 +372,12 @@ void setup() {
   BLEDevice::startAdvertising();
   Serial.println("Characteristic defined!");
   pinMode(calb.PIN, INPUT_PULLUP);
+  maxx = 0.0;
+  minn = 0.0;
+  reps = 0.0;
+  flag = 1;
+  orn = cal();
+  flag = 0;
   delay(100);
 }
 
@@ -389,7 +394,10 @@ void loop() {
   char y[15];
   char z[15];
   char f[15];
+  char b[15];
   char del[15];
+
+  batterylevel = map(analogRead(33), 0.0f, 4095.0f, 0, 100);
 
   if (digitalRead(calb.PIN) == LOW){
     calb.pressed = true;
@@ -405,6 +413,8 @@ void loop() {
     strcpy(y, floatToString(reps, S, sizeof(S), 1));
     strcpy(z, floatToString(vv, S, sizeof(S), 1));
     strcpy(f, floatToString(flag, S, sizeof(S), 1));
+    strcpy(b, floatToString(batterylevel, S, sizeof(S), 1));
+    
 
 
     strcpy(del, ",");
@@ -414,6 +424,8 @@ void loop() {
     strcat(x,z);
     strcat(x,del);
     strcat(x,f);
+    strcat(x,del);
+    strcat(x,b);
     pCharacteristicx->setValue(x);
     Serial.println(x);
     orn = cal();
@@ -437,7 +449,7 @@ void loop() {
         currv[n] = (prevvx + (averagex)*0.001); // rate of change 
         prevvx = currv[n];
       }
-      vv = ((currv[9] - currv[0]) * 1000) + 81.0; // velocity from rate of change
+      vv = (((currv[9] - currv[0]) * 1000) + 81.0) / 9.8; // velocity from rate of change
     }
     else if (orn == 2) { // -y
       for (int n = 0; n < 10; n++){
@@ -454,7 +466,7 @@ void loop() {
         currv[n] = (prevvx + (averagex)*0.001); // rate of change 
         prevvx = currv[n];
       }
-      vv = ((currv[9] - currv[0]) * 1000) + 81.0; // velocity from rate of change
+      vv = (((currv[9] - currv[0]) * 1000) + 81.0) / 9.8; // velocity from rate of change
     }
     else if (orn == 1){ // +x
       for (int n = 0; n < 10; n++){
@@ -471,7 +483,7 @@ void loop() {
         currv[n] = (prevvx + (averagex)*0.001); // rate of change 
         prevvx = currv[n];
       }
-      vv = ((currv[9] - currv[0]) * 1000) - 81.0; // velocity from rate of change
+      vv = (((currv[9] - currv[0]) * 1000) - 81.0) / 9.8; // velocity from rate of change
     }
     else if (orn == 3) { // +y
       for (int n = 0; n < 10; n++){
@@ -488,7 +500,7 @@ void loop() {
         currv[n] = (prevvx + (averagex)*0.001); // rate of change 
         prevvx = currv[n];
       }
-      vv = ((currv[9] - currv[0]) * 1000) - 81.0; // velocity from rate of change
+      vv = (((currv[9] - currv[0]) * 1000) - 81.0) / 9.8; // velocity from rate of change
     }
     else if (orn == 4) { // -z
       for (int n = 0; n < 10; n++){
@@ -505,7 +517,7 @@ void loop() {
         currv[n] = (prevvx + (averagex)*0.001); // rate of change 
         prevvx = currv[n];
       }
-      vv = ((currv[9] - currv[0]) * 1000) + 72.0; // velocity from rate of change
+      vv = (((currv[9] - currv[0]) * 1000) + 72.0) / 9.8; // velocity from rate of change
     }
     else { // +z
       for (int n = 0; n < 10; n++){
@@ -522,15 +534,25 @@ void loop() {
         currv[n] = (prevvx + (averagex)*0.001); // rate of change 
         prevvx = currv[n];
       }
-      vv = ((currv[9] - currv[0]) * 1000) - 90.0; // velocity from rate of change
+      vv = (((currv[9] - currv[0]) * 1000) - 90.0) / 9.8; // velocity from rate of change
     }
 
     if (state == 0 && vv > t){ // if current velocity goes above threshold, increase rep
       state = 1;
       reps = reps + 1;
     }
-    if (state == 1 && vv < t - 10){ //if below, set state to 0 (ready for new rep count)
+    if (state == 1 && vv < t-0.7){ //if below, set state to 0 (ready for new rep count)
       state = 0;
+    }
+    if (vv > maxx){ // if current velocity is greater than the max, set max to that velocity
+      maxx = vv;
+      //Serial.print("max: ");
+      //Serial.println(maxx);
+    }
+    if (vv < minn){ // if less than minimum, set as min
+      minn = vv;
+      //Serial.print("min: ");
+      //Serial.println(minn);
     }
     for (int k = 0; k < 10; k++){ // reset array of rates to account for accumulating errors
       currv[k] = 0;
@@ -542,6 +564,8 @@ void loop() {
     strcpy(y, floatToString(reps, S, sizeof(S), 1));
     strcpy(z, floatToString(vv, S, sizeof(S), 1));
     strcpy(f, floatToString(flag, S, sizeof(S), 1));
+    strcpy(b, floatToString(batterylevel, S, sizeof(S), 1));
+
 
 
     strcpy(del, ",");
@@ -551,7 +575,17 @@ void loop() {
     strcat(x,z);
     strcat(x,del);
     strcat(x,f);
+    strcat(x,del);
+    strcat(x,b);
     pCharacteristicx->setValue(x);
+    Serial.print(maxx);
+    Serial.print(" ");
+    Serial.print(minn);
+    Serial.print(" ");
+    Serial.print(vv);
+    Serial.print(" ");
+    Serial.print(t);
+    Serial.print(" ");
     Serial.println(x);
   }
   
