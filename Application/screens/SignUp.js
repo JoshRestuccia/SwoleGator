@@ -102,7 +102,6 @@ textInput:{
   alignItems: 'flex-end',
   fontFamily: 'Oswald-Regular',
   color:'white',
-  textTransform: 'uppercase',
   width: 340,
   height: 50,
   marginTop: 15,

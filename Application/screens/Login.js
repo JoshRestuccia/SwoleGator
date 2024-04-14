@@ -95,7 +95,6 @@ textInput:{
   alignItems: 'flex-end',
   fontFamily: 'Oswald-Regular',
   color:'white',
-  textTransform: 'uppercase',
   width: 340,
   height: 50,
 },
@@ -161,7 +160,6 @@ textBoxes:{
 titleText:{
   textAlign:'center',
   fontSize: 30,
-  textTransform: 'uppercase',
   fontFamily: 'Oswald-Medium',
   color: 'white',
 }
