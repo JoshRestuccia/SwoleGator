@@ -48,29 +48,32 @@ const HomeScreen = ({ navigation }) => {
     if(recents){
       let dataByType = {};
       Object.entries(recents).forEach((type) => {
-        console.log(type);
-        const maxVs = type[1].data.maxVs;
-        const avgVs = type[1].data.avgVs;
-        const weight = type[1].weight;
-        let mx = 0;
-        let avg = 0;
-        let sum = 0;
-        let cnt = 0;
-        maxVs.forEach((dp) => {
-          if(dp.data > mx) mx = dp.data;
-        });
-        avgVs.forEach((dp) => {
-          sum += dp.data;
-          cnt += 1;
-        });
-        avg = sum/cnt;
-        const dataObj = {
-          "weight": weight,
-          "avg": avg,
-          "max": mx,
-          "rec": getRec(avg, mx)
-        };
-        dataByType[type[0]] = dataObj;
+        if(type[1] == null){
+          dataByType[type[0]] = null;
+        }else{
+          const maxVs = type[1].data.maxVs;
+          const avgVs = type[1].data.avgVs;
+          const weight = type[1].weight;
+          let mx = 0;
+          let avg = 0;
+          let sum = 0;
+          let cnt = 0;
+          maxVs.forEach((dp) => {
+            if(dp.data > mx) mx = dp.data;
+          });
+          avgVs.forEach((dp) => {
+            sum += dp.data;
+            cnt += 1;
+          });
+          avg = sum/cnt;
+          const dataObj = {
+            "weight": weight,
+            "avg": avg,
+            "max": mx,
+            "rec": getRec(avg, mx)
+          };
+          dataByType[type[0]] = dataObj;
+        }
       });
       const dataArray = Object.entries(dataByType).map(([name, data]) => ({
         name,
@@ -79,6 +82,12 @@ const HomeScreen = ({ navigation }) => {
       setRecs(dataArray);
     }
   }, [recents])
+
+  useEffect(() => {
+    if(recs){
+      console.log("Recs: ", recs["Squat"]);
+    }
+  }, [recs])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -119,12 +128,21 @@ const HomeScreen = ({ navigation }) => {
   }, [scannedDevices]);
 
   const recListItem = ({item}) => {
-    return(
-      <View style={item.rec === "HOLD" ? styles.weightContainerHold : styles.weightContainer}>
+    if(item.weight && item.rec){
+      return(
+        <View style={item.rec === "HOLD" ? styles.weightContainerHold : styles.weightContainer}>
           <Text style={styles.weightText}>{`${item.name}[${item.weight}]`}</Text>
           <Text style={styles.recommendationText}>{`${item.rec}`}</Text>
-      </View>
-    )
+        </View>
+      );
+    }else{
+      return(
+        <View style={item.rec === "HOLD" ? styles.weightContainerHold : styles.weightContainer}>
+          <Text style={styles.weightText}>{`${item.name}`}</Text>
+          <Text style={styles.recommendationText}>{`No Data`}</Text>
+        </View>
+      )
+    }
   };
 
   return (
@@ -134,7 +152,7 @@ const HomeScreen = ({ navigation }) => {
       </View>
       <View style={styles.recommendations}>
           <Text style={styles.recommendationHeader}>Based on your last sessions... </Text>
-          {recs ? (
+          {!isLoading && recs ? (
             <FlatList
             data={recs}
             renderItem={recListItem}
