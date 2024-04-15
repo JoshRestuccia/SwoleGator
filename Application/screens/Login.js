@@ -4,7 +4,7 @@ import React, {useState, useEffect} from 'react';
 import { useFirestore } from '../api/firestore/FirestoreAPI';
 
 
-const Login = ({navigation}) => {
+const Login = ({navigation, batteryPercentage}) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     
@@ -38,6 +38,7 @@ const Login = ({navigation}) => {
     <View style={styles.container}>
       <View>
         <Text style={styles.swoleGator}>swolegator</Text>
+     
       </View>
       <View style={styles.textBoxes}>
         <TextInput

@@ -3,7 +3,7 @@ import { Text, View, TouchableOpacity, StyleSheet, FlatList } from 'react-native
 import { useBLE } from '../api/ble/BLEContext';
 import { useFirestore } from '../api/firestore/FirestoreAPI';
 
-const HomeScreen = ({ navigation }) => {
+const HomeScreen = ({ navigation, batteryPercentage }) => {
   const {
     isScanning,
     startBLEScan,
@@ -141,6 +141,7 @@ const HomeScreen = ({ navigation }) => {
 
   return (
     <View style={styles.screenSetup}>
+
       <View style={styles.title}>
         <Text style={styles.welcome}>{isLoading ? 'Loading...' : `Welcome, ${userData?.first}`}</Text>
       </View>
@@ -166,18 +167,21 @@ const HomeScreen = ({ navigation }) => {
           </View>
           :
           <View style={styles.connectedContainer}>
-            {!connected &&  
-              <View style={styles.warnContainer}>
+            <TouchableOpacity onPress={isScanning ? handleStopScan : handleStartScan} style={styles.button}>
+                          <Text style={styles.textStyle}>{isScanning ? 'Finding Device...' : 'Connect Device'}</Text>
+                        </TouchableOpacity>
+            {!connected &&
+              <View>
                 <Text style = {styles.warnStyle}>SWOLEGATOR not connected. </Text>
                 <Text style = {styles.warnStyle}>Please ensure device is turned on and in range.</Text>
                 <Text style = {styles.warnStyle}>You may need to restart the device</Text>
               </View>
             }
-            <TouchableOpacity onPress={isScanning ? handleStopScan : handleStartScan} style={styles.button}>
-              <Text style={styles.textStyle}>{isScanning ? 'Finding Device...' : 'Connect Device'}</Text>
-            </TouchableOpacity>
+
           </View>
+
         }
+
       </View>
     </View>
   );
@@ -232,7 +236,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   warnStyle: {
-    color: '#700C0C',
+    color: 'white',
     fontFamily: 'Oswald-Regular',
     fontSize: 16,
     textAlign: 'center',
@@ -291,6 +295,12 @@ const styles = StyleSheet.create({
         borderWidth: 2.5,
         borderRadius: 5,
   },
+  batteryPercentage: {
+      color: 'white',
+      fontSize: 20,
+      fontFamily: 'Oswald-Regular',
+      testAlign : 'right'
+    },
   weightText: {
     color: 'white',
     fontFamily: 'Oswald-Regular',

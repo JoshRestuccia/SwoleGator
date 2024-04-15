@@ -46,6 +46,7 @@ function GraphingScreen({navigation}) {
   const [isLoading, setIsLoading] = useState(false);
   const [workoutName, setWorkoutName] = useState('');
   const [workoutData, setWorkoutData] = useState([]);
+  const [batteryPercentage, setBatteryPercentage] = useState('0');
 
   const cleanUp = () => {
     setWorkoutData([]); // Clear workout data for next session
@@ -69,7 +70,7 @@ function GraphingScreen({navigation}) {
     const [maxV, rep, currentV] = textData.split(',').map(parseFloat);
     console.log([maxV.toString(), rep.toString(), currentV.toString()]);
     
-    return { maxV, rep, currentV };
+    return { maxV, rep, currentV, batteryPercentage };
   };
 
   useEffect(() => {
@@ -95,7 +96,7 @@ function GraphingScreen({navigation}) {
   useEffect(() => {
     // format and move data to workoutData[]
     if(isReadingData && bleData && !calibrating){
-      const {maxV, rep, currentV, flag} = handleDataFormat(bleData);
+      const {maxV, rep, currentV, flag, batteryPercentage} = handleDataFormat(bleData);
       setMaxVelocity(maxV);
       setRepCount(rep);
       setCurrentVelocity(currentV);
@@ -147,8 +148,9 @@ function GraphingScreen({navigation}) {
   }
 
   return (
+
     <View style={styles.container}>
-      
+
       {/* Picker for selecting Workout Type */}
       <View style={styles.workoutType}>
         <Text style={styles.selectWorkoutHeader}>Select the workout type:</Text>
@@ -196,9 +198,14 @@ function GraphingScreen({navigation}) {
         <TouchableOpacity style={styles.startWorkoutButton}
           onPress={handleBeginWorkout}
         >
+
           <Text style={styles.saveButtonText}> Begin Workout </Text>
         </TouchableOpacity>
+
+
       </View>
+
+
 
       {/* Modals */}
       <LiveWorkoutModal
@@ -246,6 +253,12 @@ const styles = StyleSheet.create({
     flex: 0.5,
     paddingBottom: 0 
   },
+   batteryPercentage: {
+            color: 'white',
+            fontSize: 20,
+            fontFamily: 'Oswald-Regular',
+            //textAlign : 'right'
+          },
   // Picker for selecting Workout Type
   workoutSelector: {
     flex: 0.8,

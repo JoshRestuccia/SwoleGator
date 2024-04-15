@@ -5,7 +5,7 @@ import MotivationQuotes from '../data/motivation.js';
 const MemoizedMotivationQuotes = React.memo(MotivationQuotes);
 
 const LiveWorkoutModal = ({visible, currentWorkoutWeight, currentWorkoutType, repCount, peakVelocity, handleSaveWorkout, 
-                            isDataLoading, handleCloseWorkout, cleanUp, calibrating}) => {
+                            isDataLoading, handleCloseWorkout, cleanUp, calibrating, batteryPercentage}) => {
 
     return(
         <Modal 
@@ -19,8 +19,10 @@ const LiveWorkoutModal = ({visible, currentWorkoutWeight, currentWorkoutType, re
                         <Text style={styles.calibrating}>Calibrating...</Text>
                         <Text style={styles.calibrationSteps}>Please perform a few normal reps with no weight and then press RESET</Text>
                     </View>
-                :    
+                :
+
                     <View style={styles.repCountBox}>
+                    <Text style={styles.batteryPercentage}>Device Battery: {batteryPercentage}</Text>
                         <Text style={styles.repCount}>{`${repCount}`}</Text>
                         <MemoizedMotivationQuotes/>
                     </View>
@@ -161,4 +163,10 @@ parametersAndSaveButton: {
         color: 'white',
         fontFamily: 'Oswald-Regular',
       },
+      batteryPercentage: {
+                  color: 'white',
+                  fontSize: 20,
+                  fontFamily: 'Oswald-Regular',
+                  //textAlign : 'right'
+                },
 });
