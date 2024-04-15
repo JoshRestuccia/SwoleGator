@@ -6,7 +6,6 @@ const MemoizedMotivationQuotes = React.memo(MotivationQuotes);
 
 const LiveWorkoutModal = ({visible, currentWorkoutWeight, currentWorkoutType, repCount, peakVelocity, handleSaveWorkout, 
                             isDataLoading, handleCloseWorkout, cleanUp, calibrating, batteryPercentage}) => {
-
     return(
         <Modal 
           visible={visible}
@@ -22,7 +21,7 @@ const LiveWorkoutModal = ({visible, currentWorkoutWeight, currentWorkoutType, re
                 :
 
                     <View style={styles.repCountBox}>
-                    <Text style={styles.batteryPercentage}>Device Battery: {batteryPercentage}</Text>
+                    <Text style={styles.batteryPercentage}>Device Battery: {batteryPercentage}%</Text>
                         <Text style={styles.repCount}>{`${repCount}`}</Text>
                         <MemoizedMotivationQuotes/>
                     </View>
