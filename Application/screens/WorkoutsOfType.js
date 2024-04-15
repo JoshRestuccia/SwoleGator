@@ -40,7 +40,7 @@ const WorkoutsOfType = ({route}) => {
         let dd, mm, yyyy;
         if(convertDate){
             dd = convertDate.getDate();
-            mm = convertDate.getMonth();
+            mm = convertDate.getMonth()+1;
             yyyy = convertDate.getFullYear();
         }
         return(

@@ -158,7 +158,7 @@ export const FirestoreProvider = ({children}) => {
                     startDate.setDate(endDate.getDate() - 7); // subtract a week
                     break;
                 case 'month':
-                    startDate.setDate(endDate.getMonth() - 1); // subtract a month
+                    startDate.setMonth(endDate.getMonth() - 1); // subtract a month
                     break;
                 case 'year':
                     startDate.setFullYear(endDate.getFullYear()-1); // subtract a year
