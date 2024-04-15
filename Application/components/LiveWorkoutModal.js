@@ -1,4 +1,4 @@
-import React, {useEffect} from "react";
+import React from "react";
 import { Modal, View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import MotivationQuotes from '../data/motivation.js';
 
@@ -6,11 +6,6 @@ const MemoizedMotivationQuotes = React.memo(MotivationQuotes);
 
 const LiveWorkoutModal = ({visible, currentWorkoutWeight, currentWorkoutType, repCount, peakVelocity, handleSaveWorkout, 
                             isDataLoading, handleCloseWorkout, cleanUp, calibrating, batteryPercentage}) => {
-
-    useEffect(() => {
-        console.log("Battery perc: ", batteryPercentage);
-    }, [batteryPercentage])
-
     return(
         <Modal 
           visible={visible}
@@ -26,7 +21,7 @@ const LiveWorkoutModal = ({visible, currentWorkoutWeight, currentWorkoutType, re
                 :
 
                     <View style={styles.repCountBox}>
-                    <Text style={styles.batteryPercentage}>Device Battery: {batteryPercentage}</Text>
+                    <Text style={styles.batteryPercentage}>Device Battery: {batteryPercentage}%</Text>
                         <Text style={styles.repCount}>{`${repCount}`}</Text>
                         <MemoizedMotivationQuotes/>
                     </View>
