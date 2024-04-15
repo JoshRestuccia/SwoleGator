@@ -171,7 +171,7 @@ const HomeScreen = ({ navigation, batteryPercentage }) => {
                           <Text style={styles.textStyle}>{isScanning ? 'Finding Device...' : 'Connect Device'}</Text>
                         </TouchableOpacity>
             {!connected &&
-              <View >
+              <View>
                 <Text style = {styles.warnStyle}>SWOLEGATOR not connected. </Text>
                 <Text style = {styles.warnStyle}>Please ensure device is turned on and in range.</Text>
                 <Text style = {styles.warnStyle}>You may need to restart the device</Text>
@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   warnStyle: {
-    color: '#700C0C',
+    color: 'white',
     fontFamily: 'Oswald-Regular',
     fontSize: 16,
     textAlign: 'center',
