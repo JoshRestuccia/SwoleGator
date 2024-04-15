@@ -69,11 +69,11 @@ function WeightSelection({navigation}) {
 
   const handleDataFormat = (data) => {
     const textData = String.fromCharCode.apply(null, new Uint8Array(data));
-    const [maxV, rep, currentV] = textData.split(',').map(parseFloat);
+    const [maxV, rep, currentV, batteryPercentage] = textData.split(',').map(parseFloat);
     setRepCount(rep - offset);
     console.log([maxV.toString(), rep.toString(), currentV.toString()]);
-
-    return { maxV, rep, currentV };
+    console.log(batteryPercentage.toString());
+    return { maxV, rep, currentV, batteryPercentage };
   };
 
   useEffect(() => {
@@ -124,6 +124,7 @@ function WeightSelection({navigation}) {
   };
 
   return (
+
     <View style={containerStyles.container}>
 
       {/* Picker for selecting Workout Type */}
@@ -371,6 +372,12 @@ parametersAndSaveButton: {
       padding: 10,
       marginHorizontal: 0
     },
+    batteryPercentage: {
+          color: 'white',
+          fontSize: 20,
+          fontFamily: 'Oswald-Regular',
+          //testAlign : 'right'
+        },
     // Save Button Text
     saveButtonText: {
       fontSize: 15,
