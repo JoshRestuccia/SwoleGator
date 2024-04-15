@@ -333,10 +333,10 @@ const styles = StyleSheet.create({
   },
   columnWrap: {
     marginBottom: 5,
-    marginRight: 45,
+    marginRight: 40,
     marginTop: 5,
     marginLeft: 0,
-    width: 400,
+    width: 415,
     justifyContent: 'space-evenly'
   }
 });
