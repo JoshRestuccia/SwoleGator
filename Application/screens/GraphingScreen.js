@@ -46,7 +46,7 @@ function GraphingScreen({navigation}) {
   const [isLoading, setIsLoading] = useState(false);
   const [workoutName, setWorkoutName] = useState('');
   const [workoutData, setWorkoutData] = useState([]);
-  const [batteryPercentage, setBatteryPercentage] = useState('0');
+  const [btry, setBtry] = useState('0');
 
   const cleanUp = () => {
     setWorkoutData([]); // Clear workout data for next session
@@ -67,10 +67,10 @@ function GraphingScreen({navigation}) {
 
   const handleDataFormat = (data) => {
     const textData = String.fromCharCode.apply(null, new Uint8Array(data));
-    const [maxV, rep, currentV] = textData.split(',').map(parseFloat);
-    console.log([maxV.toString(), rep.toString(), currentV.toString()]);
+    const [maxV, rep, currentV, flag, batteryPercentage] = textData.split(',').map(parseFloat);
+    console.log([maxV.toString(), rep.toString(), currentV.toString(), flag.toString(), batteryPercentage.toString()]);
     
-    return { maxV, rep, currentV, batteryPercentage };
+    return { maxV, rep, currentV, flag, batteryPercentage };
   };
 
   useEffect(() => {
@@ -103,6 +103,7 @@ function GraphingScreen({navigation}) {
       // Update peakVelocity only if the new currentV is greater
       setPeakVelocity((prevPeakVelocity) => Math.max(prevPeakVelocity, currentV));
       setWorkoutData([...workoutData, {maxV, rep, currentV}]);
+      setBtry(batteryPercentage);
       console.log(workoutData);
     }
   },[isReadingData, bleData, calibrating])
@@ -219,6 +220,7 @@ function GraphingScreen({navigation}) {
         isDataLoading={isDataLoading}  
         cleanUp={cleanUp}
         calibrating={calibrating}
+        batteryPercentage={btry}
       />
       <ConnectedDeviceModal
         visible={!deviceConnected}
