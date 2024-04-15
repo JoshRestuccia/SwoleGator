@@ -224,7 +224,6 @@ const styles = StyleSheet.create({
     flex: 0.35,
     flexDirection: 'column',
     alignItems: 'center',
-    alignContent: 'center',
   },
   welcome: {
     fontFamily: 'Anta-Regular',
@@ -333,10 +332,12 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   columnWrap: {
-    margin: 5,
-    padding: 5,
-    justifyContent: 'space-between',
-    width: '70.5%',
+    marginBottom: 5,
+    marginRight: 45,
+    marginTop: 5,
+    marginLeft: 0,
+    width: 400,
+    justifyContent: 'space-evenly'
   }
 });
 
