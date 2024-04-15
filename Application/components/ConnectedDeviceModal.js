@@ -11,7 +11,7 @@ const ConnectedDeviceModal = ({visible, onConnect}) => {
                 <View style={styles.main}>
                     <Text style={styles.text}>Please connect device before proceeding</Text>
                     <TouchableOpacity style={styles.connectButton} onPress={onConnect}>
-                        <Text style={styles.text}>{`Connect Device`}</Text>
+                        <Text style={styles.text}>{`Return Home`}</Text>
                     </TouchableOpacity>
                 </View>
             </View>

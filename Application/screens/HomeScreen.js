@@ -142,7 +142,29 @@ const HomeScreen = ({ navigation }) => {
   return (
     <View style={styles.screenSetup}>
       <View style={styles.title}>
-        <Text style={styles.welcome}>{isLoading ? 'Loading...' : `Welcome, ${userData?.first}`}</Text>
+        <Text style={styles.welcome}>{isLoading ? 'Loading...' : `Welcome Back, ${userData?.first}`}</Text>
+      </View>
+      <View style={styles.container}>
+        {device ?
+          <View style={styles.connectedContainer}>
+            <Text style={styles.connectedText}>Connected to SwoleGator</Text>
+          </View>
+          :
+          <View style={styles.connectedContainer}> 
+           {!connected &&  
+              <View>
+                <Text style = {styles.warnStyle1}>SWOLEGATOR not connected. </Text>
+                <Text style = {styles.warnStyle2}>Please ensure device is turned on and in range.</Text>
+                <Text style = {styles.warnStyle2}>You may need to restart the device</Text>
+              </View>
+            }   
+          <TouchableOpacity onPress={isScanning ? handleStopScan : handleStartScan} style={styles.button}>
+              <Text style={styles.buttonText}>{isScanning ? 'Finding Device...' : 'Connect Device'}</Text>
+           </TouchableOpacity>
+           
+        
+          </View>
+        }
       </View>
       <View style={styles.recommendations}>
           <Text style={styles.recommendationHeader}>Based on your last sessions... </Text>
@@ -159,48 +181,43 @@ const HomeScreen = ({ navigation }) => {
             <Text> Loading Recommendations... </Text>
           )}
       </View>
-      <View style={styles.container}>
-        {device ?
-          <View style={styles.connectedContainer}>
-            <Text style={styles.connectedText}>Connected to SwoleGator</Text>
-          </View>
-          :
-          <View style={styles.connectedContainer}>
-            {!connected &&  
-              <View style={styles.warnContainer}>
-                <Text style = {styles.warnStyle}>SWOLEGATOR not connected. </Text>
-                <Text style = {styles.warnStyle}>Please ensure device is turned on and in range.</Text>
-                <Text style = {styles.warnStyle}>You may need to restart the device</Text>
-              </View>
-            }
-            <TouchableOpacity onPress={isScanning ? handleStopScan : handleStartScan} style={styles.button}>
-              <Text style={styles.textStyle}>{isScanning ? 'Finding Device...' : 'Connect Device'}</Text>
-            </TouchableOpacity>
-          </View>
-        }
-      </View>
+    
     </View>
   );
 };
 
-
+const boxShadow = {
+  shadowColor: 'black',
+  shadowOffset: {
+    width: 0,
+    height: 0,
+  },
+  shadowOpacity: 0.25,
+  shadowRadius: 1.84,
+  elevation: 4,
+};
 const styles = StyleSheet.create({
   screenSetup: {
     flex: 1,
     justifyContent: 'space-evenly',
     backgroundColor: '#272727'
   },
+  buttonText:{
+    textAlign:'center',
+    fontSize: 20,
+    textTransform: 'uppercase',
+    fontFamily: 'Oswald-Regular',
+    color: 'white',
+  },
   container: {
     flex: 0.4,
     justifyContent: 'center',
     alignItems: 'center',
-    flexDirection: 'column',
   },
   title: {
-    flex: 0.25,
+    marginTop: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 25
   },
   recommendations: {
     flex: 0.35,
@@ -210,20 +227,20 @@ const styles = StyleSheet.create({
   },
   welcome: {
     fontFamily: 'Anta-Regular',
+    textTransform: 'uppercase',
     color: 'white',
-    fontSize: 50,
-    marginHorizontal: 50,
+    fontSize: 45,
     textAlign: 'center'
   },
   button: {
-    alignSelf: 'center',
-    flex: 0.4,
-    backgroundColor: '#615F5F',
-    borderColor: '#700C0C',
-    borderWidth: 5,
-    borderRadius: 15,
-    padding: 15,
-    justifyContent: 'center'
+    width: 250,
+    height: 50,
+    marginTop: 20,
+    marginBottom: 25,
+    backgroundColor: 'black',
+    borderRadius: 10,
+    padding: 10,
+    ...boxShadow,
   },
   textStyle: {
     color: 'white',
@@ -231,17 +248,22 @@ const styles = StyleSheet.create({
     fontSize: 30,
     textAlign: 'center',
   },
-  warnStyle: {
-    color: '#700C0C',
+  warnStyle1: {
+    color: 'red',
+    fontFamily: 'Oswald-Regular',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  warnStyle2: {
+    color: 'white',
     fontFamily: 'Oswald-Regular',
     fontSize: 16,
     textAlign: 'center',
   },
   connectedContainer: {
-    width: '100%',
-    flex: 1,
-    flexDirection: 'column',
-    justifyContent: 'space-evenly',
+    alignContent: 'center',
+    alignSelf: 'center',
+    justifyContent: 'center',
   },
   connectedText: {
     color: 'green',
@@ -260,39 +282,46 @@ const styles = StyleSheet.create({
   },
   recommendationText: {
     textAlign: 'center',
-    color: 'white',
+    color: 'darkred',
     fontFamily: 'Oswald-Regular',
+    textTransform: 'uppercase',
     fontSize: 15,
+    marginRight: 10,
+    marginLeft: 10,
   },
   recommendationHeader: {
     fontSize: 28,
     fontFamily: 'Oswald-Regular',
+    textTransform: 'uppercase',
     color: 'white',
-    paddingVertical: 10,
+    marginBottom: 10,
   },
   weightContainer: {
     flex: 0.45,
     flexDirection: 'row',
-    backgroundColor: 'black',
+    backgroundColor: 'lightgrey',
     justifyContent: 'space-between',
     padding: 2,
-    borderColor: 'green',
-        borderWidth: 2.5,
-        borderRadius: 5,
+    borderRadius: 5,
+    height: 45,
+    alignSelf: 'center',
+    alignItems: 'center',
   },
   weightContainerHold: {
     alignSelf: 'center',
     flex: 0.45,
     flexDirection: 'row',
-    backgroundColor: 'black',
+    backgroundColor: 'lightgrey',
     justifyContent: 'space-between',
     padding: 2,
-    borderColor: '#700C0C',
-        borderWidth: 2.5,
-        borderRadius: 5,
+    borderRadius: 5,
+    height: 45,
+    alignSelf: 'center',
+    alignItems: 'center',
   },
   weightText: {
-    color: 'white',
+    color: 'black',
+    textTransform: 'uppercase',
     fontFamily: 'Oswald-Regular',
     fontSize: 15,
   },

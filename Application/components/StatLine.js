@@ -18,11 +18,13 @@ const styles = StyleSheet.create({
     statContainer: {
         display: 'flex',
         width: '80%',
+        height: 45,
         flexDirection: 'row',
         backgroundColor: 'lightgray',
         borderRadius: 5,
         margin: 5,
         alignSelf: 'center',
+        alignItems: 'center',
         justifyContent: 'space-evenly'
     },
     statHeader:{
