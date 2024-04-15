@@ -3,7 +3,7 @@ import { Text, View, TouchableOpacity, StyleSheet, FlatList } from 'react-native
 import { useBLE } from '../api/ble/BLEContext';
 import { useFirestore } from '../api/firestore/FirestoreAPI';
 
-const HomeScreen = ({ navigation }) => {
+const HomeScreen = ({ navigation, batteryPercentage }) => {
   const {
     isScanning,
     startBLEScan,
@@ -141,6 +141,7 @@ const HomeScreen = ({ navigation }) => {
 
   return (
     <View style={styles.screenSetup}>
+
       <View style={styles.title}>
         <Text style={styles.welcome}>{isLoading ? 'Loading...' : `Welcome Back, ${userData?.first}`}</Text>
       </View>
@@ -319,6 +320,12 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     alignItems: 'center',
   },
+  batteryPercentage: {
+      color: 'white',
+      fontSize: 20,
+      fontFamily: 'Oswald-Regular',
+      testAlign : 'right'
+    },
   weightText: {
     color: 'black',
     textTransform: 'uppercase',
